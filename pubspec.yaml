@@ -1,0 +1,14 @@
+name: ejson_workspace
+publish_to: none
+environment:
+  sdk: ^3.12.2
+workspace:
+  - apps/ejson
+  - packages/ejson_core
+dev_dependencies:
+  melos: ^7.0.0
+melos:
+  scripts:
+    analyze: flutter analyze
+    test:core: melos exec --scope=ejson_core -- dart test
+    test:app: melos exec --scope=ejson -- flutter test --no-pub
