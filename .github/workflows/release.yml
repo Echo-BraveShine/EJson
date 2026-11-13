@@ -111,7 +111,13 @@ jobs:
             echo "::error::macOS package version is $name+$build, expected $EXPECTED_VERSION+$EXPECTED_BUILD"
             exit 1
           fi
-          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/EJson"
+          archs=$(lipo -archs "$app/Contents/MacOS/EJson")
+          for arch in arm64 x86_64; do
+            if [[ " $archs " != *" $arch "* ]]; then
+              echo "::error::macOS binary is missing $arch (found: $archs)"
+              exit 1
+            fi
+          done
           ditto -c -k --sequesterRsrc --keepParent "$app" "${{ matrix.file }}"
       - name: Package Windows
         if: matrix.platform == 'windows'
