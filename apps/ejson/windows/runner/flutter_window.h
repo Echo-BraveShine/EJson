@@ -24,6 +24,12 @@ class FlutterWindow : public Win32Window {
                          LPARAM const lparam) noexcept override;
 
  private:
+  void UpdateWindowIcons(HWND window, UINT dpi);
+
+  bool dark_appearance_ = false;
+  HICON small_icon_ = nullptr;
+  HICON large_icon_ = nullptr;
+
   // The project to run.
   flutter::DartProject project_;
 

@@ -43,10 +43,13 @@ Windows 可在发布页下载 `EchoBraveShine.EJson.yaml` 后使用 WinGet 安�
 winget install --manifest .\EchoBraveShine.EJson.yaml
 ```
 
-Ubuntu 24.04+ 或 Debian 13+ 的 x64 用户可从发布页下载 `.deb`，然后运行以下命令。升级时下载新版包并重复安装。
+Ubuntu 24.04+ 或 Debian 13+ 用户可运行 `dpkg --print-architecture`，然后从发布页下载对应架构的 `.deb`。升级时下载新版包并重复安装。
 
 ```sh
+# amd64
 sudo apt install ./EJson-linux-amd64.deb
+# arm64（例如 Apple 芯片 Mac 上的 ARM Linux 虚拟机）
+sudo apt install ./EJson-linux-arm64.deb
 ```
 
 ## 本地开发

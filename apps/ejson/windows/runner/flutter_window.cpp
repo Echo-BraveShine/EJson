@@ -1,7 +1,6 @@
 #include "flutter_window.h"
 
 #include <optional>
-#include <tuple>
 #include <variant>
 
 #include <flutter/standard_method_codec.h>
@@ -30,6 +29,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+  UpdateWindowIcons(GetHandle(), GetDpiForWindow(GetHandle()));
 
   appearance_channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
@@ -44,23 +44,9 @@ bool FlutterWindow::OnCreate() {
         const bool* dark = call.arguments()
                                ? std::get_if<bool>(call.arguments())
                                : nullptr;
-        if (dark) {
-          const int resource = *dark ? IDI_APP_ICON_DARK : IDI_APP_ICON;
-          const HWND window = GetHandle();
-          const HINSTANCE instance = GetModuleHandle(nullptr);
-          const UINT dpi = GetDpiForWindow(window);
-          for (const auto& [slot, width, height] :
-               {std::tuple{ICON_SMALL, SM_CXSMICON, SM_CYSMICON},
-                std::tuple{ICON_BIG, SM_CXICON, SM_CYICON}}) {
-            const HANDLE icon = LoadImage(
-                instance, MAKEINTRESOURCE(resource), IMAGE_ICON,
-                GetSystemMetricsForDpi(width, dpi),
-                GetSystemMetricsForDpi(height, dpi), LR_SHARED);
-            if (icon) {
-              SendMessage(window, WM_SETICON, slot,
-                          reinterpret_cast<LPARAM>(icon));
-            }
-          }
+        if (dark && *dark != dark_appearance_) {
+          dark_appearance_ = *dark;
+          UpdateWindowIcons(GetHandle(), GetDpiForWindow(GetHandle()));
         }
         result->Success();
       });
@@ -77,7 +63,34 @@ bool FlutterWindow::OnCreate() {
   return true;
 }
 
+void FlutterWindow::UpdateWindowIcons(HWND window, UINT dpi) {
+  const int resource = dark_appearance_ ? IDI_APP_ICON_DARK : IDI_APP_ICON;
+  const HINSTANCE instance = GetModuleHandle(nullptr);
+  const auto update = [&](WPARAM slot, int width, int height, HICON& current) {
+    const auto icon = static_cast<HICON>(LoadImage(
+        instance, MAKEINTRESOURCE(resource), IMAGE_ICON,
+        GetSystemMetricsForDpi(width, dpi), GetSystemMetricsForDpi(height, dpi),
+        LR_DEFAULTCOLOR));
+    if (icon) {
+      SendMessage(window, WM_SETICON, slot, reinterpret_cast<LPARAM>(icon));
+      if (current) DestroyIcon(current);
+      current = icon;
+    }
+  };
+  update(ICON_SMALL, SM_CXSMICON, SM_CYSMICON, small_icon_);
+  update(ICON_BIG, SM_CXICON, SM_CYICON, large_icon_);
+}
+
 void FlutterWindow::OnDestroy() {
+  if (const HWND window = GetHandle()) {
+    SendMessage(window, WM_SETICON, ICON_SMALL, 0);
+    SendMessage(window, WM_SETICON, ICON_BIG, 0);
+  }
+  if (small_icon_) DestroyIcon(small_icon_);
+  if (large_icon_) DestroyIcon(large_icon_);
+  small_icon_ = nullptr;
+  large_icon_ = nullptr;
+
   if (appearance_channel_) {
     appearance_channel_->SetMethodCallHandler(nullptr);
     appearance_channel_.reset();
@@ -93,6 +106,10 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (message == WM_DPICHANGED) {
+    UpdateWindowIcons(hwnd, LOWORD(wparam));
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

@@ -52,6 +52,12 @@ jobs:
             platform: linux
             arch: x64
             file: EJson-linux-x64.tar.gz
+            deb_arch: amd64
+          - os: ubuntu-24.04-arm
+            platform: linux
+            arch: arm64
+            file: EJson-linux-arm64.tar.gz
+            deb_arch: arm64
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -89,12 +95,13 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "build=$build" >> "$GITHUB_OUTPUT"
       - name: Check runner architecture
-        if: matrix.arch == 'x64'
+        if: matrix.arch != 'universal'
         env:
           RUNNER_ARCHITECTURE: ${{ runner.arch }}
+          EXPECTED_ARCHITECTURE: ${{ matrix.arch }}
         run: |
-          if [[ "$RUNNER_ARCHITECTURE" != X64 ]]; then
-            echo "::error::Expected an x64 runner, got $RUNNER_ARCHITECTURE"
+          if [[ "${RUNNER_ARCHITECTURE,,}" != "$EXPECTED_ARCHITECTURE" ]]; then
+            echo "::error::Expected a $EXPECTED_ARCHITECTURE runner, got $RUNNER_ARCHITECTURE"
             exit 1
           fi
       - uses: subosito/flutter-action@v2
@@ -176,7 +183,9 @@ jobs:
           EXPECTED_VERSION: ${{ steps.version.outputs.name }}
           EXPECTED_BUILD: ${{ steps.version.outputs.build }}
         run: |
-          bundle=build/linux/x64/release/bundle
+          bundle=build/linux/${{ matrix.arch }}/release/bundle
+          deb_arch=${{ matrix.deb_arch }}
+          deb_file="EJson-linux-$deb_arch.deb"
           jq -e --arg version "$EXPECTED_VERSION" --arg build "$EXPECTED_BUILD" \
             '.version == $version and .build_number == $build' \
             "$bundle/data/flutter_assets/version.json"
@@ -191,7 +200,7 @@ jobs:
           cat > "$staging/DEBIAN/control" <<EOF
           Package: ejson
           Version: $EXPECTED_VERSION-$EXPECTED_BUILD
-          Architecture: amd64
+          Architecture: $deb_arch
           Section: editors
           Priority: optional
           Maintainer: EJson <1239383708@qq.com>
@@ -199,15 +208,16 @@ jobs:
           Homepage: https://github.com/Echo-BraveShine/EJson
           Description: Desktop JSON editor with a synchronized tree view
           EOF
-          dpkg-deb --build --root-owner-group "$staging" EJson-linux-amd64.deb
-          test "$(dpkg-deb -f EJson-linux-amd64.deb Version)" = "$EXPECTED_VERSION-$EXPECTED_BUILD"
+          dpkg-deb --build --root-owner-group "$staging" "$deb_file"
+          test "$(dpkg-deb -f "$deb_file" Version)" = "$EXPECTED_VERSION-$EXPECTED_BUILD"
+          test "$(dpkg-deb -f "$deb_file" Architecture)" = "$deb_arch"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             apps/ejson/${{ matrix.file }}
             ${{ matrix.platform == 'windows' && 'apps/ejson/EJson-windows-x64.zip' || '' }}
-            ${{ matrix.platform == 'linux' && 'apps/ejson/EJson-linux-amd64.deb' || '' }}
+            ${{ matrix.platform == 'linux' && format('apps/ejson/EJson-linux-{0}.deb', matrix.deb_arch) || '' }}
           if-no-files-found: error
 
   publish:
