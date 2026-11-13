@@ -47,8 +47,8 @@ jobs:
           - os: windows-latest
             platform: windows
             arch: x64
-            file: EJson-windows-x64.zip
-          - os: ubuntu-latest
+            file: EJson-Windows-x64-Setup.exe
+          - os: ubuntu-24.04
             platform: linux
             arch: x64
             file: EJson-linux-x64.tar.gz
@@ -61,6 +61,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: refs/tags/${{ needs.resolve.outputs.tag }}
+      - name: Checkout Windows packaging files
+        if: matrix.platform == 'windows'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: release-tools
+          sparse-checkout: |
+            apps/ejson/windows/installer
+            apps/ejson/windows/runner/resources
       - name: Check tag matches app version
         id: version
         env:
@@ -134,7 +143,33 @@ jobs:
               $numeric -ne "$env:EXPECTED_VERSION.$env:EXPECTED_BUILD") {
             throw "Windows package version is $($version.ProductVersion) (file $($version.FileVersion), numeric $numeric), expected $expected"
           }
-          Compress-Archive -Path "$bundle/*" -DestinationPath '${{ matrix.file }}'
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vs) { throw 'Visual Studio C++ tools were not found' }
+          $redist = Join-Path $vs 'VC/Redist/MSVC'
+          $crt = Get-ChildItem $redist -Directory |
+            Where-Object { $_.Name -match '^\d+\.\d+\.\d+$' } |
+            Sort-Object { [version]$_.Name } -Descending |
+            ForEach-Object { Get-ChildItem "$($_.FullName)/x64/Microsoft.VC*.CRT" -Directory } |
+            Select-Object -First 1
+          if (-not $crt) { throw 'Visual C++ x64 redistributable DLLs were not found' }
+          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            Copy-Item (Join-Path $crt.FullName $dll) $bundle
+          }
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'
+          $output = [IO.Path]::GetFileNameWithoutExtension('${{ matrix.file }}')
+          $outputDir = (Get-Location).Path
+          $bundleDir = (Resolve-Path $bundle).Path
+          $script = Join-Path $env:GITHUB_WORKSPACE 'release-tools/apps/ejson/windows/installer/ejson.iss'
+          & $iscc "/DAppVersion=$env:EXPECTED_VERSION" "/DBuildNumber=$env:EXPECTED_BUILD" "/DBundleDir=$bundleDir" "/O$outputDir" "/F$output" $script
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup exited with code $LASTEXITCODE" }
+          $installer = (Get-Item '${{ matrix.file }}').VersionInfo
+          $installerNumeric = "$($installer.FileMajorPart).$($installer.FileMinorPart).$($installer.FileBuildPart).$($installer.FilePrivatePart)"
+          if ($installer.ProductVersion.TrimEnd() -ne $expected -or
+              $installerNumeric -ne "$env:EXPECTED_VERSION.$env:EXPECTED_BUILD") {
+            throw "Unexpected installer version: product $($installer.ProductVersion), file $($installer.FileVersion)"
+          }
+          Compress-Archive -Path "$bundle/*" -DestinationPath 'EJson-windows-x64.zip'
       - name: Package Linux
         if: matrix.platform == 'linux'
         env:
@@ -146,10 +181,33 @@ jobs:
             '.version == $version and .build_number == $build' \
             "$bundle/data/flutter_assets/version.json"
           tar -czf "${{ matrix.file }}" -C "$bundle" .
+          staging=$(mktemp -d)
+          chmod 0755 "$staging"
+          mkdir -p "$staging/DEBIAN" "$staging/opt/ejson" "$staging/usr/bin"
+          chmod 0755 "$staging/DEBIAN" "$staging/opt" "$staging/usr" "$staging/usr/bin"
+          cp -a "$bundle"/. "$staging/opt/ejson/"
+          mv "$staging/opt/ejson/share" "$staging/usr/share"
+          ln -s /opt/ejson/ejson "$staging/usr/bin/ejson"
+          cat > "$staging/DEBIAN/control" <<EOF
+          Package: ejson
+          Version: $EXPECTED_VERSION-$EXPECTED_BUILD
+          Architecture: amd64
+          Section: editors
+          Priority: optional
+          Maintainer: EJson <1239383708@qq.com>
+          Depends: libc6 (>= 2.39), libstdc++6, libgtk-3-0t64 | libgtk-3-0, libgl1
+          Homepage: https://github.com/Echo-BraveShine/EJson
+          Description: Desktop JSON editor with a synchronized tree view
+          EOF
+          dpkg-deb --build --root-owner-group "$staging" EJson-linux-amd64.deb
+          test "$(dpkg-deb -f EJson-linux-amd64.deb Version)" = "$EXPECTED_VERSION-$EXPECTED_BUILD"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
-          path: apps/ejson/${{ matrix.file }}
+          path: |
+            apps/ejson/${{ matrix.file }}
+            ${{ matrix.platform == 'windows' && 'apps/ejson/EJson-windows-x64.zip' || '' }}
+            ${{ matrix.platform == 'linux' && 'apps/ejson/EJson-linux-amd64.deb' || '' }}
           if-no-files-found: error
 
   publish:
@@ -168,8 +226,86 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
         run: |
+          shopt -s nullglob
+          files=(release/*)
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" release/* --clobber
+            # Package managers pin download hashes, so preserve uploaded installers.
+            existing=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+            upload=()
+            for file in "${files[@]}"; do
+              if grep -Fxq -- "${file##*/}" <<< "$existing"; then
+                continue
+              fi
+              upload+=("$file")
+            done
+            if (( ${#upload[@]} )); then
+              gh release upload "$RELEASE_TAG" "${upload[@]}"
+            fi
           else
-            gh release create "$RELEASE_TAG" release/* --verify-tag --generate-notes --latest
+            gh release create "$RELEASE_TAG" "${files[@]}" --verify-tag --generate-notes
+          fi
+      - name: Publish WinGet manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          installer=EJson-Windows-x64-Setup.exe
+          gh release download "$RELEASE_TAG" --pattern "$installer" --dir "$RUNNER_TEMP"
+          checksum=$(sha256sum "$RUNNER_TEMP/$installer" | cut -d ' ' -f 1 | tr '[:lower:]' '[:upper:]')
+          manifest="$RUNNER_TEMP/EchoBraveShine.EJson.yaml"
+          cat > "$manifest" <<EOF
+          # yaml-language-server: \$schema=https://aka.ms/winget-manifest.singleton.1.6.0.schema.json
+          PackageIdentifier: EchoBraveShine.EJson
+          PackageVersion: "${RELEASE_TAG#v}"
+          PackageLocale: en-US
+          Publisher: EJson
+          PackageName: EJson
+          License: Copyright (c) EJson
+          ShortDescription: Desktop JSON editor with a synchronized tree view
+          InstallerType: inno
+          Scope: user
+          Installers:
+            - Architecture: x64
+              InstallerUrl: https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$installer
+              InstallerSha256: $checksum
+          ManifestType: singleton
+          ManifestVersion: 1.6.0
+          EOF
+          gh release upload "$RELEASE_TAG" "$manifest" --clobber
+
+  homebrew:
+    needs: [resolve, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: homebrew-cask
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Update Homebrew cask
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          latest=$(gh release view --json tagName --jq '.tagName')
+          if [[ "$latest" != "$RELEASE_TAG" ]]; then
+            echo "Keeping the cask on the latest release ($latest)"
+            exit 0
+          fi
+          gh release download "$RELEASE_TAG" --pattern EJson-macos.zip --dir "$RUNNER_TEMP"
+          checksum=$(sha256sum "$RUNNER_TEMP/EJson-macos.zip" | cut -d ' ' -f 1)
+          sed -i -E \
+            -e "s/^  version \"[^\"]+\"/  version \"${RELEASE_TAG#v}\"/" \
+            -e "s/^  sha256 \"[^\"]+\"/  sha256 \"$checksum\"/" \
+            Casks/ejson.rb
+          ruby -c Casks/ejson.rb
+          git add Casks/ejson.rb
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m "Update Homebrew cask for $RELEASE_TAG"
+            git push
           fi

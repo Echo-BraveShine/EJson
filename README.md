@@ -25,8 +25,29 @@
 从 [GitHub Releases](https://github.com/Echo-BraveShine/EJson/releases/latest) 选择对应平台的下载包。
 
 - **macOS 12+**：解压 ZIP，将 `EJson.app` 移到「应用程序」。GitHub Actions 生成的构建未进行 Apple 公证。
-- **Windows**：解压 ZIP，在解压后的目录运行 `ejson.exe`，保留同目录的 DLL 和数据文件。
+- **Windows**：双击 `EJson-Windows-x64-Setup.exe` 安装，从开始菜单启动 EJson。便携版可解压 ZIP 后运行 `ejson.exe`。
 - **Linux**：解压 `.tar.gz`，从解压目录运行 `./ejson`。系统需要 GTK 3。
+
+macOS 也可以使用 Homebrew 安装。
+
+```sh
+brew tap echo-braveshine/ejson https://github.com/Echo-BraveShine/EJson.git
+brew install --cask echo-braveshine/ejson/ejson
+```
+
+升级时先运行 `brew update`，再运行 `brew upgrade --cask echo-braveshine/ejson/ejson`。
+
+Windows 可在发布页下载 `EchoBraveShine.EJson.yaml` 后使用 WinGet 安装。首次使用本地清单时，需在管理员终端运行 `winget settings --enable LocalManifestFiles`。
+
+```powershell
+winget install --manifest .\EchoBraveShine.EJson.yaml
+```
+
+Ubuntu 24.04+ 或 Debian 13+ 的 x64 用户可从发布页下载 `.deb`，然后运行以下命令。升级时下载新版包并重复安装。
+
+```sh
+sudo apt install ./EJson-linux-amd64.deb
+```
 
 ## 本地开发
 

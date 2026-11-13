@@ -25,8 +25,29 @@ Editing and parsing run locally. Checking for updates queries GitHub Releases on
 Choose a package from [GitHub Releases](https://github.com/Echo-BraveShine/EJson/releases/latest).
 
 - **macOS 12+**: Extract the ZIP and move `EJson.app` into Applications. GitHub Actions builds are not notarized by Apple.
-- **Windows**: Extract the ZIP and run `ejson.exe` from the extracted directory alongside its DLLs and data.
+- **Windows**: Run `EJson-Windows-x64-Setup.exe` and open EJson from the Start menu. For the portable edition, extract the ZIP and run `ejson.exe`.
 - **Linux**: Extract the `.tar.gz` and run `./ejson` from the extracted directory. GTK 3 is required.
+
+On macOS, you can also install with Homebrew.
+
+```sh
+brew tap echo-braveshine/ejson https://github.com/Echo-BraveShine/EJson.git
+brew install --cask echo-braveshine/ejson/ejson
+```
+
+To upgrade, run `brew update` followed by `brew upgrade --cask echo-braveshine/ejson/ejson`.
+
+On Windows, download `EchoBraveShine.EJson.yaml` from the release page to install with WinGet. For first-time use of local manifests, run `winget settings --enable LocalManifestFiles` in an administrator terminal.
+
+```powershell
+winget install --manifest .\EchoBraveShine.EJson.yaml
+```
+
+On x64 Ubuntu 24.04+ or Debian 13+, download the `.deb` from the release page and run the following command. To upgrade, download and install the newer package.
+
+```sh
+sudo apt install ./EJson-linux-amd64.deb
+```
 
 ## Development
 
