@@ -6,6 +6,7 @@ import 'package:ejson/workspace/local_files.dart';
 import 'package:ejson/workspace/workspace.dart';
 import 'package:ejson/workspace/workbench.dart';
 import 'package:ejson_core/ejson_core.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,9 +16,12 @@ import 'package:window_manager/window_manager.dart';
 Future<ProviderContainer> openWorkbench(
   WidgetTester tester, {
   bool manageWindow = false,
+  Future<void> Function(String, Uint8List)? atomicWriter,
 }) async {
   final container = ProviderContainer(
     overrides: [
+      if (atomicWriter != null)
+        workspaceAtomicWriterProvider.overrideWithValue(atomicWriter),
       parseDocumentProvider.overrideWithValue(
         (source, revision) async => parseJson(source, revision: revision),
       ),
@@ -162,7 +166,12 @@ void main() {
       await file.writeAsString('{}');
       return LocalJsonFile.read(file.path);
     }))!;
-    final container = await openWorkbench(tester);
+    final container = await openWorkbench(
+      tester,
+      atomicWriter: (path, bytes) async {
+        await File(path).writeAsBytes(bytes, flush: true);
+      },
+    );
     final controller = container.read(workspaceProvider.notifier);
     controller.open(opened);
     final id = container.read(workspaceProvider).activeId;
@@ -172,25 +181,20 @@ void main() {
     Future<void> saveAndClose() async {
       await tester.tap(find.byTooltip('Close example.json'));
       await tester.pumpAndSettle();
-      await tester.runAsync(() => tester.tap(find.text('Save')));
-      await tester.pumpAndSettle();
+      final dialog = find.widgetWithText(FilledButton, 'Save');
+      await tester.runAsync(() async {
+        // Invoking the action in this zone also keeps the async save out of
+        // Flutter's fake clock while the dialog route is being dismissed.
+        tester.widget<FilledButton>(dialog).onPressed!();
+        await tester.pumpAndSettle();
+      });
     }
-
-    final binding = tester.binding.defaultBinaryMessenger;
-    const channel = MethodChannel('dev.ekko.ejson/files');
-    binding.setMockMethodCallHandler(channel, (call) {
-      final args = call.arguments as Map;
-      return File(
-        args['path'] as String,
-      ).writeAsBytes(args['bytes'] as Uint8List).then((_) => null);
-    });
-    addTearDown(() => binding.setMockMethodCallHandler(channel, null));
 
     await tester.runAsync(() => file.writeAsString('null'));
     await saveAndClose();
     await tester.runAsync(() async {
-      for (var i = 0; i < 100; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
+      for (var i = 0; i < 150; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
         await tester.pump();
         if (find.textContaining('Save failed').evaluate().isNotEmpty) break;
       }
@@ -202,8 +206,8 @@ void main() {
     await tester.runAsync(() => file.writeAsString('{}'));
     await saveAndClose();
     await tester.runAsync(() async {
-      for (var i = 0; i < 100; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
+      for (var i = 0; i < 150; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
         await tester.pump();
         if (container.read(workspaceProvider).tab(id) == null) break;
       }

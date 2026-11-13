@@ -95,7 +95,9 @@ void main() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsPanel), findsOneWidget);
-    await tester.tap(find.text('Dark'));
+    final darkOption = find.text('Dark');
+    await tester.ensureVisible(darkOption);
+    await tester.tap(darkOption);
     await tester.pumpAndSettle();
     expect(
       Theme.of(tester.element(find.byType(SettingsPanel))).brightness,
@@ -148,7 +150,9 @@ void main() {
 
       await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('JSON highlighting'));
+      final highlightPicker = find.byTooltip('JSON highlighting');
+      await tester.ensureVisible(highlightPicker);
+      await tester.tap(highlightPicker);
       await tester.pumpAndSettle();
       expect(find.text('Tokyo Night'), findsOneWidget);
       await tester.tap(find.text('GitHub'));
@@ -192,7 +196,6 @@ void main() {
         tester.widget<EJsonCodeEditor>(find.byType(EJsonCodeEditor)).highlight,
         JsonHighlight.github,
       );
-      final highlightPicker = find.byTooltip('JSON highlighting');
       await tester.ensureVisible(highlightPicker);
       await tester.tap(highlightPicker);
       await tester.pumpAndSettle();

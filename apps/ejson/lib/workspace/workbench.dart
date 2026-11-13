@@ -22,6 +22,15 @@ import 'local_files.dart';
 import 'workspace.dart';
 import 'workspace_session.dart';
 
+final workspaceAtomicWriterProvider =
+    Provider<Future<void> Function(String, Uint8List)?>(
+      (ref) => Platform.isMacOS
+          ? (path, bytes) => const MethodChannel(
+              'dev.ekko.ejson/files',
+            ).invokeMethod<void>('atomicWrite', {'path': path, 'bytes': bytes})
+          : null,
+    );
+
 class Workbench extends ConsumerStatefulWidget {
   const Workbench({
     super.key,
@@ -376,13 +385,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
       final saved = await (original ?? LocalJsonFile(destination!, '')).save(
         tab.text,
         destination: destination,
-        writeAtomically: Platform.isMacOS
-            ? (path, bytes) => const MethodChannel('dev.ekko.ejson/files')
-                  .invokeMethod<void>('atomicWrite', {
-                    'path': path,
-                    'bytes': bytes,
-                  })
-            : null,
+        writeAtomically: ref.read(workspaceAtomicWriterProvider),
       );
       if (mounted) controller.markSaved(id, saved);
       if (original != null && original.path != saved.path) {

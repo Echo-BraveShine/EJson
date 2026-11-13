@@ -75,6 +75,8 @@ class LocalJsonFile {
       return LocalJsonFile(target.path, text, bom: bom);
     }
 
+    // Check before staging as well, so a known conflict leaves the directory untouched.
+    await verifyBaseline();
     final temp = await target.parent.createTemp('.ejson-');
     try {
       final staged = File('${temp.path}${Platform.pathSeparator}document');
