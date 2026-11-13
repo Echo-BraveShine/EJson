@@ -3,12 +3,29 @@ import FlutterMacOS
 
 class MainFlutterWindow: NSWindow {
   private var scopedFiles: [String: URL] = [:]
+  private var canShowWindow = false
+
+  override func order(_ place: NSWindow.OrderingMode, relativeTo otherWin: Int) {
+    // AppKit may order the window during launch or state restoration.
+    guard canShowWindow || place == .out else { return }
+    super.order(place, relativeTo: otherWin)
+  }
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
+    let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+    // Match the Dart workbench background while the engine prepares its surface.
+    let launchBackground = NSColor(
+      srgbRed: (dark ? 43 : 239) / 255.0,
+      green: (dark ? 43 : 239) / 255.0,
+      blue: (dark ? 45 : 241) / 255.0,
+      alpha: 1
+    )
+    self.backgroundColor = launchBackground
+    flutterViewController.backgroundColor = launchBackground
     self.contentViewController = flutterViewController
-    self.setFrame(windowFrame, display: true)
+    self.setFrame(windowFrame, display: false)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
@@ -77,24 +94,24 @@ class MainFlutterWindow: NSWindow {
       name: "dev.ekko.ejson/appearance",
       binaryMessenger: flutterViewController.engine.binaryMessenger
     )
-    appearance.setMethodCallHandler { [weak self, weak flutterViewController] call, reply in
+    appearance.setMethodCallHandler { [weak self] call, reply in
       guard let self else {
         reply(nil)
         return
       }
       switch call.method {
+      case "allowWindowDisplay":
+        self.canShowWindow = true
+        reply(nil)
       case "setMenuLanguage":
         if let language = call.arguments as? String { self.updateMenuLanguage(language) }
         reply(nil)
       case "setDarkAppearance":
         if let dark = call.arguments as? Bool {
           self.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-          let asset = dark ? "assets/branding/logo_dark.png" : "assets/branding/logo_light.png"
-          if let key = flutterViewController?.lookupKey(forAsset: asset) {
-            let url = Bundle.main.bundleURL.appendingPathComponent(key)
-            if let icon = NSImage(contentsOf: url) {
-              NSApp.applicationIconImage = icon
-            }
+          let iconName = dark ? "DockIconDark" : "DockIconLight"
+          if let icon = NSImage(named: iconName) {
+            NSApp.applicationIconImage = icon
           }
         }
         reply(nil)
@@ -104,6 +121,9 @@ class MainFlutterWindow: NSWindow {
     }
 
     super.awakeFromNib()
+    // The default controller starts its engine when the view becomes visible.
+    // Start it explicitly so Flutter can render while this window is hidden.
+    flutterViewController.engine.run(withEntrypoint: nil)
   }
 
   private var originalMenuTitles: [ObjectIdentifier: String] = [:]

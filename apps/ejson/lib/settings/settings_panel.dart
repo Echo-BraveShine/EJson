@@ -195,6 +195,10 @@ class _SettingsPanelState extends State<SettingsPanel> {
       actions: [
         FilledButton(
           onPressed: () => Navigator.pop(context),
+          style: workbenchDialogButtonStyle(
+            context,
+            role: DialogButtonRole.primary,
+          ),
           child: Text(strings.done),
         ),
       ],

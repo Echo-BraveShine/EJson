@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' show AppExitResponse;
 
+import 'package:ejson/design/workbench_style.dart';
 import 'package:ejson/main.dart';
 import 'package:ejson/workspace/local_files.dart';
 import 'package:ejson/workspace/workspace.dart';
@@ -17,11 +18,14 @@ Future<ProviderContainer> openWorkbench(
   WidgetTester tester, {
   bool manageWindow = false,
   Future<void> Function(String, Uint8List)? atomicWriter,
+  Directory? drafts,
 }) async {
   final container = ProviderContainer(
     overrides: [
       if (atomicWriter != null)
         workspaceAtomicWriterProvider.overrideWithValue(atomicWriter),
+      if (drafts != null)
+        workspaceDraftDirectoryProvider.overrideWithValue(() async => drafts),
       parseDocumentProvider.overrideWithValue(
         (source, revision) async => parseJson(source, revision: revision),
       ),
@@ -48,6 +52,53 @@ Future<void> closeShortcut(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('Save on exit writes untitled documents without a picker', (
+    tester,
+  ) async {
+    final drafts = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('ejson-drafts-'),
+    ))!;
+    addTearDown(() => drafts.delete(recursive: true));
+    final container = await openWorkbench(
+      tester,
+      drafts: drafts,
+      atomicWriter: (path, bytes) =>
+          File(path).writeAsBytes(bytes, flush: true),
+    );
+    final controller = container.read(workspaceProvider.notifier);
+    controller.editSource(1, '{"draft":true}');
+    await tester.pumpAndSettle();
+
+    final state = tester.state(find.byType(Workbench)) as WindowListener;
+    final messenger = tester.binding.defaultBinaryMessenger;
+    const window = MethodChannel('window_manager');
+    var destroyed = false;
+    messenger.setMockMethodCallHandler(window, (call) async {
+      if (call.method == 'destroy') destroyed = true;
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(window, null));
+    state.onWindowClose();
+    await tester.pumpAndSettle();
+    final save = find.widgetWithText(FilledButton, 'Save');
+    await tester.runAsync(() async {
+      tester.widget<FilledButton>(save).onPressed!();
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 150 && !destroyed; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await tester.pump();
+      }
+    });
+    expect(destroyed, isTrue);
+    final tab = container.read(workspaceProvider).active;
+    expect(tab.name, 'Untitled.json');
+    expect(tab.dirty, isFalse);
+    expect(
+      await tester.runAsync(() => File(tab.file!.path).readAsString()),
+      '{"draft":true}',
+    );
+  });
+
   testWidgets(
     'discard approves the native exit callback without a second prompt',
     (tester) async {
@@ -78,6 +129,18 @@ void main() {
       listener.onWindowClose();
       await tester.pumpAndSettle();
       expect(find.text('Save changes before quitting?'), findsOneWidget);
+      final buttons = [
+        find.widgetWithText(TextButton, 'Cancel'),
+        find.widgetWithText(TextButton, 'Discard'),
+        find.widgetWithText(FilledButton, 'Save'),
+      ];
+      final bounds = buttons.map(tester.getRect).toList();
+      for (final button in bounds) {
+        expect(button.height, WorkbenchStyle.dialogButtonHeight);
+        expect(button.top, bounds.first.top);
+      }
+      expect(bounds[0].right, lessThan(bounds[1].left));
+      expect(bounds[1].right, lessThan(bounds[2].left));
       await tester.tap(find.text('Discard'));
       await tester.pumpAndSettle();
 

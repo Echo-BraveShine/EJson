@@ -1,3 +1,4 @@
+import 'package:ejson/design/workbench_style.dart';
 import 'package:ejson/editor/code_editor.dart';
 import 'package:ejson/editor/json_highlight.dart';
 import 'package:ejson/editor/tree_panel.dart';
@@ -87,7 +88,12 @@ void main() {
     );
     await tester.binding.setSurfaceSize(const Size(720, 460));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const ProviderScope(child: EJsonApp()));
+    final savedModes = <ThemeMode>[];
+    await tester.pumpWidget(
+      ProviderScope(
+        child: EJsonApp(saveThemeMode: (mode) async => savedModes.add(mode)),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(BackdropFilter), findsNWidgets(3));
@@ -143,6 +149,7 @@ void main() {
     );
     expect(logo('dark'), findsOneWidget);
     expect(logo('light'), findsNothing);
+    expect(savedModes, [ThemeMode.dark]);
     final glassSwitch = find.descendant(
       of: find.bySemanticsLabel('Glass toolbar'),
       matching: find.byType(CupertinoSwitch),
@@ -151,10 +158,20 @@ void main() {
     await tester.tap(glassSwitch);
     await tester.pumpAndSettle();
     expect(find.byType(BackdropFilter), findsNothing);
+    expect(
+      tester.getSize(find.widgetWithText(FilledButton, 'Done')).height,
+      WorkbenchStyle.dialogButtonHeight,
+    );
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsPanel), findsNothing);
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(
+      ProviderScope(child: EJsonApp(initialThemeMode: savedModes.single)),
+    );
+    await tester.pumpAndSettle();
+    expect(logo('dark'), findsOneWidget);
   });
 
   testWidgets(

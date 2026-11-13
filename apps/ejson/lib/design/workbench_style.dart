@@ -16,6 +16,7 @@ abstract final class WorkbenchStyle {
   static const dialogRadius = 15.0;
   static const rowHeight = 32.0;
   static const toolbarControlHeight = 28.0;
+  static const dialogButtonHeight = 30.0;
   static const controlIconSize = 16.0;
 
   static const caption = TextStyle(fontSize: 11, height: 1.3, letterSpacing: 0);
@@ -47,6 +48,72 @@ abstract final class WorkbenchStyle {
     fontSize: 13,
     fontWeight: FontWeight.w400,
     letterSpacing: 0,
+  );
+}
+
+enum DialogButtonRole { secondary, destructive, primary }
+
+ButtonStyle workbenchDialogButtonStyle(
+  BuildContext context, {
+  DialogButtonRole role = DialogButtonRole.secondary,
+}) {
+  final theme = Theme.of(context);
+  final colors = theme.colorScheme;
+  final primary = role == DialogButtonRole.primary;
+  final background = primary ? colors.primary : colors.surface;
+  final foreground = switch (role) {
+    DialogButtonRole.primary =>
+      theme.brightness == Brightness.dark ? colors.surface : Colors.white,
+    DialogButtonRole.destructive => colors.error,
+    DialogButtonRole.secondary => colors.onSurface,
+  };
+  return ButtonStyle(
+    foregroundColor: WidgetStatePropertyAll(foreground),
+    backgroundColor: WidgetStatePropertyAll(background),
+    overlayColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.pressed)) {
+        return foreground.withValues(alpha: .14);
+      }
+      if (states.contains(WidgetState.hovered)) {
+        return foreground.withValues(alpha: .06);
+      }
+      return Colors.transparent;
+    }),
+    side: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.focused)) {
+        return BorderSide(
+          color: primary ? foreground.withValues(alpha: .7) : colors.primary,
+        );
+      }
+      return BorderSide(
+        color: primary ? Colors.transparent : colors.outlineVariant,
+      );
+    }),
+    shape: const WidgetStatePropertyAll(
+      RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(
+          Radius.circular(WorkbenchStyle.controlRadius),
+        ),
+      ),
+    ),
+    textStyle: WidgetStatePropertyAll(
+      WorkbenchStyle.body.copyWith(
+        fontWeight: primary ? FontWeight.w600 : FontWeight.w500,
+      ),
+    ),
+    padding: const WidgetStatePropertyAll(
+      EdgeInsets.symmetric(
+        horizontal: WorkbenchStyle.space12,
+        vertical: WorkbenchStyle.space4,
+      ),
+    ),
+    minimumSize: const WidgetStatePropertyAll(
+      Size(72, WorkbenchStyle.dialogButtonHeight),
+    ),
+    elevation: const WidgetStatePropertyAll(0),
+    visualDensity: VisualDensity.standard,
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    splashFactory: NoSplash.splashFactory,
   );
 }
 

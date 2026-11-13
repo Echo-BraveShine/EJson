@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="EJson is a local JSON editor for macOS, Windows, and Linux. Edit source, check syntax, and explore the tree in one window.">
-  <title>EJson — A desktop JSON editor</title>
+  <meta name="description" content="Edit source and explore its tree side by side. Format JSON, jump to errors, or change values right in the tree. All editing and parsing happen on your device.">
+  <meta name="theme-color" content="#10141e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f7fc" media="(prefers-color-scheme: light)">
+  <title>EJson · Desktop JSON editor</title>
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="alternate" hreflang="zh-CN" href="index.html">
   <link rel="stylesheet" href="styles.css">
@@ -12,36 +14,91 @@
 <body>
   <header class="site-header">
     <nav class="wrap nav" aria-label="Main navigation">
-      <a class="brand" href="#top"><img src="assets/logo.png" width="30" height="30" alt="">EJson</a>
-      <div class="nav-links"><a href="#features">Features</a><a href="#download">Download</a><a href="index.html" lang="zh-CN">简体中文</a></div>
+      <a class="brand" href="#top"><img src="assets/logo.png" width="32" height="32" alt="">EJson</a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a class="language" href="index.html" lang="zh-CN">简体中文</a>
+      </div>
     </nav>
   </header>
+
   <main id="top">
-    <section class="hero wrap">
-      <div class="hero-copy">
-        <h1>See the source.<br>See the structure.</h1>
-        <p>EJson is a local JSON editor for macOS, Windows, and Linux. Edit source, check syntax, and explore the tree in one window.</p>
-        <div class="actions"><a class="button primary" href="#download">Download EJson</a><a class="button secondary" href="https://github.com/Echo-BraveShine/EJson">View on GitHub</a></div>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <h1 id="hero-title">Edit JSON. <span>See every layer.</span></h1>
+          <p>Edit source and explore its tree side by side. Format JSON, jump to errors, or change values right in the tree. All editing and parsing happen on your device.</p>
+          <div class="actions">
+            <a class="button primary" href="#download">Download EJson <span aria-hidden="true">↓</span></a>
+            <a class="button secondary" href="https://github.com/Echo-BraveShine/EJson">View on GitHub <span aria-hidden="true">↗</span></a>
+          </div>
+          <p class="platform-note">macOS <span aria-hidden="true">·</span> Windows <span aria-hidden="true">·</span> Linux</p>
+        </div>
+        <figure class="product">
+          <a class="product-image" href="assets/workbench.png">
+            <img src="assets/workbench.png" width="1100" height="726" alt="The EJson app showing example.json source code on the left and its JSON tree on the right" fetchpriority="high">
+          </a>
+          <figcaption>EJson workbench · Source and tree view</figcaption>
+        </figure>
       </div>
-      <figure class="product"><img src="assets/workbench.png" width="1100" height="726" alt="EJson workbench with JSON source on the left and a JSON tree on the right" fetchpriority="high"></figure>
     </section>
-    <section class="features wrap" id="features">
-      <h2>Edit the way you work</h2>
+
+    <section class="wrap features" id="features" aria-labelledby="features-title">
+      <h2 id="features-title">From source to node</h2>
       <div class="feature-grid">
-        <article><h3>Source and tree, in sync</h3><p>Jump from a node to its source, rename a key, or replace a value in the tree. Undo and redo work across both views.</p></article>
-        <article><h3>Preserve the original data</h3><p>Formatting and minifying preserve duplicate keys, raw numbers, and string escapes. Jump straight to a syntax error.</p></article>
-        <article><h3>Pick up where you left off</h3><p>Reopen your last files in order with the active tab selected. Customize syntax highlighting and tree styles separately.</p></article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">{}</span>
+          <h3>Source and tree, in sync</h3>
+          <p>Select a node to jump to its source. Rename keys or replace values in the tree, with changes and undo shared across both views.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">≡</span>
+          <h3>Format and validate</h3>
+          <p>Format or minify without losing duplicate keys, number literals, or string escapes. Jump straight to a syntax error.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">▤</span>
+          <h3>Pick up where you left off</h3>
+          <p>Reopen your last files and tabs. Set syntax highlighting, tree styles, and the interface language independently.</p>
+        </article>
       </div>
     </section>
-    <section class="downloads wrap" id="download">
-      <div><h2>Choose your platform</h2><p>See GitHub Releases for the available downloads for each platform.</p></div>
-      <ul class="platforms"><li>macOS</li><li>Windows</li><li>Linux</li></ul>
-      <a class="button primary" href="https://github.com/Echo-BraveShine/EJson/releases/latest">GitHub Releases <span aria-hidden="true">↗</span></a>
+
+    <section class="wrap downloads" id="download" aria-labelledby="download-title">
+      <div class="download-header">
+        <div>
+          <h2 id="download-title">Download EJson</h2>
+          <p>Find platform builds and release notes on GitHub Releases.</p>
+        </div>
+        <a class="button primary" href="https://github.com/Echo-BraveShine/EJson/releases/latest">GitHub Releases <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="platforms">
+        <article>
+          <h3>macOS</h3>
+          <p class="package">Universal ZIP</p>
+          <p>Unzip and move EJson.app to Applications. Supports Apple Silicon and Intel.</p>
+        </article>
+        <article>
+          <h3>Windows</h3>
+          <p class="package">x64 ZIP</p>
+          <p>Extract the entire folder, then run ejson.exe.</p>
+        </article>
+        <article>
+          <h3>Linux</h3>
+          <p class="package">x64 TAR.GZ</p>
+          <p>Extract the archive and run ./ejson. Requires GTK 3.</p>
+        </article>
+      </div>
     </section>
   </main>
+
   <footer class="wrap footer">
-    <p>Editing and parsing happen locally. The app contacts GitHub for release information only when you check for updates.</p>
-    <div><a href="https://github.com/Echo-BraveShine/EJson/issues">Report an issue</a><a href="https://buymeacoffee.com/1239383708p">Buy me a coffee</a></div>
+    <p>The app contacts GitHub for release information when you choose Check for updates.</p>
+    <div>
+      <a href="https://github.com/Echo-BraveShine/EJson/issues">Report an issue</a>
+      <a href="https://buymeacoffee.com/1239383708p">Buy me a coffee</a>
+    </div>
   </footer>
 </body>
 </html>

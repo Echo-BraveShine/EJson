@@ -13,6 +13,20 @@ void main() {
 
   String path(String name) => '${temp.path}${Platform.pathSeparator}$name';
 
+  test(
+    'drafts with the same name save without overwriting each other',
+    () async {
+      final drafts = Directory(path('Drafts'));
+      final saved = await Future.wait([
+        LocalJsonFile.saveDraft(drafts, 'Untitled.json', '{"first":true}'),
+        LocalJsonFile.saveDraft(drafts, 'Untitled.json', '{"second":true}'),
+      ]);
+      expect(saved[0].path, isNot(saved[1].path));
+      expect(await File(saved[0].path).readAsString(), '{"first":true}');
+      expect(await File(saved[1].path).readAsString(), '{"second":true}');
+    },
+  );
+
   test('round-trips UTF-8 BOM and saves as a different file', () async {
     final original = File(path('original.json'));
     await original.writeAsBytes([0xef, 0xbb, 0xbf, 0x7b, 0x7d]);

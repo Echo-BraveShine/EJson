@@ -1,7 +1,7 @@
 name: ejson
 description: Offline desktop JSON workspace.
 publish_to: none
-version: 0.0.1+1
+version: 0.0.2+1
 environment:
   sdk: ^3.12.2
 resolution: workspace
@@ -22,6 +22,7 @@ dependencies:
   re_editor: ^0.10.0
   re_highlight: ^0.0.3
   window_manager: ^0.5.1
+  path_provider: ^2.1.6
 dev_dependencies:
   flutter_test:
     sdk: flutter

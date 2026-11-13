@@ -3,12 +3,39 @@ name: Release
 on:
   push:
     tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (vX.Y.Z)
+        required: true
+        type: string
 
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Resolve release tag
+        id: tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Expected a release tag in vX.Y.Z format"
+            exit 1
+          fi
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
   package:
+    needs: resolve
     strategy:
       fail-fast: false
       matrix:
@@ -32,10 +59,35 @@ jobs:
         working-directory: apps/ejson
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ needs.resolve.outputs.tag }}
       - name: Check tag matches app version
+        id: version
+        env:
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
         run: |
-          version=$(sed -n 's/^version: \([^+]*\).*/\1/p' pubspec.yaml)
-          test "$GITHUB_REF_NAME" = "v$version"
+          version=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | tr -d '\r')
+          if [[ ! "$version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)$ ]]; then
+            echo "::error::Expected version X.Y.Z+BUILD in pubspec.yaml"
+            exit 1
+          fi
+          name="${BASH_REMATCH[1]}"
+          build="${BASH_REMATCH[2]}"
+          if [[ "$RELEASE_TAG" != "v$name" ]]; then
+            echo "::error::Tag $RELEASE_TAG does not match app version $name"
+            exit 1
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+      - name: Check runner architecture
+        if: matrix.arch == 'x64'
+        env:
+          RUNNER_ARCHITECTURE: ${{ runner.arch }}
+        run: |
+          if [[ "$RUNNER_ARCHITECTURE" != X64 ]]; then
+            echo "::error::Expected an x64 runner, got $RUNNER_ARCHITECTURE"
+            exit 1
+          fi
       - uses: subosito/flutter-action@v2
         with:
           flutter-version-file: .fvmrc
@@ -48,14 +100,46 @@ jobs:
       - run: flutter build ${{ matrix.platform }} --release --no-pub
       - name: Package macOS
         if: matrix.platform == 'macos'
-        run: ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/EJson.app "${{ matrix.file }}"
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.name }}
+          EXPECTED_BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          app=build/macos/Build/Products/Release/EJson.app
+          name=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
+          build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Contents/Info.plist")
+          if [[ "$name+$build" != "$EXPECTED_VERSION+$EXPECTED_BUILD" ]]; then
+            echo "::error::macOS package version is $name+$build, expected $EXPECTED_VERSION+$EXPECTED_BUILD"
+            exit 1
+          fi
+          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/EJson"
+          ditto -c -k --sequesterRsrc --keepParent "$app" "${{ matrix.file }}"
       - name: Package Windows
         if: matrix.platform == 'windows'
         shell: pwsh
-        run: Compress-Archive -Path 'build/windows/x64/runner/Release/*' -DestinationPath '${{ matrix.file }}'
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.name }}
+          EXPECTED_BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          $bundle = 'build/windows/x64/runner/Release'
+          $version = (Get-Item "$bundle/ejson.exe").VersionInfo
+          $expected = "$env:EXPECTED_VERSION+$env:EXPECTED_BUILD"
+          $numeric = "$($version.ProductMajorPart).$($version.ProductMinorPart).$($version.ProductBuildPart).$($version.ProductPrivatePart)"
+          if ($version.ProductVersion -ne $expected -or $version.FileVersion -ne $expected -or
+              $numeric -ne "$env:EXPECTED_VERSION.$env:EXPECTED_BUILD") {
+            throw "Windows package version is $($version.ProductVersion) (file $($version.FileVersion), numeric $numeric), expected $expected"
+          }
+          Compress-Archive -Path "$bundle/*" -DestinationPath '${{ matrix.file }}'
       - name: Package Linux
         if: matrix.platform == 'linux'
-        run: tar -czf "${{ matrix.file }}" -C build/linux/x64/release/bundle .
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.name }}
+          EXPECTED_BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          bundle=build/linux/x64/release/bundle
+          jq -e --arg version "$EXPECTED_VERSION" --arg build "$EXPECTED_BUILD" \
+            '.version == $version and .build_number == $build' \
+            "$bundle/data/flutter_assets/version.json"
+          tar -czf "${{ matrix.file }}" -C "$bundle" .
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
@@ -63,7 +147,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: package
+    needs: [resolve, package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -76,9 +160,10 @@ jobs:
       - name: Publish stable release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release/* --clobber
           else
-            gh release create "$GITHUB_REF_NAME" release/* --verify-tag --generate-notes --latest
+            gh release create "$RELEASE_TAG" release/* --verify-tag --generate-notes --latest
           fi

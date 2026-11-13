@@ -44,5 +44,5 @@ fvm flutter run -d macos
 ## CI、官网与发版
 
 - [Desktop checks](.github/workflows/desktop.yml) 在三个平台检查格式、静态分析、测试和原生构建。
-- [Website](.github/workflows/pages.yml) 将 [website](website) 部署到 GitHub Pages。首次启用时，在仓库「Settings → Pages」将来源设为「GitHub Actions」。
-- [Release](.github/workflows/release.yml) 在推送 `vX.Y.Z` 标签时构建三平台压缩包并创建 GitHub Release。标签版本须与 `apps/ejson/pubspec.yaml` 中的应用版本一致，忽略 `+build` 部分。应用内检查更新读取最新正式 Release。
+- [Website](.github/workflows/pages.yml) 将 [website](website) 部署到 GitHub Pages。首次部署时，在仓库「Settings → Pages」将来源设为「GitHub Actions」，然后到「Actions → Website」选择 `main` 并点击「Run workflow」。之后推送到 `main` 的网站改动会触发部署。
+- [Release](.github/workflows/release.yml) 在推送 `vX.Y.Z` 标签时构建三平台压缩包并创建 GitHub Release。已有标签可在「Actions → Release」选择 `main`，点击「Run workflow」并填写标签来补发。构建使用标签对应的源码，标签须与该版本 `apps/ejson/pubspec.yaml` 中的版本一致，忽略 `+build` 部分。应用内检查更新读取最新正式 Release。

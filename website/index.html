@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="EJson 是适用于 macOS、Windows 和 Linux 的本地 JSON 编辑器。在同一窗口中编辑源码、检查语法和浏览树形结构。">
-  <title>EJson — 在桌面上编辑 JSON</title>
+  <meta name="description" content="源码和树形结构并排显示。格式化、定位错误，或直接在树上修改数据。所有编辑和解析都在本机完成。">
+  <meta name="theme-color" content="#10141e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f7fc" media="(prefers-color-scheme: light)">
+  <title>EJson · 桌面 JSON 编辑器</title>
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="alternate" hreflang="en" href="en.html">
   <link rel="stylesheet" href="styles.css">
@@ -12,36 +14,91 @@
 <body>
   <header class="site-header">
     <nav class="wrap nav" aria-label="主导航">
-      <a class="brand" href="#top"><img src="assets/logo.png" width="30" height="30" alt="">EJson</a>
-      <div class="nav-links"><a href="#features">功能</a><a href="#download">下载</a><a href="en.html" lang="en">English</a></div>
+      <a class="brand" href="#top"><img src="assets/logo.png" width="32" height="32" alt="">EJson</a>
+      <div class="nav-links">
+        <a href="#features">功能</a>
+        <a href="#download">下载</a>
+        <a class="language" href="en.html" lang="en">English</a>
+      </div>
     </nav>
   </header>
+
   <main id="top">
-    <section class="hero wrap">
-      <div class="hero-copy">
-        <h1>源码和结构，<br>一眼看清。</h1>
-        <p>EJson 是适用于 macOS、Windows 和 Linux 的本地 JSON 编辑器。在同一窗口中编辑源码、检查语法和浏览树形结构。</p>
-        <div class="actions"><a class="button primary" href="#download">下载 EJson</a><a class="button secondary" href="https://github.com/Echo-BraveShine/EJson">查看 GitHub</a></div>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <h1 id="hero-title">编辑 JSON， <span>看清每一层。</span></h1>
+          <p>源码和树形结构并排显示。格式化、定位错误，或直接在树上修改数据。所有编辑和解析都在本机完成。</p>
+          <div class="actions">
+            <a class="button primary" href="#download">下载 EJson <span aria-hidden="true">↓</span></a>
+            <a class="button secondary" href="https://github.com/Echo-BraveShine/EJson">查看 GitHub <span aria-hidden="true">↗</span></a>
+          </div>
+          <p class="platform-note">macOS <span aria-hidden="true">·</span> Windows <span aria-hidden="true">·</span> Linux</p>
+        </div>
+        <figure class="product">
+          <a class="product-image" href="assets/workbench.png">
+            <img src="assets/workbench.png" width="1100" height="726" alt="EJson 的实际界面，左侧显示 example.json 源码，右侧显示同一份文件的树形结构" fetchpriority="high">
+          </a>
+          <figcaption>EJson 工作台 · 源码与树形结构</figcaption>
+        </figure>
       </div>
-      <figure class="product"><img src="assets/workbench.png" width="1100" height="726" alt="EJson 工作台，左侧为 JSON 源码，右侧为 JSON 树" fetchpriority="high"></figure>
     </section>
-    <section class="features wrap" id="features">
-      <h2>用你习惯的方式编辑</h2>
+
+    <section class="wrap features" id="features" aria-labelledby="features-title">
+      <h2 id="features-title">从源码到节点</h2>
       <div class="feature-grid">
-        <article><h3>源码与树同步</h3><p>从树节点跳到源码，或直接在树上重命名键和替换值。撤销和重做适用于两个视图。</p></article>
-        <article><h3>保留原始数据</h3><p>格式化和压缩保留重复键、数字原文与字符串转义。发现语法错误时可以直接跳到对应位置。</p></article>
-        <article><h3>关闭后接着做</h3><p>按顺序恢复上次打开的文件和选中的标签。源码高亮与树视图样式可分别设置。</p></article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">{}</span>
+          <h3>源码与树同步</h3>
+          <p>点击节点即可跳到源码。在树中重命名键、替换值，改动会同步到源码，也可以撤销。</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">≡</span>
+          <h3>格式化与校验</h3>
+          <p>格式化和压缩保留重复键、数字原文和字符串转义。发现语法错误时，可以直接跳到对应位置。</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">▤</span>
+          <h3>接着上次编辑</h3>
+          <p>重新打开上次的文件和标签。源码高亮、树样式与界面语言可以分别设置。</p>
+        </article>
       </div>
     </section>
-    <section class="downloads wrap" id="download">
-      <div><h2>选择你的平台</h2><p>在 GitHub Releases 查看各平台可用的下载包。</p></div>
-      <ul class="platforms"><li>macOS</li><li>Windows</li><li>Linux</li></ul>
-      <a class="button primary" href="https://github.com/Echo-BraveShine/EJson/releases/latest">GitHub Releases <span aria-hidden="true">↗</span></a>
+
+    <section class="wrap downloads" id="download" aria-labelledby="download-title">
+      <div class="download-header">
+        <div>
+          <h2 id="download-title">下载 EJson</h2>
+          <p>各平台的安装包和版本说明都在 GitHub Releases。</p>
+        </div>
+        <a class="button primary" href="https://github.com/Echo-BraveShine/EJson/releases/latest">GitHub Releases <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="platforms">
+        <article>
+          <h3>macOS</h3>
+          <p class="package">通用版 ZIP</p>
+          <p>解压后，将 EJson.app 移到「应用程序」。支持 Apple Silicon 与 Intel。</p>
+        </article>
+        <article>
+          <h3>Windows</h3>
+          <p class="package">x64 ZIP</p>
+          <p>解压整个文件夹，运行 ejson.exe。</p>
+        </article>
+        <article>
+          <h3>Linux</h3>
+          <p class="package">x64 TAR.GZ</p>
+          <p>解压后运行 ./ejson。系统需要 GTK 3。</p>
+        </article>
+      </div>
     </section>
   </main>
+
   <footer class="wrap footer">
-    <p>文件编辑与解析在本机完成。只有主动检查更新时，应用才会向 GitHub 查询发布版本。</p>
-    <div><a href="https://github.com/Echo-BraveShine/EJson/issues">问题反馈</a><a href="https://buymeacoffee.com/1239383708p">请我喝杯咖啡</a></div>
+    <p>仅在你点击「检查版本更新」时，应用才向 GitHub 查询发布版本。</p>
+    <div>
+      <a href="https://github.com/Echo-BraveShine/EJson/issues">问题反馈</a>
+      <a href="https://buymeacoffee.com/1239383708p">请我喝杯咖啡</a>
+    </div>
   </footer>
 </body>
 </html>

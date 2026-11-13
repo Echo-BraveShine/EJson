@@ -44,5 +44,5 @@ Use `windows` or `linux` on the corresponding host. The app lives in [apps/ejson
 ## CI, website, and releases
 
 - [Desktop checks](.github/workflows/desktop.yml) runs formatting, analysis, tests, and native builds on all three platforms.
-- [Website](.github/workflows/pages.yml) deploys [website](website) to GitHub Pages. For the first deployment, select GitHub Actions under Settings → Pages.
-- [Release](.github/workflows/release.yml) builds archives for all three platforms and publishes a GitHub Release when a `vX.Y.Z` tag is pushed. The tag must match the app version in `apps/ejson/pubspec.yaml` before the `+build` suffix. The app checks the latest stable release.
+- [Website](.github/workflows/pages.yml) deploys [website](website) to GitHub Pages. For the first deployment, select GitHub Actions under Settings → Pages. Then open Actions → Website, select `main`, and click Run workflow. Later website changes pushed to `main` trigger deployment.
+- [Release](.github/workflows/release.yml) builds archives for all three platforms and publishes a GitHub Release when a `vX.Y.Z` tag is pushed. To publish an existing tag, open Actions → Release, select `main`, click Run workflow, and enter the tag. The workflow builds the tagged source. The tag must match that revision's app version in `apps/ejson/pubspec.yaml` before the `+build` suffix. The app checks the latest stable release.

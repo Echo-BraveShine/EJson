@@ -11,6 +11,31 @@ class LocalJsonFile {
   final String source;
   final bool bom;
 
+  static Future<LocalJsonFile> saveDraft(
+    Directory drafts,
+    String name,
+    String text, {
+    Future<void> Function(String, Uint8List)? writeAtomically,
+  }) async {
+    await drafts.create(recursive: true);
+    // Give each draft its own directory so repeated names cannot collide.
+    final directory = await drafts.createTemp('draft-');
+    final file = File.fromUri(directory.uri.resolve(name));
+    try {
+      return await LocalJsonFile(
+        file.path,
+        '',
+      ).save(text, destination: file.path, writeAtomically: writeAtomically);
+    } on Exception {
+      try {
+        await directory.delete(recursive: true);
+      } on FileSystemException {
+        // Keep the original save error if cleanup fails.
+      }
+      rethrow;
+    }
+  }
+
   static Future<LocalJsonFile> read(String path) async {
     final file = File(await File(path).resolveSymbolicLinks());
     if (await file.length() > maxFileBytes) {

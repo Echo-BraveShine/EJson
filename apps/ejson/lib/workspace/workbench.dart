@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../design/workbench_style.dart';
@@ -21,6 +22,13 @@ import '../settings/settings_panel.dart';
 import 'local_files.dart';
 import 'workspace.dart';
 import 'workspace_session.dart';
+
+final workspaceDraftDirectoryProvider = Provider<Future<Directory> Function()>(
+  (ref) => () async {
+    final support = await getApplicationSupportDirectory();
+    return Directory.fromUri(support.uri.resolve('Drafts/'));
+  },
+);
 
 final workspaceAtomicWriterProvider =
     Provider<Future<void> Function(String, Uint8List)?>(
@@ -40,6 +48,7 @@ class Workbench extends ConsumerStatefulWidget {
     required this.failedRestorePaths,
     required this.themeMode,
     required this.onThemeChanged,
+    required this.waitForThemeSave,
     required this.highlight,
     required this.onHighlightChanged,
     required this.treeStyle,
@@ -58,6 +67,7 @@ class Workbench extends ConsumerStatefulWidget {
   final ValueChanged<JsonTreeStyle> onTreeStyleChanged;
   final ValueChanged<JsonHighlight> onHighlightChanged;
   final ValueChanged<ThemeMode> onThemeChanged;
+  final Future<void> Function() waitForThemeSave;
   final String? language;
   final ValueChanged<String?> onLanguageChanged;
 
@@ -167,12 +177,14 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
         if (!mounted || action == _CloseAction.cancel) return false;
         if (action == _CloseAction.save) {
           for (final tab in unsaved) {
-            if (!await _save(tab.id)) return false;
+            if (!await _save(tab.id, saveDraftOnExit: true)) return false;
           }
           if (!mounted || workspace.tabs.any((tab) => tab.dirty)) return false;
         }
       }
 
+      await widget.waitForThemeSave();
+      if (!mounted) return false;
       final session = widget.workspaceSession;
       if (session != null) {
         try {
@@ -276,21 +288,24 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: workbenchDialogButtonStyle(context),
               child: Text(AppLocalizations.of(context).cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, _CloseAction.discard),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.error.withValues(alpha: .08),
+              style: workbenchDialogButtonStyle(
+                context,
+                role: DialogButtonRole.destructive,
               ),
               child: Text(AppLocalizations.of(context).discard),
             ),
             FilledButton(
               autofocus: quitting,
               onPressed: () => Navigator.pop(context, _CloseAction.save),
+              style: workbenchDialogButtonStyle(
+                context,
+                role: DialogButtonRole.primary,
+              ),
               child: Text(AppLocalizations.of(context).save),
             ),
           ],
@@ -355,13 +370,29 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
     }
   }
 
-  Future<bool> _save(int id, {bool saveAs = false}) async {
+  Future<bool> _save(
+    int id, {
+    bool saveAs = false,
+    bool saveDraftOnExit = false,
+  }) async {
     if (_fileBusy || !mounted) return false;
     final tab = workspace.tab(id);
     if (tab == null) return false;
     setState(() => _fileBusy = true);
     try {
       final original = tab.file;
+      final writeAtomically = ref.read(workspaceAtomicWriterProvider);
+      if (original == null && saveDraftOnExit) {
+        final directory = await ref.read(workspaceDraftDirectoryProvider)();
+        final saved = await LocalJsonFile.saveDraft(
+          directory,
+          '${tab.name}.json',
+          tab.text,
+          writeAtomically: writeAtomically,
+        );
+        if (mounted) controller.markSaved(id, saved);
+        return true;
+      }
       String? destination;
       if (saveAs || original == null) {
         final selected = await getSaveLocation(
@@ -385,7 +416,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
       final saved = await (original ?? LocalJsonFile(destination!, '')).save(
         tab.text,
         destination: destination,
-        writeAtomically: ref.read(workspaceAtomicWriterProvider),
+        writeAtomically: writeAtomically,
       );
       if (mounted) controller.markSaved(id, saved);
       if (original != null && original.path != saved.path) {
