@@ -95,6 +95,44 @@ void main() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsPanel), findsOneWidget);
+    final about = find.text('About EJson');
+    expect(
+      tester.getTopLeft(about).dy,
+      greaterThan(tester.getTopLeft(find.text('Language')).dy),
+    );
+    final checkUpdates = find.text('Check for updates');
+    await tester.ensureVisible(checkUpdates);
+    await tester.pumpAndSettle();
+    expect(checkUpdates.hitTestable(), findsOneWidget);
+    expect(
+      tester.getCenter(checkUpdates).dy,
+      closeTo(tester.getCenter(about).dy, 1),
+    );
+    final buyCoffee = find.text('Buy me a coffee');
+    await tester.ensureVisible(buyCoffee);
+    await tester.pumpAndSettle();
+    expect(buyCoffee.hitTestable(), findsOneWidget);
+    expect(
+      tester.getTopLeft(buyCoffee).dx,
+      closeTo(tester.getTopLeft(about).dx, .01),
+    );
+    expect(
+      tester.getTopLeft(buyCoffee).dy,
+      greaterThan(tester.getBottomLeft(checkUpdates).dy),
+    );
+    final footerDivider = find
+        .descendant(
+          of: find.byType(SettingsPanel),
+          matching: find.byType(Divider),
+        )
+        .last;
+    expect(
+      tester.getCenter(buyCoffee).dy - tester.getCenter(footerDivider).dy,
+      closeTo(
+        tester.getCenter(footerDivider).dy - tester.getCenter(about).dy,
+        1,
+      ),
+    );
     final darkOption = find.text('Dark');
     await tester.ensureVisible(darkOption);
     await tester.tap(darkOption);

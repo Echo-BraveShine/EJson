@@ -67,143 +67,129 @@ class _SettingsPanelState extends State<SettingsPanel> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
     return WorkbenchDialog(
       title: strings.settings,
       content: SizedBox(
-        width: 400,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _SettingsGroup(
-              label: strings.about,
-              icon: CupertinoIcons.info_circle,
-              children: const [_ReleaseSettings()],
+        width: 460,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(WorkbenchStyle.groupRadius),
+            border: Border.all(color: colors.outlineVariant),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: WorkbenchStyle.space12,
             ),
-            const SizedBox(height: WorkbenchStyle.space12),
-            _SettingsGroup(
-              label: strings.startup,
-              icon: CupertinoIcons.clock,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Expanded(child: Text(strings.restoreWorkspace)),
-                    Semantics(
-                      label: strings.restoreWorkspace,
-                      child: CupertinoSwitch(
-                        value: _restoreOnStartup,
-                        activeTrackColor: colors.primary,
-                        onChanged: _savingRestorePreference
-                            ? null
-                            : _setRestoreOnStartup,
-                      ),
+                _SettingsRow(
+                  label: strings.restoreWorkspace,
+                  icon: CupertinoIcons.clock,
+                  child: Semantics(
+                    label: strings.restoreWorkspace,
+                    child: CupertinoSwitch(
+                      value: _restoreOnStartup,
+                      activeTrackColor: colors.primary,
+                      onChanged: _savingRestorePreference
+                          ? null
+                          : _setRestoreOnStartup,
                     ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: WorkbenchStyle.space12),
-            _SettingsGroup(
-              label: strings.appearance,
-              icon: CupertinoIcons.circle_lefthalf_fill,
-              children: [
-                _SettingsSelector(
-                  options: {
-                    ThemeMode.system: strings.systemTheme,
-                    ThemeMode.light: strings.lightTheme,
-                    ThemeMode.dark: strings.darkTheme,
-                  },
-                  selected: _theme,
-                  onChanged: (mode) {
-                    setState(() => _theme = mode);
-                    widget.onThemeChanged(mode);
-                  },
+                const Divider(height: 1),
+                _SettingsRow(
+                  label: strings.appearance,
+                  icon: CupertinoIcons.circle_lefthalf_fill,
+                  child: _SettingsSelector(
+                    options: {
+                      ThemeMode.system: strings.systemTheme,
+                      ThemeMode.light: strings.lightTheme,
+                      ThemeMode.dark: strings.darkTheme,
+                    },
+                    selected: _theme,
+                    onChanged: (mode) {
+                      setState(() => _theme = mode);
+                      widget.onThemeChanged(mode);
+                    },
+                  ),
                 ),
-                const Divider(height: 18),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        strings.glassToolbar,
-                        style: theme.textTheme.bodyMedium,
-                      ),
+                const Divider(height: 1),
+                _SettingsRow(
+                  label: strings.glassToolbar,
+                  icon: CupertinoIcons.rectangle_on_rectangle,
+                  child: Semantics(
+                    label: strings.glassToolbar,
+                    child: CupertinoSwitch(
+                      value: _glass,
+                      activeTrackColor: colors.primary,
+                      onChanged: (value) {
+                        setState(() => _glass = value);
+                        widget.onGlassChanged(value);
+                      },
                     ),
-                    Semantics(
-                      label: strings.glassToolbar,
-                      child: CupertinoSwitch(
-                        value: _glass,
-                        activeTrackColor: colors.primary,
-                        onChanged: (value) {
-                          setState(() => _glass = value);
-                          widget.onGlassChanged(value);
-                        },
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: WorkbenchStyle.space12),
-            _SettingsGroup(
-              label: strings.jsonHighlight,
-              icon: CupertinoIcons.paintbrush,
-              children: [
-                _StylePicker(
+                const Divider(height: 1),
+                _SettingsRow(
                   label: strings.jsonHighlight,
-                  options: {
-                    for (final style in JsonHighlight.values)
-                      style: style.label(strings),
-                  },
-                  selected: _highlight,
-                  onChanged: (style) {
-                    setState(() => _highlight = style);
-                    widget.onHighlightChanged(style);
-                  },
+                  icon: CupertinoIcons.paintbrush,
+                  child: _StylePicker(
+                    label: strings.jsonHighlight,
+                    options: {
+                      for (final style in JsonHighlight.values)
+                        style: style.label(strings),
+                    },
+                    selected: _highlight,
+                    onChanged: (style) {
+                      setState(() => _highlight = style);
+                      widget.onHighlightChanged(style);
+                    },
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: WorkbenchStyle.space12),
-            _SettingsGroup(
-              label: strings.treeStyle,
-              icon: CupertinoIcons.list_bullet_indent,
-              children: [
-                _StylePicker(
+                const Divider(height: 1),
+                _SettingsRow(
                   label: strings.treeStyle,
-                  options: {
-                    for (final style in JsonTreeStyle.values)
-                      style: style.label(strings),
-                  },
-                  selected: _treeStyle,
-                  onChanged: (style) {
-                    setState(() => _treeStyle = style);
-                    widget.onTreeStyleChanged(style);
-                  },
+                  icon: CupertinoIcons.list_bullet_indent,
+                  child: _StylePicker(
+                    label: strings.treeStyle,
+                    options: {
+                      for (final style in JsonTreeStyle.values)
+                        style: style.label(strings),
+                    },
+                    selected: _treeStyle,
+                    onChanged: (style) {
+                      setState(() => _treeStyle = style);
+                      widget.onTreeStyleChanged(style);
+                    },
+                  ),
                 ),
+                const Divider(height: 1),
+                _SettingsRow(
+                  label: strings.language,
+                  icon: CupertinoIcons.globe,
+                  child: _SettingsSelector(
+                    options: {
+                      'system': strings.systemLanguage,
+                      'en': strings.english,
+                      'zh': strings.simplifiedChinese,
+                    },
+                    selected: _language ?? 'system',
+                    onChanged: (value) {
+                      final language = value == 'system' ? null : value;
+                      setState(() => _language = language);
+                      widget.onLanguageChanged(language);
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+                const _ReleaseSettings(),
               ],
             ),
-            const SizedBox(height: WorkbenchStyle.space12),
-            _SettingsGroup(
-              label: strings.language,
-              icon: CupertinoIcons.globe,
-              children: [
-                _SettingsSelector(
-                  options: {
-                    'system': strings.systemLanguage,
-                    'en': strings.english,
-                    'zh': strings.simplifiedChinese,
-                  },
-                  selected: _language ?? 'system',
-                  onChanged: (value) {
-                    final language = value == 'system' ? null : value;
-                    setState(() => _language = language);
-                    widget.onLanguageChanged(language);
-                  },
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
       actions: [
@@ -216,49 +202,80 @@ class _SettingsPanelState extends State<SettingsPanel> {
   }
 }
 
-class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
     required this.label,
     required this.icon,
-    required this.children,
+    required this.child,
+    this.detail,
   });
 
   final String label;
   final IconData icon;
-  final List<Widget> children;
+  final Widget child;
+  final String? detail;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: WorkbenchStyle.space4),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: WorkbenchStyle.rowHeight),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: _SettingsLabel(label: label, icon: icon, detail: detail),
+          ),
+          const SizedBox(width: WorkbenchStyle.space12),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: child,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SettingsLabel extends StatelessWidget {
+  const _SettingsLabel({required this.label, required this.icon, this.detail});
+
+  final String label;
+  final IconData icon;
+  final String? detail;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(WorkbenchStyle.groupRadius),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(WorkbenchStyle.space12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: WorkbenchStyle.controlIconSize,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: WorkbenchStyle.space8),
+        Flexible(
+          child: Text.rich(
+            TextSpan(
+              text: label,
               children: [
-                Icon(icon, size: 17, color: colors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                if (detail != null)
+                  TextSpan(
+                    text: '  $detail',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 10),
-            ...children,
-          ],
+            style: theme.textTheme.bodyMedium,
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -279,14 +296,15 @@ class _SettingsSelector<T extends Object> extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return CupertinoSlidingSegmentedControl<T>(
       backgroundColor: colors.surfaceContainer,
-      thumbColor: colors.brightness == Brightness.dark
-          ? const Color(0xff565658)
-          : colors.surface,
+      thumbColor: colors.surfaceContainerLow,
       groupValue: selected,
       children: {
         for (final option in options.entries)
           option.key: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: WorkbenchStyle.space8,
+              vertical: WorkbenchStyle.space4,
+            ),
             child: Text(
               option.value,
               textAlign: TextAlign.center,
@@ -341,14 +359,19 @@ class _StylePicker<T> extends StatelessWidget {
           borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: WorkbenchStyle.space8,
+            vertical: WorkbenchStyle.space4,
+          ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(child: Text(options[selected]!)),
+              Flexible(child: Text(options[selected]!)),
+              const SizedBox(width: WorkbenchStyle.space8),
               Icon(
                 CupertinoIcons.chevron_up_chevron_down,
                 color: colors.onSurfaceVariant,
-                size: 16,
+                size: WorkbenchStyle.controlIconSize,
               ),
             ],
           ),
@@ -434,23 +457,33 @@ class _ReleaseSettingsState extends State<_ReleaseSettings> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: WorkbenchStyle.space8,
-          children: [
-            if (_version != null) Text(strings.versionLabel('$_version')),
-            TextButton.icon(
-              onPressed: _checking ? null : _check,
-              icon: const Icon(CupertinoIcons.arrow_clockwise, size: 15),
-              label: Text(strings.checkUpdates),
+        _SettingsRow(
+          label: strings.about,
+          icon: CupertinoIcons.info_circle,
+          detail: _version == null ? null : strings.versionLabel('$_version'),
+          child: TextButton(
+            onPressed: _checking ? null : _check,
+            style: TextButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-          ],
+            child: Text(strings.checkUpdates),
+          ),
         ),
         if (message != null)
-          Semantics(
-            liveRegion: true,
-            child: Text(message, style: theme.textTheme.bodySmall),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              start: WorkbenchStyle.controlIconSize + WorkbenchStyle.space8,
+              bottom: WorkbenchStyle.space8,
+            ),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                message,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           ),
         if (_result?.status == UpdateStatus.available)
           Align(
@@ -460,13 +493,22 @@ class _ReleaseSettingsState extends State<_ReleaseSettings> {
               child: Text(strings.downloadRelease),
             ),
           ),
-        const Divider(),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: WorkbenchStyle.space4),
+          child: TextButton(
             onPressed: () => _open(supportPage),
-            icon: const Icon(CupertinoIcons.heart, size: 15),
-            label: Text(strings.buyCoffee),
+            style: TextButton.styleFrom(
+              alignment: AlignmentDirectional.centerStart,
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, WorkbenchStyle.rowHeight),
+              visualDensity: VisualDensity.standard,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: _SettingsLabel(
+              label: strings.buyCoffee,
+              icon: CupertinoIcons.heart,
+            ),
           ),
         ),
         if (_browserFailed)
