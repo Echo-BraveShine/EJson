@@ -24,9 +24,16 @@
 
 从 [GitHub Releases](https://github.com/Echo-BraveShine/EJson/releases/latest) 选择对应平台的下载包。
 
-- **macOS 12+**：解压 ZIP，将 `EJson.app` 移到「应用程序」。GitHub Actions 生成的构建未进行 Apple 公证。
-- **Windows**：双击 `EJson-Windows-x64-Setup.exe` 安装，从开始菜单启动 EJson。便携版可解压 ZIP 后运行 `ejson.exe`。
-- **Linux**：解压 `.tar.gz`，从解压目录运行 `./ejson`。系统需要 GTK 3。
+- **macOS 12+**：Apple Silicon（M 系列）选择 `EJson-macos-arm64.dmg`，Intel Mac 选择 `EJson-macos-x86_64.dmg`。打开 DMG，将 EJson 拖入「应用程序」。通用 ZIP 和 Homebrew 构建也支持两种架构，可在 M 系列上原生运行。GitHub Actions 构建未经过 Apple 公证。
+- **Windows x64**：双击 `EJson-Windows-x64-Setup.exe` 为当前用户安装，或用 `EJson-Windows-x64.msi` 为整台电脑安装。MSI 需要管理员权限。从一种安装方式切换到另一种前，先卸载旧安装。便携版可解压 ZIP 后运行 `ejson.exe`。
+- **Linux**：按架构选择 `EJson-linux-x86_64.AppImage` 或 `EJson-linux-aarch64.AppImage`，赋予执行权限后双击或在终端运行，无需管理员权限。Fedora 或兼容的 RPM 系统也可用 `sudo dnf install ./EJson-linux-x86_64.rpm`（ARM64 选择 `aarch64`）。这些构建需要 glibc 2.39 或更新版本、GTK 3 和 OpenGL 运行库。
+
+```sh
+chmod +x EJson-linux-x86_64.AppImage
+./EJson-linux-x86_64.AppImage
+# 系统没有 FUSE 时，从终端启动
+./EJson-linux-x86_64.AppImage --appimage-extract-and-run
+```
 
 macOS 也可以使用 Homebrew 安装。
 
@@ -67,6 +74,6 @@ fvm flutter run -d macos
 
 ## CI、官网与发版
 
-- [Desktop checks](.github/workflows/desktop.yml) 在三个平台检查格式、静态分析、测试和原生构建。
+- [Desktop checks](.github/workflows/desktop.yml) 在分支推送和 Pull Request 时运行三平台检查。发布标签触发 Release。
 - [Website](.github/workflows/pages.yml) 将 [website](website) 部署到 GitHub Pages。首次部署时，在仓库「Settings → Pages」将来源设为「GitHub Actions」，然后到「Actions → Website」选择 `main` 并点击「Run workflow」。之后推送到 `main` 的网站改动会触发部署。
-- [Release](.github/workflows/release.yml) 在推送 `vX.Y.Z` 标签时构建三平台压缩包并创建 GitHub Release。已有标签可在「Actions → Release」选择 `main`，点击「Run workflow」并填写标签来补发。构建使用标签对应的源码，标签须与该版本 `apps/ejson/pubspec.yaml` 中的版本一致，忽略 `+build` 部分。应用内检查更新读取最新正式 Release。
+- [Release](.github/workflows/release.yml) 在推送 `vX.Y.Z` 标签时构建安装包和便携包并创建 GitHub Release。已有标签可在「Actions → Release」选择 `main`，点击「Run workflow」并填写标签来补发，也可勾选 `build_only` 只构建并检查安装包。标签须与对应源码的 `apps/ejson/pubspec.yaml` 版本一致，忽略 `+build` 部分。应用内检查更新读取最新正式 Release。

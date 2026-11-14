@@ -9,6 +9,10 @@ on:
         description: Existing release tag (vX.Y.Z)
         required: true
         type: string
+      build_only:
+        description: Build and check artifacts without publishing a release
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -44,7 +48,17 @@ jobs:
             platform: macos
             arch: universal
             file: EJson-macos.zip
-          - os: windows-latest
+          - os: macos-26
+            platform: macos
+            arch: arm64
+            xcode_arch: arm64
+            file: EJson-macos-arm64.dmg
+          - os: macos-26-intel
+            platform: macos
+            arch: x64
+            xcode_arch: x86_64
+            file: EJson-macos-x86_64.dmg
+          - os: windows-2025
             platform: windows
             arch: x64
             file: EJson-Windows-x64-Setup.exe
@@ -53,11 +67,13 @@ jobs:
             arch: x64
             file: EJson-linux-x64.tar.gz
             deb_arch: amd64
+            image_arch: x86_64
           - os: ubuntu-24.04-arm
             platform: linux
             arch: arm64
             file: EJson-linux-arm64.tar.gz
             deb_arch: arm64
+            image_arch: aarch64
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -67,13 +83,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: refs/tags/${{ needs.resolve.outputs.tag }}
-      - name: Checkout Windows packaging files
-        if: matrix.platform == 'windows'
+      - name: Checkout packaging files
         uses: actions/checkout@v4
         with:
           ref: ${{ github.workflow_sha }}
           path: release-tools
           sparse-checkout: |
+            .github/release
             apps/ejson/windows/installer
             apps/ejson/windows/runner/resources
       - name: Check tag matches app version
@@ -100,7 +116,7 @@ jobs:
           RUNNER_ARCHITECTURE: ${{ runner.arch }}
           EXPECTED_ARCHITECTURE: ${{ matrix.arch }}
         run: |
-          if [[ "${RUNNER_ARCHITECTURE,,}" != "$EXPECTED_ARCHITECTURE" ]]; then
+          if [[ "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_ARCHITECTURE")" != "$EXPECTED_ARCHITECTURE" ]]; then
             echo "::error::Expected a $EXPECTED_ARCHITECTURE runner, got $RUNNER_ARCHITECTURE"
             exit 1
           fi
@@ -121,31 +137,34 @@ jobs:
           echo "$sdk/bin" >> "$GITHUB_PATH"
       - name: Linux build dependencies
         if: matrix.platform == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev \
+            libstdc++-12-dev libgl1 libgl1-mesa-dri rpm patchelf xvfb xauth xdotool
       - run: flutter pub get --enforce-lockfile
       - run: flutter test --no-pub
-      - run: flutter build ${{ matrix.platform }} --release --no-pub
+      - name: Build app
+        env:
+          XCODE_ARCH: ${{ matrix.xcode_arch }}
+        run: |
+          if [[ -n "$XCODE_ARCH" ]]; then
+            export FLUTTER_XCODE_ARCHS="$XCODE_ARCH"
+          fi
+          flutter build ${{ matrix.platform }} --release --no-pub
       - name: Package macOS
         if: matrix.platform == 'macos'
         env:
           EXPECTED_VERSION: ${{ steps.version.outputs.name }}
           EXPECTED_BUILD: ${{ steps.version.outputs.build }}
         run: |
-          app=build/macos/Build/Products/Release/EJson.app
-          name=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
-          build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Contents/Info.plist")
-          if [[ "$name+$build" != "$EXPECTED_VERSION+$EXPECTED_BUILD" ]]; then
-            echo "::error::macOS package version is $name+$build, expected $EXPECTED_VERSION+$EXPECTED_BUILD"
-            exit 1
-          fi
-          archs=$(lipo -archs "$app/Contents/MacOS/EJson")
-          for arch in arm64 x86_64; do
-            if [[ " $archs " != *" $arch "* ]]; then
-              echo "::error::macOS binary is missing $arch (found: $archs)"
-              exit 1
-            fi
-          done
-          ditto -c -k --sequesterRsrc --keepParent "$app" "${{ matrix.file }}"
+          bash "$GITHUB_WORKSPACE/release-tools/.github/release/macos.sh" \
+            build/macos/Build/Products/Release/EJson.app \
+            '${{ matrix.file }}' '${{ matrix.xcode_arch || 'arm64 x86_64' }}'
+      - name: Set up .NET for WiX
+        if: matrix.platform == 'windows'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
       - name: Package Windows
         if: matrix.platform == 'windows'
         shell: pwsh
@@ -188,6 +207,8 @@ jobs:
             throw "Unexpected installer version: product $($installer.ProductVersion), file $($installer.FileVersion)"
           }
           Compress-Archive -Path "$bundle/*" -DestinationPath 'EJson-windows-x64.zip'
+          $tools = Join-Path $env:GITHUB_WORKSPACE 'release-tools/.github/release'
+          & "$tools/windows-msi.ps1" $bundleDir (Split-Path $script -Parent)
       - name: Package Linux
         if: matrix.platform == 'linux'
         env:
@@ -222,17 +243,40 @@ jobs:
           dpkg-deb --build --root-owner-group "$staging" "$deb_file"
           test "$(dpkg-deb -f "$deb_file" Version)" = "$EXPECTED_VERSION-$EXPECTED_BUILD"
           test "$(dpkg-deb -f "$deb_file" Architecture)" = "$deb_arch"
+          rm -rf "$staging"
+          tools="$GITHUB_WORKSPACE/release-tools/.github/release"
+          image_arch='${{ matrix.image_arch }}'
+          bash "$tools/linux-appimage.sh" "$bundle" "$image_arch"
+          bash "$tools/linux-rpm.sh" '${{ matrix.file }}' "$image_arch"
+      - name: Check release artifacts exist
+        run: |
+          test -s '${{ matrix.file }}'
+          case '${{ matrix.platform }}' in
+            windows)
+              test -s EJson-windows-x64.zip
+              test -s EJson-Windows-x64.msi
+              ;;
+            linux)
+              test -s 'EJson-linux-${{ matrix.deb_arch }}.deb'
+              test -s 'EJson-linux-${{ matrix.image_arch }}.AppImage'
+              test -s 'EJson-linux-${{ matrix.image_arch }}.rpm'
+              ;;
+          esac
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             apps/ejson/${{ matrix.file }}
             ${{ matrix.platform == 'windows' && 'apps/ejson/EJson-windows-x64.zip' || '' }}
+            ${{ matrix.platform == 'windows' && 'apps/ejson/EJson-Windows-x64.msi' || '' }}
             ${{ matrix.platform == 'linux' && format('apps/ejson/EJson-linux-{0}.deb', matrix.deb_arch) || '' }}
+            ${{ matrix.platform == 'linux' && format('apps/ejson/EJson-linux-{0}.AppImage', matrix.image_arch) || '' }}
+            ${{ matrix.platform == 'linux' && format('apps/ejson/EJson-linux-{0}.rpm', matrix.image_arch) || '' }}
           if-no-files-found: error
 
   publish:
     needs: [resolve, package]
+    if: ${{ !inputs.build_only }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -9,6 +9,99 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get compareDocuments => 'Compare JSON documents';
+
+  @override
+  String get comparisonBefore => 'Before';
+
+  @override
+  String get comparisonAfter => 'After';
+
+  @override
+  String get comparisonSwap => 'Swap comparison sides';
+
+  @override
+  String get comparisonEmpty => 'The structures match.';
+
+  @override
+  String get comparisonLimit => 'Showing the first 1,000 differences.';
+
+  @override
+  String get comparisonFailed => 'Could not compare these documents.';
+
+  @override
+  String get comparisonAdded => 'Added';
+
+  @override
+  String get comparisonRemoved => 'Removed';
+
+  @override
+  String get comparisonChanged => 'Changed';
+
+  @override
+  String get comparisonMissing => 'No corresponding node';
+
+  @override
+  String get goToJsonPath => 'Go to JSONPath';
+
+  @override
+  String get goToNode => 'Go to node';
+
+  @override
+  String get invalidJsonPath => 'Enter a single JSONPath such as \$.items[0].';
+
+  @override
+  String get missingJsonPath => 'This path does not exist in the document.';
+
+  @override
+  String get ambiguousJsonPath => 'This path matches duplicate keys.';
+
+  @override
+  String get findInDocument => 'Find in document';
+
+  @override
+  String get searchSource => 'Source text';
+
+  @override
+  String get searchKeys => 'Keys';
+
+  @override
+  String get searchValues => 'Values';
+
+  @override
+  String get noMatches => 'No matches';
+
+  @override
+  String get previousMatch => 'Previous match';
+
+  @override
+  String get nextMatch => 'Next match';
+
+  @override
+  String get closeFind => 'Close find';
+
+  @override
+  String get findNeedsValidJson => 'Key and value search needs valid JSON.';
+
+  @override
+  String get addProperty => 'Add property';
+
+  @override
+  String get addArrayItem => 'Add array item';
+
+  @override
+  String get propertyName => 'Property name';
+
+  @override
+  String get deleteNode => 'Delete node';
+
+  @override
+  String get copyJsonPath => 'Copy JSONPath';
+
+  @override
+  String get jsonPathCopied => 'JSONPath copied';
+
+  @override
   String get open => 'Open';
 
   @override

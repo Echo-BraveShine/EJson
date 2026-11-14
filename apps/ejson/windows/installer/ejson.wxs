@@ -1,0 +1,28 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="EJson" Manufacturer="EJson" Version="$(var.AppVersion)"
+           UpgradeCode="AE572C65-E54B-47D6-AF89-63247B6A4AA4" Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of EJson is already installed."
+                  Schedule="afterInstallInitialize" />
+    <MediaTemplate EmbedCab="yes" />
+    <Property Id="EJSON_BUILD_NUMBER" Value="$(var.BuildNumber)" />
+    <Icon Id="EJsonIcon" SourceFile="../runner/resources/app_icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="EJsonIcon" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="EJson" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="EJson" Level="1">
+      <Files Directory="INSTALLFOLDER" Include="$(var.BundleDir)\**">
+        <Exclude Files="$(var.BundleDir)\ejson.exe" />
+      </Files>
+      <Component Directory="INSTALLFOLDER">
+        <File Id="EJsonExe" Source="$(var.BundleDir)\ejson.exe" KeyPath="yes">
+          <Shortcut Id="EJsonStartMenu" Directory="ProgramMenuFolder" Name="EJson"
+                    WorkingDirectory="INSTALLFOLDER" Advertise="yes" />
+        </File>
+      </Component>
+    </Feature>
+  </Package>
+</Wix>

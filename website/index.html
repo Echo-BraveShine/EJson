@@ -76,8 +76,8 @@
       <div class="platforms">
         <article>
           <h3>macOS</h3>
-          <p class="package">通用版 ZIP</p>
-          <p>解压后，将 EJson.app 移到「应用程序」。支持 Apple Silicon 与 Intel。</p>
+          <p class="package">Apple Silicon / Intel DMG</p>
+          <p>M 系列选 arm64，Intel 选 x86_64。打开 DMG，将 EJson 拖入「应用程序」。也可下载通用 ZIP。</p>
           <details class="brew-install">
             <summary>使用 Homebrew 安装</summary>
             <pre><code>brew tap echo-braveshine/ejson https://github.com/Echo-BraveShine/EJson.git
@@ -86,15 +86,15 @@ brew install --cask echo-braveshine/ejson/ejson</code></pre>
         </article>
         <article>
           <h3>Windows</h3>
-          <p class="package">x64 Setup.exe</p>
-          <p>双击安装程序，从开始菜单启动。也可下载便携版 ZIP。</p>
+          <p class="package">x64 Setup.exe / MSI</p>
+          <p>Setup.exe 为当前用户安装，MSI 为整台电脑安装。也可下载便携 ZIP。</p>
           <p>支持通过发布页的本地 WinGet 清单安装。</p>
         </article>
         <article>
           <h3>Linux</h3>
-          <p class="package">x64 TAR.GZ</p>
-          <p>解压后运行 ./ejson。系统需要 GTK 3。</p>
-          <p>Ubuntu 24.04+ 和 Debian 13+ 可用 apt 安装发布页的 .deb 包。</p>
+          <p class="package">x86_64 / ARM64 AppImage</p>
+          <p>赋予执行权限后打开，无需管理员权限。需要 glibc 2.39+、GTK 3 和 OpenGL。</p>
+          <p>Ubuntu 24.04+ 和 Debian 13+ 也可安装 DEB，Fedora 和兼容系统可安装 RPM。</p>
         </article>
       </div>
     </section>

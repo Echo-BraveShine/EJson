@@ -13,6 +13,7 @@ class EJsonCodeEditor extends StatefulWidget {
     required this.onChanged,
     required this.readOnly,
     this.jump,
+    this.focusOnJump = true,
     this.highlight = JsonHighlight.atomOne,
     this.useWorkspaceShortcuts = true,
   });
@@ -22,6 +23,7 @@ class EJsonCodeEditor extends StatefulWidget {
   final bool readOnly;
   final JsonHighlight highlight;
   final bool useWorkspaceShortcuts;
+  final bool focusOnJump;
   final ({SourceRange range, int sequence})? jump;
 
   @override
@@ -50,6 +52,7 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     );
     _lines = _controller.codeLines;
     _controller.addListener(_edited);
+    _scheduleJump();
   }
 
   @override
@@ -76,18 +79,21 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         _controller.addListener(_edited);
       }
     }
-    if (widget.jump != null && widget.jump != oldWidget.jump) {
-      final range = widget.jump!.range;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || widget.jump?.range != range) return;
-        final lines = LineIndex(_source);
-        final start = _position(range.start, lines);
-        final end = _position(range.end, lines);
-        _controller.selection = _selection(start, end);
-        _focus.requestFocus();
-        _scroll.makeCenterIfInvisible(start);
-      });
-    }
+    if (widget.jump != oldWidget.jump) _scheduleJump();
+  }
+
+  void _scheduleJump() {
+    final jump = widget.jump;
+    if (jump == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.jump != jump) return;
+      final lines = LineIndex(_source);
+      final start = _position(jump.range.start, lines);
+      final end = _position(jump.range.end, lines);
+      _controller.selection = _selection(start, end);
+      if (widget.focusOnJump) _focus.requestFocus();
+      _scroll.makeCenterIfInvisible(start);
+    });
   }
 
   void _edited() {
@@ -185,6 +191,7 @@ class _EditorShortcuts extends DefaultCodeShortcutsActivatorsBuilder {
 
   @override
   List<ShortcutActivator>? build(CodeShortcutType type) => switch (type) {
+    CodeShortcutType.find ||
     CodeShortcutType.undo ||
     CodeShortcutType.redo ||
     CodeShortcutType.save => null,

@@ -98,6 +98,192 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @compareDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare JSON documents'**
+  String get compareDocuments;
+
+  /// No description provided for @comparisonBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Before'**
+  String get comparisonBefore;
+
+  /// No description provided for @comparisonAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get comparisonAfter;
+
+  /// No description provided for @comparisonSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap comparison sides'**
+  String get comparisonSwap;
+
+  /// No description provided for @comparisonEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The structures match.'**
+  String get comparisonEmpty;
+
+  /// No description provided for @comparisonLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the first 1,000 differences.'**
+  String get comparisonLimit;
+
+  /// No description provided for @comparisonFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not compare these documents.'**
+  String get comparisonFailed;
+
+  /// No description provided for @comparisonAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get comparisonAdded;
+
+  /// No description provided for @comparisonRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get comparisonRemoved;
+
+  /// No description provided for @comparisonChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed'**
+  String get comparisonChanged;
+
+  /// No description provided for @comparisonMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No corresponding node'**
+  String get comparisonMissing;
+
+  /// No description provided for @goToJsonPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to JSONPath'**
+  String get goToJsonPath;
+
+  /// No description provided for @goToNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to node'**
+  String get goToNode;
+
+  /// No description provided for @invalidJsonPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a single JSONPath such as \$.items[0].'**
+  String get invalidJsonPath;
+
+  /// No description provided for @missingJsonPath.
+  ///
+  /// In en, this message translates to:
+  /// **'This path does not exist in the document.'**
+  String get missingJsonPath;
+
+  /// No description provided for @ambiguousJsonPath.
+  ///
+  /// In en, this message translates to:
+  /// **'This path matches duplicate keys.'**
+  String get ambiguousJsonPath;
+
+  /// No description provided for @findInDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in document'**
+  String get findInDocument;
+
+  /// No description provided for @searchSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source text'**
+  String get searchSource;
+
+  /// No description provided for @searchKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Keys'**
+  String get searchKeys;
+
+  /// No description provided for @searchValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Values'**
+  String get searchValues;
+
+  /// No description provided for @noMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get noMatches;
+
+  /// No description provided for @previousMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous match'**
+  String get previousMatch;
+
+  /// No description provided for @nextMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Next match'**
+  String get nextMatch;
+
+  /// No description provided for @closeFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Close find'**
+  String get closeFind;
+
+  /// No description provided for @findNeedsValidJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Key and value search needs valid JSON.'**
+  String get findNeedsValidJson;
+
+  /// No description provided for @addProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add property'**
+  String get addProperty;
+
+  /// No description provided for @addArrayItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add array item'**
+  String get addArrayItem;
+
+  /// No description provided for @propertyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Property name'**
+  String get propertyName;
+
+  /// No description provided for @deleteNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete node'**
+  String get deleteNode;
+
+  /// No description provided for @copyJsonPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy JSONPath'**
+  String get copyJsonPath;
+
+  /// No description provided for @jsonPathCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'JSONPath copied'**
+  String get jsonPathCopied;
+
   /// No description provided for @open.
   ///
   /// In en, this message translates to:

@@ -24,9 +24,16 @@ Editing and parsing run locally. Checking for updates queries GitHub Releases on
 
 Choose a package from [GitHub Releases](https://github.com/Echo-BraveShine/EJson/releases/latest).
 
-- **macOS 12+**: Extract the ZIP and move `EJson.app` into Applications. GitHub Actions builds are not notarized by Apple.
-- **Windows**: Run `EJson-Windows-x64-Setup.exe` and open EJson from the Start menu. For the portable edition, extract the ZIP and run `ejson.exe`.
-- **Linux**: Extract the `.tar.gz` and run `./ejson` from the extracted directory. GTK 3 is required.
+- **macOS 12+**: Use `EJson-macos-arm64.dmg` for Apple silicon or `EJson-macos-x86_64.dmg` for Intel. Open the DMG and drag EJson into Applications. The universal ZIP and Homebrew build also run natively on both architectures. Apple notarization is pending.
+- **Windows x64**: Use `EJson-Windows-x64-Setup.exe` for a per-user install or `EJson-Windows-x64.msi` for an administrator-managed, machine-wide install. Uninstall the existing copy before switching installers. For the portable edition, extract the ZIP and run `ejson.exe`.
+- **Linux**: Choose `EJson-linux-x86_64.AppImage` or `EJson-linux-aarch64.AppImage`, make it executable, and open it without administrator permissions. On Fedora or a compatible RPM system, you can also run `sudo dnf install ./EJson-linux-x86_64.rpm` (choose `aarch64` for ARM64). These builds require glibc 2.39 or later, GTK 3, and OpenGL runtime libraries.
+
+```sh
+chmod +x EJson-linux-x86_64.AppImage
+./EJson-linux-x86_64.AppImage
+# If FUSE is unavailable
+./EJson-linux-x86_64.AppImage --appimage-extract-and-run
+```
 
 On macOS, you can also install with Homebrew.
 
@@ -43,10 +50,12 @@ On Windows, download `EchoBraveShine.EJson.yaml` from the release page to instal
 winget install --manifest .\EchoBraveShine.EJson.yaml
 ```
 
-On x64 Ubuntu 24.04+ or Debian 13+, download the `.deb` from the release page and run the following command. To upgrade, download and install the newer package.
+On Ubuntu 24.04+ or Debian 13+, download the matching `.deb` from the release page. To upgrade, download and install the newer package.
 
 ```sh
 sudo apt install ./EJson-linux-amd64.deb
+# ARM64
+sudo apt install ./EJson-linux-arm64.deb
 ```
 
 ## Development
@@ -64,6 +73,6 @@ Use `windows` or `linux` on the corresponding host. The app lives in [apps/ejson
 
 ## CI, website, and releases
 
-- [Desktop checks](.github/workflows/desktop.yml) runs formatting, analysis, tests, and native builds on all three platforms.
+- [Desktop checks](.github/workflows/desktop.yml) runs three-platform checks on branch pushes and pull requests. Release tags trigger the Release workflow.
 - [Website](.github/workflows/pages.yml) deploys [website](website) to GitHub Pages. For the first deployment, select GitHub Actions under Settings → Pages. Then open Actions → Website, select `main`, and click Run workflow. Later website changes pushed to `main` trigger deployment.
-- [Release](.github/workflows/release.yml) builds archives for all three platforms and publishes a GitHub Release when a `vX.Y.Z` tag is pushed. To publish an existing tag, open Actions → Release, select `main`, click Run workflow, and enter the tag. The workflow builds the tagged source. The tag must match that revision's app version in `apps/ejson/pubspec.yaml` before the `+build` suffix. The app checks the latest stable release.
+- [Release](.github/workflows/release.yml) builds installers and portable packages and publishes a GitHub Release when a `vX.Y.Z` tag is pushed. To publish an existing tag, open Actions → Release, select `main`, click Run workflow, and enter the tag. Select `build_only` to build and verify the packages without publishing. The tag must match the tagged source's app version in `apps/ejson/pubspec.yaml` before the `+build` suffix. The app checks the latest stable release.

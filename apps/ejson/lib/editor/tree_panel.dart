@@ -17,6 +17,10 @@ class TreePanel extends StatefulWidget {
     required this.onReveal,
     required this.onEdit,
     this.style = JsonTreeStyle.classic,
+    this.reveal,
+    this.onAdd,
+    this.onDelete,
+    this.onCopyPath,
   });
 
   final ParseSnapshot snapshot;
@@ -25,12 +29,16 @@ class TreePanel extends StatefulWidget {
   final bool current;
   final ValueChanged<SourceRange> onReveal;
   final void Function(SourceRange range, bool key) onEdit;
+  final ({SourceRange range, int sequence})? reveal;
+  final ValueChanged<JsonNode>? onAdd;
+  final void Function(JsonNode parent, int index)? onDelete;
+  final ValueChanged<String>? onCopyPath;
 
   @override
   State<TreePanel> createState() => _TreePanelState();
 }
 
-enum _NodeAction { focus, replace, rename }
+enum _NodeAction { focus, replace, rename, add, delete, copyPath }
 
 typedef _Step = ({int index, String? key});
 
@@ -55,6 +63,8 @@ class _TreePanelState extends State<TreePanel> {
     super.dispose();
   }
 
+  bool _pendingReveal = false;
+  List<_Step> _revealSteps = const [];
   List<_Step> _focus = const [];
   String? _selected;
   final _expanded = <String>{'root'};
@@ -75,6 +85,12 @@ class _TreePanelState extends State<TreePanel> {
   @override
   void didUpdateWidget(covariant TreePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.current &&
+        widget.reveal != null &&
+        widget.reveal != oldWidget.reveal) {
+      _showMatch(widget.reveal!.range.start);
+      return;
+    }
     if (widget.snapshot == oldWidget.snapshot) return;
     var node = widget.snapshot.root!;
     var validSteps = 0;
@@ -89,6 +105,29 @@ class _TreePanelState extends State<TreePanel> {
       _focus = _focus.take(validSteps).toList();
       _selected = null;
     }
+  }
+
+  void _showMatch(int offset) {
+    var node = widget.snapshot.root!;
+    var path = 'root';
+    final steps = <_Step>[];
+    _focus = const [];
+    _expanded.add(path);
+    while (true) {
+      final index = node.children.indexWhere((child) {
+        final start = child.keyRange?.start ?? child.value.range.start;
+        return start <= offset && offset < child.value.range.end;
+      });
+      if (index < 0) break;
+      _expanded.add(path);
+      path = '$path/$index';
+      final child = node.children[index];
+      steps.add((index: index, key: child.key));
+      node = child.value;
+    }
+    _selected = path;
+    _revealSteps = steps;
+    _pendingReveal = true;
   }
 
   @override
@@ -147,6 +186,39 @@ class _TreePanelState extends State<TreePanel> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final code = WorkbenchStyle.code(theme.platform);
+    if (widget.reveal != null && widget.current && _selected != null) {
+      final index = rows.indexWhere((row) => row.path == _selected);
+      if (index < 0 && _pendingReveal && clipped && _revealSteps.isNotEmpty) {
+        _pendingReveal = false;
+        final sequence = widget.reveal!.sequence;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || widget.reveal?.sequence != sequence) return;
+          setState(() {
+            _focus = _revealSteps;
+            _expanded.remove(_selected);
+            _pendingReveal = true;
+          });
+        });
+      }
+      if (index >= 0 && _pendingReveal) {
+        _pendingReveal = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !_vertical.hasClients || !_horizontal.hasClients) {
+            return;
+          }
+          _vertical.jumpTo(
+            (index * style.rowHeight - style.rowHeight).clamp(
+              0.0,
+              _vertical.position.maxScrollExtent,
+            ),
+          );
+          final indent = rows[index].depth * style.indent;
+          _horizontal.jumpTo(
+            indent.clamp(0.0, _horizontal.position.maxScrollExtent),
+          );
+        });
+      }
+    }
     final list = ListView.builder(
       controller: _vertical,
       primary: false,
@@ -253,11 +325,15 @@ class _TreePanelState extends State<TreePanel> {
                   ),
                   if (widget.current || hasChildren && row.depth > 0)
                     PopupMenuButton<_NodeAction>(
+                      key: ValueKey('node-menu:${row.path}'),
                       tooltip: widget.current
                           ? strings.editNode
                           : strings.nodeActions,
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(CupertinoIcons.ellipsis, size: 15),
+                      child: const SizedBox(
+                        width: 28,
+                        height: 24,
+                        child: Icon(CupertinoIcons.ellipsis, size: 15),
+                      ),
                       onSelected: (action) {
                         switch (action) {
                           case _NodeAction.focus:
@@ -266,6 +342,27 @@ class _TreePanelState extends State<TreePanel> {
                             widget.onEdit(range, false);
                           case _NodeAction.rename:
                             widget.onEdit(row.keyRange!, true);
+                          case _NodeAction.add:
+                            widget.onAdd?.call(node);
+                          case _NodeAction.delete:
+                            var parent = widget.snapshot.root!;
+                            for (final step in row.steps.take(
+                              row.steps.length - 1,
+                            )) {
+                              parent = parent.children[step.index].value;
+                            }
+                            widget.onDelete?.call(parent, row.steps.last.index);
+                          case _NodeAction.copyPath:
+                            widget.onCopyPath?.call(
+                              formatJsonPath(
+                                row.steps.map(
+                                  (step) => (
+                                    key: step.key,
+                                    index: step.key == null ? step.index : null,
+                                  ),
+                                ),
+                              ),
+                            );
                         }
                       },
                       itemBuilder: (context) => [
@@ -276,6 +373,28 @@ class _TreePanelState extends State<TreePanel> {
                             label: strings.focusSubtree,
                           ),
                         if (widget.current) ...[
+                          if (widget.onCopyPath != null)
+                            WorkbenchMenuItem(
+                              value: _NodeAction.copyPath,
+                              icon: CupertinoIcons.doc_on_doc,
+                              label: strings.copyJsonPath,
+                            ),
+                          if (widget.onAdd != null &&
+                              (node.kind == JsonKind.array ||
+                                  node.kind == JsonKind.object))
+                            WorkbenchMenuItem(
+                              value: _NodeAction.add,
+                              icon: CupertinoIcons.plus,
+                              label: node.kind == JsonKind.object
+                                  ? strings.addProperty
+                                  : strings.addArrayItem,
+                            ),
+                          if (widget.onDelete != null && row.steps.isNotEmpty)
+                            WorkbenchMenuItem(
+                              value: _NodeAction.delete,
+                              icon: CupertinoIcons.trash,
+                              label: strings.deleteNode,
+                            ),
                           WorkbenchMenuItem(
                             value: _NodeAction.replace,
                             icon: CupertinoIcons.arrow_left_right,

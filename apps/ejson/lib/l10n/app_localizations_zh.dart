@@ -9,6 +9,99 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get compareDocuments => '对比 JSON 文档';
+
+  @override
+  String get comparisonBefore => '对比前';
+
+  @override
+  String get comparisonAfter => '对比后';
+
+  @override
+  String get comparisonSwap => '交换对比两侧';
+
+  @override
+  String get comparisonEmpty => '两份文档的结构一致。';
+
+  @override
+  String get comparisonLimit => '显示前 1,000 条差异。';
+
+  @override
+  String get comparisonFailed => '无法比较这两份文档。';
+
+  @override
+  String get comparisonAdded => '新增';
+
+  @override
+  String get comparisonRemoved => '删除';
+
+  @override
+  String get comparisonChanged => '修改';
+
+  @override
+  String get comparisonMissing => '无对应节点';
+
+  @override
+  String get goToJsonPath => '跳转到 JSONPath';
+
+  @override
+  String get goToNode => '跳转';
+
+  @override
+  String get invalidJsonPath => '请输入单节点路径，例如 \$.items[0]。';
+
+  @override
+  String get missingJsonPath => '文档中不存在此路径。';
+
+  @override
+  String get ambiguousJsonPath => '此路径匹配到重复键。';
+
+  @override
+  String get findInDocument => '在文档中查找';
+
+  @override
+  String get searchSource => '源码文本';
+
+  @override
+  String get searchKeys => '键名';
+
+  @override
+  String get searchValues => '值';
+
+  @override
+  String get noMatches => '没有匹配项';
+
+  @override
+  String get previousMatch => '上一个匹配项';
+
+  @override
+  String get nextMatch => '下一个匹配项';
+
+  @override
+  String get closeFind => '关闭查找';
+
+  @override
+  String get findNeedsValidJson => '按键名或值查找需要有效的 JSON。';
+
+  @override
+  String get addProperty => '新增属性';
+
+  @override
+  String get addArrayItem => '新增数组项';
+
+  @override
+  String get propertyName => '属性名称';
+
+  @override
+  String get deleteNode => '删除节点';
+
+  @override
+  String get copyJsonPath => '复制 JSONPath';
+
+  @override
+  String get jsonPathCopied => '已复制 JSONPath';
+
+  @override
   String get open => '打开';
 
   @override

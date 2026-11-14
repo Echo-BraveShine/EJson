@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:ui' show AppExitResponse;
 
 import 'package:ejson_core/ejson_core.dart';
@@ -13,12 +15,14 @@ import 'package:window_manager/window_manager.dart';
 
 import '../design/workbench_style.dart';
 import '../editor/code_editor.dart';
+import '../editor/document_find.dart';
 import '../editor/json_highlight.dart';
 import '../editor/tree_panel.dart';
 import '../editor/tree_style.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/workspace_messages.dart';
 import '../settings/settings_panel.dart';
+import 'compare_documents.dart';
 import 'local_files.dart';
 import 'workspace.dart';
 import 'workspace_session.dart';
@@ -29,6 +33,20 @@ final workspaceDraftDirectoryProvider = Provider<Future<Directory> Function()>(
     return Directory.fromUri(support.uri.resolve('Drafts/'));
   },
 );
+
+final formatTreeAdditionProvider =
+    Provider<
+      Future<({SourcePatch? patch, JsonDiagnostic? error})> Function(
+        String,
+        JsonNode,
+        String,
+      )
+    >(
+      (ref) =>
+          (source, parent, entry) => Isolate.run(
+            () => appendFormattedJsonChild(source, parent, entry),
+          ),
+    );
 
 final workspaceAtomicWriterProvider =
     Provider<Future<void> Function(String, Uint8List)?>(
@@ -91,6 +109,9 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
   late final AppLifecycleListener? _lifecycle;
   ({SourceRange range, int sequence, int tabId, int revision})? _jump;
   int _jumpSequence = 0;
+  bool _findOpen = false;
+  bool _searchJump = false;
+  final _findFocus = FocusNode();
   double _split = 0.61;
 
   WorkspaceController get controller => ref.read(workspaceProvider.notifier);
@@ -131,9 +152,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
     final dark = Theme.of(context).brightness == Brightness.dark;
     if (dark == _nativeDark) return;
     _nativeDark = dark;
-    if (Platform.isLinux) {
-      unawaited(windowManager.setIcon(_logoAsset(dark)));
-    } else if (Platform.isMacOS || Platform.isWindows) {
+    if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
       unawaited(
         _appearanceChannel.invokeMethod<void>('setDarkAppearance', dark),
       );
@@ -147,6 +166,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
   void dispose() {
     if (widget.manageWindow) windowManager.removeListener(this);
     _lifecycle?.dispose();
+    _findFocus.dispose();
     super.dispose();
   }
 
@@ -431,14 +451,91 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
     }
   }
 
-  void _reveal(SourceRange range) => setState(
-    () => _jump = (
+  void _reveal(SourceRange range, {bool search = false}) => setState(() {
+    _searchJump = search;
+    _jump = (
       range: range,
       sequence: ++_jumpSequence,
       tabId: workspace.activeId,
       revision: workspace.active.document.revision,
-    ),
-  );
+    );
+  });
+
+  Future<void> _openComparison() async {
+    final model = workspace;
+    final tabs = model.tabs
+        .where((tab) => !tab.large && tab.document.isValid)
+        .toList();
+    if (tabs.length < 2) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => CompareDocuments(
+        tabs: tabs,
+        activeId: model.activeId,
+        highlight: widget.highlight,
+      ),
+    );
+  }
+
+  Future<void> _goToPath(WorkspaceTab tab) async {
+    final range = await showDialog<SourceRange>(
+      context: context,
+      builder: (_) => _PathDialog(root: tab.document.snapshot!.root!),
+    );
+    if (!mounted || range == null) return;
+    final active = workspace.active;
+    if (active.id != tab.id ||
+        active.document.revision != tab.document.revision) {
+      _message(strings.staleNode);
+      return;
+    }
+    _reveal(range, search: true);
+  }
+
+  void _openFind() {
+    setState(() => _findOpen = true);
+    _findFocus.requestFocus();
+  }
+
+  void _closeFind() => setState(() {
+    _findOpen = false;
+    if (_searchJump) _jump = null;
+  });
+
+  Future<void> _copyPath(String path) async {
+    await Clipboard.setData(ClipboardData(text: path));
+    if (mounted) _message(strings.jsonPathCopied);
+  }
+
+  void _applyTreePatch(WorkspaceTab tab, SourcePatch patch) {
+    if (!controller.editNode(tab.id, tab.document.revision, patch)) {
+      _message(strings.staleNode);
+    }
+  }
+
+  Future<void> _addChild(WorkspaceTab tab, JsonNode parent) async {
+    final entry = await showDialog<String>(
+      context: context,
+      builder: (_) => _NodeEditor(
+        value: 'null',
+        keyName: false,
+        addTo: parent.kind,
+        highlight: widget.highlight,
+      ),
+    );
+    if (entry == null || !mounted) return;
+    final result = await ref.read(formatTreeAdditionProvider)(
+      tab.text,
+      parent,
+      entry,
+    );
+    if (!mounted) return;
+    if (result.patch case final patch?) {
+      _applyTreePatch(tab, patch);
+    } else {
+      _message(strings.diagnosticMessage(result.error!));
+    }
+  }
 
   Future<void> _editNode(WorkspaceTab tab, SourceRange range, bool key) async {
     final document = tab.document;
@@ -451,13 +548,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
       ),
     );
     if (replacement == null || !mounted) return;
-    if (!controller.editNode(
-      tab.id,
-      document.revision,
-      SourcePatch(range, replacement),
-    )) {
-      _message(strings.staleNode);
-    }
+    _applyTreePatch(tab, SourcePatch(range, replacement));
   }
 
   Widget _tool(String label, IconData icon, VoidCallback? action) => IconButton(
@@ -551,6 +642,25 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
             enabled: _glass,
             child: Row(
               children: [
+                _tool(
+                  strings.compareDocuments,
+                  CupertinoIcons.square_split_2x1,
+                  workspace.tabs
+                              .where(
+                                (item) => !item.large && item.document.isValid,
+                              )
+                              .take(2)
+                              .length ==
+                          2
+                      ? _openComparison
+                      : null,
+                ),
+                _tool(
+                  strings.goToJsonPath,
+                  CupertinoIcons.location,
+                  valid ? () => _goToPath(tab) : null,
+                ),
+                _tool(strings.findInDocument, CupertinoIcons.search, _openFind),
                 _tool(
                   strings.undo,
                   CupertinoIcons.arrow_uturn_left,
@@ -700,6 +810,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
                 jump: _jump?.tabId == tab.id && _jump?.revision == doc.revision
                     ? (range: _jump!.range, sequence: _jump!.sequence)
                     : null,
+                focusOnJump: !_searchJump,
                 readOnly: tab.large,
               ),
             ),
@@ -733,6 +844,16 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
                       source: doc.lastValidSource!.text,
                       current: valid,
                       onReveal: _reveal,
+                      reveal:
+                          _searchJump &&
+                              _jump?.tabId == tab.id &&
+                              _jump?.revision == doc.revision
+                          ? (range: _jump!.range, sequence: _jump!.sequence)
+                          : null,
+                      onAdd: (node) => _addChild(tab, node),
+                      onDelete: (parent, index) =>
+                          _applyTreePatch(tab, removeJsonChild(parent, index)),
+                      onCopyPath: _copyPath,
                       onEdit: (range, key) => _editNode(tab, range, key),
                     ),
             ),
@@ -828,6 +949,9 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
 
     return CallbackShortcuts(
       bindings: {
+        shortcut(LogicalKeyboardKey.keyF): _openFind,
+        if (_findOpen)
+          const SingleActivator(LogicalKeyboardKey.escape): _closeFind,
         shortcut(LogicalKeyboardKey.keyN): controller.newTab,
         shortcut(LogicalKeyboardKey.keyO): _open,
         shortcut(LogicalKeyboardKey.keyS): () => _save(tab.id),
@@ -853,6 +977,15 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
                 const Divider(height: 1),
                 Material(color: colors.surfaceContainer, child: _tabs(model)),
                 const Divider(height: 1),
+                if (_findOpen)
+                  DocumentFind(
+                    key: ValueKey(tab.id),
+                    document: doc,
+                    enabled: !tab.large,
+                    focusNode: _findFocus,
+                    onMatch: (range) => _reveal(range, search: true),
+                    onClose: _closeFind,
+                  ),
                 Expanded(child: _panes(tab, valid)),
                 const Divider(height: 1),
                 _statusBar(tab, status, diagnostic, valid),
@@ -968,14 +1101,89 @@ class _EmptyTree extends StatelessWidget {
   }
 }
 
+class _PathDialog extends StatefulWidget {
+  const _PathDialog({required this.root});
+
+  final JsonNode root;
+
+  @override
+  State<_PathDialog> createState() => _PathDialogState();
+}
+
+class _PathDialogState extends State<_PathDialog> {
+  final _path = TextEditingController();
+  JsonPathStatus? _error;
+
+  @override
+  void dispose() {
+    _path.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final result = resolveJsonPath(widget.root, _path.text);
+    if (result.status == JsonPathStatus.found) {
+      Navigator.pop(context, result.range);
+    } else {
+      setState(() => _error = result.status);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    return WorkbenchDialog(
+      title: strings.goToJsonPath,
+      content: SizedBox(
+        width: 400,
+        child: TextField(
+          autofocus: true,
+          controller: _path,
+          onChanged: (_) {
+            if (_error != null) setState(() => _error = null);
+          },
+          onSubmitted: (_) => _submit(),
+          style: WorkbenchStyle.code(Theme.of(context).platform),
+          decoration: InputDecoration(
+            hintText: r'$["items"][0]',
+            errorText: switch (_error) {
+              JsonPathStatus.invalid => strings.invalidJsonPath,
+              JsonPathStatus.missing => strings.missingJsonPath,
+              JsonPathStatus.ambiguous => strings.ambiguousJsonPath,
+              _ => null,
+            },
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          style: workbenchDialogButtonStyle(context),
+          onPressed: () => Navigator.pop(context),
+          child: Text(strings.cancel),
+        ),
+        FilledButton(
+          style: workbenchDialogButtonStyle(
+            context,
+            role: DialogButtonRole.primary,
+          ),
+          onPressed: _submit,
+          child: Text(strings.goToNode),
+        ),
+      ],
+    );
+  }
+}
+
 class _NodeEditor extends StatefulWidget {
   const _NodeEditor({
     required this.value,
     required this.keyName,
     required this.highlight,
+    this.addTo,
   });
   final String value;
   final bool keyName;
+  final JsonKind? addTo;
   final JsonHighlight highlight;
 
   @override
@@ -988,6 +1196,7 @@ class _NodeEditorState extends State<_NodeEditor> {
   late final TextEditingController? _keyText = widget.keyName
       ? TextEditingController(text: widget.value)
       : null;
+  final _property = TextEditingController();
   JsonDiagnostic? _error;
   bool _requiresString = false;
 
@@ -1009,17 +1218,21 @@ class _NodeEditorState extends State<_NodeEditor> {
       });
       return;
     }
+    final value = !widget.keyName && text == _initialValue
+        ? widget.value
+        : text.substring(node.range.start, node.range.end);
     Navigator.pop(
       context,
-      !widget.keyName && text == _initialValue
-          ? widget.value
-          : text.substring(node.range.start, node.range.end),
+      widget.addTo == JsonKind.object
+          ? '${jsonEncode(_property.text)}: $value'
+          : value,
     );
   }
 
   @override
   void dispose() {
     _keyText?.dispose();
+    _property.dispose();
     super.dispose();
   }
 
@@ -1033,7 +1246,11 @@ class _NodeEditorState extends State<_NodeEditor> {
         ? null
         : strings.diagnosticMessage(_error!);
     return WorkbenchDialog(
-      title: widget.keyName ? strings.renameKey : strings.replaceJsonValue,
+      title: switch (widget.addTo) {
+        JsonKind.object => strings.addProperty,
+        JsonKind.array => strings.addArrayItem,
+        _ => widget.keyName ? strings.renameKey : strings.replaceJsonValue,
+      },
       content: SizedBox(
         width: 480,
         child: widget.keyName
@@ -1048,6 +1265,16 @@ class _NodeEditorState extends State<_NodeEditor> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (widget.addTo == JsonKind.object) ...[
+                    TextField(
+                      controller: _property,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: strings.propertyName,
+                      ),
+                    ),
+                    const SizedBox(height: WorkbenchStyle.space12),
+                  ],
                   Material(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(
@@ -1094,9 +1321,17 @@ class _NodeEditorState extends State<_NodeEditor> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
+          style: workbenchDialogButtonStyle(context),
           child: Text(strings.cancel),
         ),
-        FilledButton(onPressed: _submit, child: Text(strings.apply)),
+        FilledButton(
+          onPressed: _submit,
+          style: workbenchDialogButtonStyle(
+            context,
+            role: DialogButtonRole.primary,
+          ),
+          child: Text(strings.apply),
+        ),
       ],
     );
   }

@@ -8,6 +8,119 @@ JsonDocument document(String source) =>
     JsonDocument(SourceBuffer(source)).accept(parseJson(source));
 
 void main() {
+  test(
+    'JSONPath resolves copied paths and reports malformed or duplicate keys',
+    () {
+      const source = r'{"items":[{"a/b":42}],"dup":1,"dup":2}';
+      final root = parseJson(source).root!;
+      final match = resolveJsonPath(root, r'$.items[0]["a/b"]');
+      expect(match.status, JsonPathStatus.found);
+      expect(source.substring(match.range!.start, match.range!.end), '42');
+      expect(resolveJsonPath(root, r'$.dup').status, JsonPathStatus.ambiguous);
+      expect(
+        resolveJsonPath(root, r'$.items[5]').status,
+        JsonPathStatus.missing,
+      );
+      expect(
+        resolveJsonPath(root, r'$.missing[*]').status,
+        JsonPathStatus.invalid,
+      );
+    },
+  );
+
+  test(
+    'structure comparison ignores key order and keeps duplicate occurrences',
+    () {
+      const a = r'{"b":[1,2],"s":"a","dup":1,"dup":2,"gone":true}';
+      const b = r'{"s":"\u0061","dup":1,"dup":3,"b":[2,1],"new":null}';
+      JsonComparison compare({int limit = 1000}) => compareJsonStructure(
+        a,
+        parseJson(a).root!,
+        b,
+        parseJson(b).root!,
+        limit: limit,
+      );
+      final result = compare();
+      expect(result.differences.map((diff) => diff.path), [
+        r'$["b"][0]',
+        r'$["b"][1]',
+        r'$["dup"]',
+        r'$["gone"]',
+        r'$["new"]',
+      ]);
+      expect(result.differences[2].duplicateOccurrences, [2]);
+      expect(result.differences[3].right, isNull);
+      expect(result.differences[4].left, isNull);
+      expect(compare(limit: 2).truncated, isTrue);
+    },
+  );
+
+  test(
+    'tree patches preserve unrelated tokens and remove the correct comma',
+    () {
+      const source = '{ "dup": 1e+2, "dup": "\\u0061", "list": [1, 2, 3] }';
+      final root = parseJson(source).root!;
+      final list = root.children.last.value;
+      expect(
+        appendJsonChild(source, list, '4').apply(source),
+        source.replaceFirst('[1, 2, 3]', '[1, 2, 3, 4]'),
+      );
+      for (final (index, expected) in [
+        (0, '[2, 3]'),
+        (1, '[1, 3]'),
+        (2, '[1, 2]'),
+      ]) {
+        expect(
+          removeJsonChild(list, index).apply(source),
+          source.replaceFirst('[1, 2, 3]', expected),
+        );
+      }
+      const empty = '{"list": []}';
+      expect(
+        appendJsonChild(
+          empty,
+          parseJson(empty).root!.children.single.value,
+          'null',
+        ).apply(empty),
+        '{"list": [null]}',
+      );
+      expect(removeJsonChild(parseJson('[0]').root!, 0).apply('[0]'), '[]');
+    },
+  );
+
+  test('formatting tree additions preserves raw tokens and line endings', () {
+    const source = '{"dup":1e+2,"dup":"\\u0061","list":[]}\r\n';
+    final list = parseJson(source).root!.children.last.value;
+    final result = appendFormattedJsonChild(source, list, '{\n"k":2\n}');
+    expect(result.error, isNull);
+    final patch = result.patch!;
+    final updated = patch.apply(source);
+    expect(
+      updated,
+      [
+        '{',
+        '  "dup": 1e+2,',
+        r'  "dup": "\u0061",',
+        '  "list": [',
+        '    {',
+        '      "k": 2',
+        '    }',
+        '  ]',
+        '}',
+        '',
+      ].join('\r\n'),
+    );
+    expect(patch.inverse(source).apply(updated), source);
+
+    final tooDeep = appendFormattedJsonChild(
+      source,
+      list,
+      '${'[' * 256}0${']' * 256}',
+    );
+    expect(tooDeep.patch, isNull);
+    expect(tooDeep.error?.code, 'depth_limit');
+  });
+
   test('accepts all JSON root types and strict whitespace', () {
     for (final source in [
       ' {} ',

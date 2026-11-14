@@ -245,11 +245,13 @@ class WorkbenchDialog extends StatelessWidget {
     required this.title,
     required this.content,
     required this.actions,
+    this.scrollable = true,
   });
 
   final String title;
   final Widget content;
   final List<Widget> actions;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) => AlertDialog(
@@ -267,7 +269,7 @@ class WorkbenchDialog extends StatelessWidget {
       WorkbenchStyle.space20,
       WorkbenchStyle.space16,
     ),
-    scrollable: true,
+    scrollable: scrollable,
     actions: actions,
   );
 }

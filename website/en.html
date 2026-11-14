@@ -76,8 +76,8 @@
       <div class="platforms">
         <article>
           <h3>macOS</h3>
-          <p class="package">Universal ZIP</p>
-          <p>Unzip and move EJson.app to Applications. Supports Apple Silicon and Intel.</p>
+          <p class="package">Apple silicon / Intel DMG</p>
+          <p>Choose arm64 for Apple silicon or x86_64 for Intel. Open the DMG and drag EJson into Applications. A universal ZIP is also available.</p>
           <details class="brew-install">
             <summary>Install with Homebrew</summary>
             <pre><code>brew tap echo-braveshine/ejson https://github.com/Echo-BraveShine/EJson.git
@@ -86,15 +86,15 @@ brew install --cask echo-braveshine/ejson/ejson</code></pre>
         </article>
         <article>
           <h3>Windows</h3>
-          <p class="package">x64 Setup.exe</p>
-          <p>Run the installer and open EJson from the Start menu. A portable ZIP is also available.</p>
+          <p class="package">x64 Setup.exe / MSI</p>
+          <p>Use Setup.exe for a per-user install or MSI for a machine-wide install. A portable ZIP is also available.</p>
           <p>The release page also provides a local WinGet manifest.</p>
         </article>
         <article>
           <h3>Linux</h3>
-          <p class="package">x64 TAR.GZ</p>
-          <p>Extract the archive and run ./ejson. Requires GTK 3.</p>
-          <p>Ubuntu 24.04+ and Debian 13+ can install the .deb from the release page with apt.</p>
+          <p class="package">x86_64 / ARM64 AppImage</p>
+          <p>Make it executable and open it without administrator permissions. Requires glibc 2.39+, GTK 3, and OpenGL.</p>
+          <p>DEB packages are available for Ubuntu 24.04+ and Debian 13+, and RPM packages for Fedora and compatible systems.</p>
         </article>
       </div>
     </section>

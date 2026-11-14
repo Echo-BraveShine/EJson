@@ -1,5 +1,7 @@
 #include "flutter_window.h"
 
+#include <dwmapi.h>
+
 #include <optional>
 #include <variant>
 
@@ -44,9 +46,19 @@ bool FlutterWindow::OnCreate() {
         const bool* dark = call.arguments()
                                ? std::get_if<bool>(call.arguments())
                                : nullptr;
-        if (dark && *dark != dark_appearance_) {
+        if (dark) {
+          const HWND window = GetHandle();
+          const BOOL immersive_dark = *dark;
+          // Explicit caption colors also follow an in-app theme override.
+          const COLORREF caption = *dark ? RGB(43, 43, 45) : RGB(239, 239, 241);
+          const COLORREF text = *dark ? RGB(242, 242, 244) : RGB(37, 37, 39);
+          DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                                &immersive_dark, sizeof(immersive_dark));
+          DwmSetWindowAttribute(window, DWMWA_CAPTION_COLOR, &caption,
+                                sizeof(caption));
+          DwmSetWindowAttribute(window, DWMWA_TEXT_COLOR, &text, sizeof(text));
           dark_appearance_ = *dark;
-          UpdateWindowIcons(GetHandle(), GetDpiForWindow(GetHandle()));
+          UpdateWindowIcons(window, GetDpiForWindow(window));
         }
         result->Success();
       });
@@ -79,6 +91,9 @@ void FlutterWindow::UpdateWindowIcons(HWND window, UINT dpi) {
   };
   update(ICON_SMALL, SM_CXSMICON, SM_CYSMICON, small_icon_);
   update(ICON_BIG, SM_CXICON, SM_CYICON, large_icon_);
+  if (const HICON shell_icon = LoadIcon(instance, MAKEINTRESOURCE(resource))) {
+    SetClassLongPtr(window, GCLP_HICON, reinterpret_cast<LONG_PTR>(shell_icon));
+  }
 }
 
 void FlutterWindow::OnDestroy() {
