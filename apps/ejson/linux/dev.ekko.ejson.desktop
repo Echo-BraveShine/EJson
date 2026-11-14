@@ -1,7 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=EJson
-Exec=ejson
+Exec=ejson %F
 Icon=dev.ekko.ejson
 Categories=Development;
 Terminal=false
+MimeType=application/json;

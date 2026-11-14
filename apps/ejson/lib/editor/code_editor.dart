@@ -2,9 +2,19 @@ import 'package:ejson_core/ejson_core.dart';
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/languages/json.dart';
+import 'package:re_highlight/languages/yaml.dart';
+import 'package:re_highlight/re_highlight.dart';
 
-import '../design/workbench_style.dart';
+import '../design/reading_style.dart';
 import 'json_highlight.dart';
+
+final _csvMode = Mode(
+  name: 'CSV',
+  contains: [
+    Mode(scope: 'string', match: r'"(?:[^"]|"")*"'),
+    Mode(scope: 'punctuation', match: r'[,;\t]'),
+  ],
+);
 
 class EJsonCodeEditor extends StatefulWidget {
   const EJsonCodeEditor({
@@ -16,11 +26,13 @@ class EJsonCodeEditor extends StatefulWidget {
     this.focusOnJump = true,
     this.highlight = JsonHighlight.atomOne,
     this.useWorkspaceShortcuts = true,
+    this.format = DocumentFormat.json,
   });
 
   final String source;
   final ValueChanged<String> onChanged;
   final bool readOnly;
+  final DocumentFormat format;
   final JsonHighlight highlight;
   final bool useWorkspaceShortcuts;
   final bool focusOnJump;
@@ -146,7 +158,8 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final code = WorkbenchStyle.code(theme.platform);
+    final reading = ReadingStyle.of(context);
+    final code = reading.text.copyWith(fontSize: reading.scaledFontSize);
     final highlight = widget.highlight.colors(theme.brightness);
     return CodeEditor(
       controller: _controller,
@@ -162,6 +175,8 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         backgroundColor: colors.surface,
         textColor: colors.onSurface,
         fontFamily: code.fontFamily,
+        fontFamilyFallback: code.fontFamilyFallback,
+        fontHeight: code.height,
         cursorColor: colors.primary,
         selectionColor: colors.primary.withValues(alpha: .25),
         cursorLineColor: colors.primary.withValues(alpha: .055),
@@ -169,7 +184,15 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         codeTheme: highlight == null
             ? null
             : CodeHighlightTheme(
-                languages: {'json': CodeHighlightThemeMode(mode: langJson)},
+                languages: {
+                  widget.format.name: CodeHighlightThemeMode(
+                    mode: switch (widget.format) {
+                      DocumentFormat.json => langJson,
+                      DocumentFormat.yaml => langYaml,
+                      DocumentFormat.csv => _csvMode,
+                    },
+                  ),
+                },
                 theme: highlight,
               ),
       ),

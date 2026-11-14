@@ -204,5 +204,215 @@
         "type": "String"
       }
     }
-  }
+  },
+  "replaceText": "Replace with",
+  "replaceCurrent": "Replace current",
+  "replaceAll": "Replace all",
+  "matchCase": "Match case",
+  "useRegex": "Regular expression",
+  "invalidRegex": "Invalid regular expression",
+  "escapeJson": "Escape as JSON string",
+  "unescapeJson": "Unescape JSON string",
+  "unescapeFailed": "Enter a valid, double-quoted JSON string.",
+  "extractSubtree": "Extract to new tab",
+  "arrayTable": "Array table",
+  "copyNodeValue": "Copy JSON value",
+  "copyDecodedString": "Copy string contents",
+  "valueCopied": "Node value copied",
+  "filterRows": "Filter rows",
+  "emptyArray": "The array is empty",
+  "exportCsv": "Export CSV",
+  "csvExported": "CSV exported",
+  "exportFailed": "Export failed",
+  "tableInstructions": "Click a column header to sort, or a cell to copy its contents. Export uses the current filter and sort order.",
+  "tableRowCount": "{visible} / {total} rows",
+  "nodeCount": "{count} nodes",
+  "documentBytes": "{bytes} bytes",
+  "documentStatistics": "{bytes} bytes · {nodes} nodes · Maximum depth {depth} (root is 0) · Longest array {arrayLength} items",
+  "@tableRowCount": {
+    "placeholders": {
+      "visible": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@nodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@documentBytes": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "@documentStatistics": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "nodes": {
+        "type": "int"
+      },
+      "depth": {
+        "type": "int"
+      },
+      "arrayLength": {
+        "type": "int"
+      }
+    }
+  },
+  "jsonQuery": "JSONPath query",
+  "runQuery": "Run query",
+  "queryRunning": "Running query…",
+  "jsonQueryFailed": "The query failed. Try again.",
+  "invalidJsonQuery": "Invalid or unsupported JSONPath syntax near character {position}.",
+  "jsonQueryHelp": "Supports fields, array indices, * wildcards and [?condition] filters. Conditions support @ paths, existence, scalar comparisons, &&, || and !. Click a result to reveal its source.",
+  "queryResultCount": "{count} results",
+  "extractQueryResults": "Extract results to new tab",
+  "goToSource": "Reveal in source",
+  "captureReplacementHelp": "$1 and $2 insert capture groups. $$ inserts a dollar sign.",
+  "@invalidJsonQuery": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "@queryResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "formatIndentation": "Format indentation",
+  "indentTwo": "2 spaces",
+  "indentFour": "4 spaces",
+  "indentEight": "8 spaces",
+  "indentTabs": "Tabs",
+  "lineEnding": "Line endings",
+  "preserveLineEnding": "Preserve existing",
+  "toolPreferenceFailed": "Could not save preferences. Try again.",
+  "saveQuery": "Save query",
+  "unsaveQuery": "Unsave query",
+  "savedQueries": "Saved queries",
+  "noSavedQueries": "No saved queries",
+  "moveArrayItemUp": "Move array item up",
+  "moveArrayItemDown": "Move array item down",
+  "duplicateArrayItem": "Duplicate array item",
+  "sortArray": "Sort array",
+  "sortField": "Sort by",
+  "sortValue": "Element value",
+  "sortAscending": "Ascending",
+  "sortDescending": "Descending",
+  "sortArrayHelp": "Items with missing fields stay last. Equal values retain their order.",
+  "sortArrayAmbiguous": "The sort field has duplicate keys. Choose another field.",
+  "readingDisplay": "Reading display",
+  "readingFont": "Reading font",
+  "fontSize": "Font size",
+  "decreaseFontSize": "Decrease font size",
+  "increaseFontSize": "Increase font size",
+  "lineSpacing": "Line spacing",
+  "spacingCompact": "Compact",
+  "spacingStandard": "Standard",
+  "spacingSpacious": "Spacious",
+  "readingPreview": "Preview",
+  "resetReading": "Reset to defaults",
+  "defaultReadingFont": "Default monospace font",
+  "searchFonts": "Search installed fonts",
+  "refreshFonts": "Refresh fonts",
+  "monospaceFont": "Monospace",
+  "fontListFailed": "Could not load fonts. Retry.",
+  "noMatchingFonts": "No matching fonts",
+  "fontUnavailable": "The font “{name}” is unavailable. Using the default font.",
+  "@fontUnavailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recentFiles": "Recent files",
+  "searchRecentFiles": "Search file names or paths",
+  "noRecentFiles": "No recent files",
+  "removeRecentFile": "Remove from recent files",
+  "clearRecentFiles": "Clear recent files",
+  "recentSaveFailed": "The file was opened or saved, but recent files could not be recorded.",
+  "commandPalette": "Command palette",
+  "searchCommands": "Search commands…",
+  "noMatchingCommands": "No matching commands",
+  "commandKeyboardHelp": "↑↓ Select  ·  Enter Run  ·  Esc Close",
+  "dropFilesToOpen": "Drop files to open",
+  "noDroppedFiles": "The drop contains no local files to open.",
+  "droppedCopyOpened": "The dropped temporary copy was opened as a new document.",
+  "someFilesFailed": "Some files could not be opened",
+  "settingsGeneral": "General",
+  "settingsFormatting": "Formatting",
+  "website": "Website",
+  "schemaValidation": "JSON Schema validation",
+  "schemaHelp": "Paste or load a local schema. Select an issue to reveal its node. Internal references are supported.",
+  "loadSchema": "Load schema",
+  "validateSchema": "Validate",
+  "schemaChecking": "Working…",
+  "schemaFailed": "Validation failed",
+  "schemaValid": "Matches schema",
+  "redactData": "Redact data",
+  "redactHelp": "Separate case-insensitive field names with commas or newlines. Matching values become the replacement string. Enter one JSONPath per line, with wildcards supported.",
+  "redactKeys": "Field names",
+  "redactPaths": "JSONPath (optional)",
+  "redactReplacement": "Replacement string",
+  "openRedactedCopy": "Open redacted copy",
+  "saveRedactedCopy": "Save redacted copy",
+  "documentTools": "Document tools",
+  "schemaIssues": "{count} validation issues",
+  "@schemaIssues": {"placeholders": {"count": {"type": "int"}}},
+  "redactCount": "{count} values replaced",
+  "@redactCount": {"placeholders": {"count": {"type": "int"}}},
+  "comparisonSelectAll": "Select or clear all displayed differences",
+  "comparisonSelected": "{count} selected",
+  "comparisonPreviewChanges": "Preview changes to left",
+  "comparisonApplyChanges": "Apply changes",
+  "comparisonApplyPreview": "Preview applying differences",
+  "comparisonApplyTarget": "Target document · {name}",
+  "comparisonApplyDirection": "Right → Left · Swap sides to apply in reverse",
+  "comparisonStale": "Documents changed. Compare again.",
+  "comparisonRefresh": "Compare again",
+  "comparisonApplyFailed": "Could not prepare changes. Compare again and retry.",
+  "@comparisonSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@comparisonApplyTarget": {"placeholders": {"name": {"type": "String"}}},
+  "formatConversion": "Format conversion",
+  "conversionDirection": "Conversion direction",
+  "conversionInput": "Input",
+  "conversionDocument": "YAML document (starting at 1)",
+  "conversionDocumentError": "Enter a document number starting at 1.",
+  "conversionYamlNotice": "Data and exact numbers are retained in JSON. YAML comments are removed, and anchors, aliases and merge keys are expanded. Unsupported types produce an error.",
+  "conversionCsvNotice": "CSV accepts an object or an array. Object fields become columns and other array items use the $ value column. Values become text and nested structures become JSON strings. Missing fields and empty strings produce empty cells, while null becomes null. Preview to choose and reorder columns.",
+  "conversionDelimiter": "Delimiter",
+  "conversionComma": "Comma",
+  "conversionSemicolon": "Semicolon",
+  "conversionHeader": "Include header",
+  "conversionFlatten": "Flatten nested structures into JSONPath columns",
+  "conversionColumns": "Columns and order",
+  "conversionCancel": "Cancel conversion",
+  "conversionRun": "Convert and preview",
+  "conversionCopy": "Copy result",
+  "conversionCopied": "Conversion result copied",
+  "conversionOpen": "Open in new tab",
+  "conversionExport": "Export file",
+  "contentValid": "Valid {format}",
+  "conversionDocuments": "{count} YAML documents",
+  "@contentValid": {"placeholders": {"format": {"type": "String"}}},
+  "@conversionDocuments": {"placeholders": {"count": {"type": "int"}}},
+  "conversionColumnUp": "Move column up",
+  "conversionColumnDown": "Move column down",
+  "showReplace": "Show replace",
+  "hideReplace": "Hide replace"
 }

@@ -22,6 +22,18 @@
           <Shortcut Id="EJsonStartMenu" Directory="ProgramMenuFolder" Name="EJson"
                     WorkingDirectory="INSTALLFOLDER" Advertise="yes" />
         </File>
+        <RegistryKey Root="HKLM" Key="Software\Classes\.json\OpenWithProgids">
+          <RegistryValue Name="EJson.Json" Type="string" Value="" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="Software\Classes\EJson.Json">
+          <RegistryValue Type="string" Value="JSON document" />
+          <RegistryKey Key="DefaultIcon">
+            <RegistryValue Type="string" Value="&quot;[#EJsonExe]&quot;,0" />
+          </RegistryKey>
+          <RegistryKey Key="shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[#EJsonExe]&quot; &quot;%1&quot;" />
+          </RegistryKey>
+        </RegistryKey>
       </Component>
     </Feature>
   </Package>

@@ -58,6 +58,33 @@ static void appearance_call(FlMethodChannel*, FlMethodCall* call,
   fl_method_call_respond(call, response, nullptr);
 }
 
+static void fonts_call(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
+  if (std::strcmp(fl_method_call_get_name(call), "list") != 0) {
+    g_autoptr(FlMethodResponse) response =
+        FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+    fl_method_call_respond(call, response, nullptr);
+    return;
+  }
+  auto* context = gtk_widget_get_pango_context(GTK_WIDGET(user_data));
+  PangoFontFamily** families = nullptr;
+  int count = 0;
+  pango_font_map_list_families(pango_context_get_font_map(context), &families, &count);
+  g_autoptr(FlValue) result = fl_value_new_list();
+  for (int index = 0; index < count; ++index) {
+    const gchar* family = pango_font_family_get_name(families[index]);
+    FlValue* entry = fl_value_new_map();
+    fl_value_set_string_take(entry, "family", fl_value_new_string(family));
+    fl_value_set_string_take(entry, "name", fl_value_new_string(family));
+    fl_value_set_string_take(entry, "monospace",
+        fl_value_new_bool(pango_font_family_is_monospace(families[index])));
+    fl_value_append_take(result, entry);
+  }
+  g_free(families);
+  g_autoptr(FlMethodResponse) response =
+      FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  fl_method_call_respond(call, response, nullptr);
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
@@ -106,6 +133,12 @@ static void my_application_activate(GApplication* application) {
                          g_object_unref);
   fl_method_channel_set_method_call_handler(channel, appearance_call, view,
                                             nullptr);
+  FlMethodChannel* fonts_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+      "dev.ekko.ejson/fonts", FL_METHOD_CODEC(codec));
+  g_object_set_data_full(G_OBJECT(window), "ejson-fonts-channel", fonts_channel,
+                         g_object_unref);
+  fl_method_channel_set_method_call_handler(fonts_channel, fonts_call, view, nullptr);
   GdkRGBA background_color;
   gdk_rgba_parse(&background_color, "#efeff1");
   fl_view_set_background_color(view, &background_color);

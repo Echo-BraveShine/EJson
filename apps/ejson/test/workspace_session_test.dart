@@ -64,6 +64,28 @@ void main() {
   WorkspaceTab tab(int id, LocalJsonFile? file, String source) =>
       WorkspaceTab(id, JsonDocument(SourceBuffer(source)), file: file);
 
+  test(
+    'canonical aliases retain one grant and release the original path',
+    () async {
+      final arguments = <Object?>[];
+      messenger.setMockMethodCallHandler(filesChannel, (call) async {
+        arguments.add(call.arguments);
+        calls.add(call.method);
+        return call.method == 'accessBookmark' ? true : null;
+      });
+      expect(await session.accessFile('/alias', 'grant'), Platform.isMacOS);
+      session.trackAccess('/alias', '/canonical');
+      expect(await session.accessFile('/alias', 'grant'), isFalse);
+      expect(await session.accessFile('/canonical', 'grant'), isFalse);
+      await session.releaseAccess('/canonical');
+      await session.releaseAccess('/canonical');
+      if (Platform.isMacOS) {
+        expect(calls, ['accessBookmark', 'releaseBookmark']);
+        expect(arguments.last, '/alias');
+      }
+    },
+  );
+
   test('restores only open files in order, with fresh disk contents', () async {
     final a = await makeFile('a.json');
     final b = await makeFile('b.json');

@@ -104,3 +104,131 @@ JsonComparison compareJsonStructure(
   visit(leftRoot, rightRoot);
   return (differences: differences, truncated: truncated);
 }
+
+/// Applies the selected right-hand values to the left-hand document in one edit.
+/// Array positions and duplicate-key occurrences refer to the original inputs.
+String applyJsonDifferences(
+  String leftSource,
+  JsonNode leftRoot,
+  String rightSource,
+  JsonNode rightRoot,
+  List<JsonDifference> differences,
+) {
+  final selected = differences.map((d) => (d.left, d.right)).toSet();
+  if (selected.isEmpty) return leftSource;
+  final applied = <(SourceRange?, SourceRange?)>{};
+  String raw(String source, JsonNode node) =>
+      source.substring(node.range.start, node.range.end);
+  int start(JsonChild child) =>
+      child.keyRange?.start ?? child.value.range.start;
+
+  String? visit(JsonNode? left, JsonNode? right) {
+    final pair = (left?.range, right?.range);
+    if (selected.contains(pair)) {
+      applied.add(pair);
+      return right == null ? null : raw(rightSource, right);
+    }
+    if (left == null) return null;
+    if (right == null ||
+        left.kind != right.kind ||
+        left.kind != JsonKind.object && left.kind != JsonKind.array) {
+      return raw(leftSource, left);
+    }
+    final object = left.kind == JsonKind.object;
+    final rightGroups = <String, List<JsonChild>>{};
+    if (object) {
+      for (final child in right.children) {
+        (rightGroups[child.key!] ??= []).add(child);
+      }
+    }
+    final leftCounts = <String, int>{};
+    final entries = <({int? index, String text})>[];
+    for (var i = 0; i < left.children.length; i++) {
+      final child = left.children[i];
+      JsonChild? counterpart;
+      if (object) {
+        final key = child.key!;
+        final occurrence =
+            leftCounts.update(key, (count) => count + 1, ifAbsent: () => 1) - 1;
+        final matches = rightGroups[key] ?? const [];
+        if (occurrence < matches.length) counterpart = matches[occurrence];
+      } else if (i < right.children.length) {
+        counterpart = right.children[i];
+      }
+      final value = visit(child.value, counterpart?.value);
+      if (value != null) {
+        entries.add((
+          index: i,
+          text:
+              '${leftSource.substring(start(child), child.value.range.start)}$value',
+        ));
+      }
+    }
+    final rightCounts = <String, int>{};
+    for (var i = 0; i < right.children.length; i++) {
+      final child = right.children[i];
+      final occurrence = object
+          ? rightCounts.update(
+                  child.key!,
+                  (count) => count + 1,
+                  ifAbsent: () => 1,
+                ) -
+                1
+          : i;
+      final existingCount = object
+          ? leftCounts[child.key!] ?? 0
+          : left.children.length;
+      if (occurrence < existingCount) continue;
+      final value = visit(null, child.value);
+      if (value != null) {
+        entries.add((
+          index: null,
+          text:
+              '${rightSource.substring(start(child), child.value.range.start)}$value',
+        ));
+      }
+    }
+    final children = left.children;
+    final leading = children.isEmpty
+        ? ''
+        : leftSource.substring(left.range.start + 1, start(children.first));
+    final trailing = children.isEmpty
+        ? leftSource.substring(left.range.start + 1, left.range.end - 1)
+        : leftSource.substring(
+            children.last.value.range.end,
+            left.range.end - 1,
+          );
+    final additionSeparator =
+        ',${leading.contains('\n') || leading.contains('\r') ? leading : ' '}';
+    final output = StringBuffer(leftSource[left.range.start])..write(leading);
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+      if (i > 0) {
+        final original = entry.index;
+        output.write(
+          original != null && original > 0
+              ? leftSource.substring(
+                  children[original - 1].value.range.end,
+                  start(children[original]),
+                )
+              : additionSeparator,
+        );
+      }
+      output.write(entry.text);
+    }
+    output
+      ..write(trailing)
+      ..write(leftSource[left.range.end - 1]);
+    return output.toString();
+  }
+
+  final rewritten = visit(leftRoot, rightRoot)!;
+  if (applied.length != selected.length) {
+    throw StateError('The selected differences do not match these documents.');
+  }
+  return leftSource.replaceRange(
+    leftRoot.range.start,
+    leftRoot.range.end,
+    rewritten,
+  );
+}

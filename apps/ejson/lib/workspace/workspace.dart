@@ -5,6 +5,7 @@ import 'package:ejson_core/ejson_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'local_files.dart';
+import '../settings/tool_preferences.dart';
 
 final workspaceProvider = NotifierProvider<WorkspaceController, Workspace>(
   WorkspaceController.new,
@@ -23,6 +24,12 @@ final parseDocumentProvider =
 Future<ParseSnapshot> _parseInBackground(String source, int revision) =>
     Isolate.run(() => parseJson(source, revision: revision));
 
+Future<ParseSnapshot> _parseOtherInBackground(
+  String source,
+  DocumentFormat format,
+  int revision,
+) => Isolate.run(() => parseOtherFormat(source, format, revision: revision));
+
 const maxParsedUnits = 2 * 1024 * 1024;
 
 class WorkspaceTab {
@@ -31,10 +38,15 @@ class WorkspaceTab {
     this.document, {
     this.file,
     this.isDefault = false,
+    this.format = DocumentFormat.json,
+    this.draftBom = false,
   });
   final int id;
   final JsonDocument document;
   final LocalJsonFile? file;
+  final DocumentFormat format;
+  final bool draftBom;
+  bool get bom => file?.bom ?? draftBom;
 
   final bool isDefault;
 
@@ -48,8 +60,14 @@ class WorkspaceTab {
   bool get dirty => text != (file?.source ?? '');
   bool get large => text.length > maxParsedUnits;
 
-  WorkspaceTab withDocument(JsonDocument document) =>
-      WorkspaceTab(id, document, file: file, isDefault: isDefault);
+  WorkspaceTab withDocument(JsonDocument document) => WorkspaceTab(
+    id,
+    document,
+    file: file,
+    isDefault: isDefault,
+    format: format,
+    draftBom: draftBom,
+  );
 }
 
 class Workspace {
@@ -102,17 +120,47 @@ class WorkspaceController extends Notifier<Workspace> {
     String source, {
     LocalJsonFile? file,
     bool isDefault = false,
+    DocumentFormat? format,
+    bool bom = false,
   }) {
     final id = ++_nextId;
     _history[id] = EditHistory();
     var document = JsonDocument(SourceBuffer(source));
-    if (source.isEmpty) document = document.accept(parseJson(source));
-    return WorkspaceTab(id, document, file: file, isDefault: isDefault);
+    final type =
+        format ??
+        (file == null
+            ? DocumentFormat.json
+            : DocumentFormat.fromPath(file.path));
+    if (source.isEmpty) {
+      document = document.accept(
+        type == DocumentFormat.json
+            ? parseJson(source)
+            : parseOtherFormat(source, type),
+      );
+    }
+    return WorkspaceTab(
+      id,
+      document,
+      file: file,
+      isDefault: isDefault,
+      format: type,
+      draftBom: bom,
+    );
   }
 
   void newTab() {
     final tab = _create('');
     state = Workspace([...state.tabs, tab], tab.id);
+  }
+
+  void newTabWithSource(
+    String source, {
+    DocumentFormat format = DocumentFormat.json,
+    bool bom = false,
+  }) {
+    final tab = _create(source, format: format, bom: bom);
+    state = Workspace([...state.tabs, tab], tab.id);
+    _schedule(tab);
   }
 
   void activate(int id) {
@@ -201,7 +249,10 @@ class WorkspaceController extends Notifier<Workspace> {
     final tab = state.tab(id);
     if (tab == null || !tab.document.isValid || tab.large) return;
     final document = tab.document;
-    final text = await Isolate.run(() => rewriteJson(document, minify: minify));
+    final options = ref.read(toolPreferencesProvider).format;
+    final text = await Isolate.run(
+      () => rewriteJson(document, minify: minify, options: options),
+    );
     if (!ref.mounted || state.tab(id)?.document.revision != document.revision) {
       return;
     }
@@ -210,7 +261,9 @@ class WorkspaceController extends Notifier<Workspace> {
 
   void markSaved(int id, LocalJsonFile file) {
     final tab = state.tab(id);
-    if (tab != null) _update(WorkspaceTab(id, tab.document, file: file));
+    if (tab != null) {
+      _update(WorkspaceTab(id, tab.document, file: file, format: tab.format));
+    }
   }
 
   void _schedule(WorkspaceTab tab) {
@@ -229,7 +282,9 @@ class WorkspaceController extends Notifier<Workspace> {
     final source = tab.text;
     final revision = tab.document.revision;
     try {
-      final result = await ref.read(parseDocumentProvider)(source, revision);
+      final result = tab.format == DocumentFormat.json
+          ? await ref.read(parseDocumentProvider)(source, revision)
+          : await _parseOtherInBackground(source, tab.format, revision);
       if (!ref.mounted) return;
       final current = state.tab(id);
       if (current?.document.revision == revision) {

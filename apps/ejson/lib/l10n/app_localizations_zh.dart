@@ -415,4 +415,463 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get browserFailed => '无法打开浏览器。';
+
+  @override
+  String get replaceText => '替换为';
+
+  @override
+  String get replaceCurrent => '替换当前';
+
+  @override
+  String get replaceAll => '全部替换';
+
+  @override
+  String get matchCase => '区分大小写';
+
+  @override
+  String get useRegex => '正则表达式';
+
+  @override
+  String get invalidRegex => '正则表达式无效';
+
+  @override
+  String get escapeJson => '转义为 JSON 字符串';
+
+  @override
+  String get unescapeJson => '反转义 JSON 字符串';
+
+  @override
+  String get unescapeFailed => '请输入带双引号的有效 JSON 字符串。';
+
+  @override
+  String get extractSubtree => '提取到新标签页';
+
+  @override
+  String get arrayTable => '数组表格';
+
+  @override
+  String get copyNodeValue => '复制 JSON 值';
+
+  @override
+  String get copyDecodedString => '复制字符串内容';
+
+  @override
+  String get valueCopied => '已复制节点值';
+
+  @override
+  String get filterRows => '筛选行';
+
+  @override
+  String get emptyArray => '数组为空';
+
+  @override
+  String get exportCsv => '导出 CSV';
+
+  @override
+  String get csvExported => '已导出 CSV';
+
+  @override
+  String get exportFailed => '导出失败';
+
+  @override
+  String get tableInstructions => '点击列标题排序，点击单元格复制内容。导出使用当前筛选和排序结果。';
+
+  @override
+  String tableRowCount(int visible, int total) {
+    return '$visible / $total 行';
+  }
+
+  @override
+  String nodeCount(int count) {
+    return '$count 个节点';
+  }
+
+  @override
+  String documentBytes(int bytes) {
+    return '$bytes 字节';
+  }
+
+  @override
+  String documentStatistics(int bytes, int nodes, int depth, int arrayLength) {
+    return '$bytes 字节 · $nodes 个节点 · 最大深度 $depth（根节点为 0）· 最长数组 $arrayLength 项';
+  }
+
+  @override
+  String get jsonQuery => 'JSONPath 查询';
+
+  @override
+  String get runQuery => '查询';
+
+  @override
+  String get queryRunning => '正在查询…';
+
+  @override
+  String get jsonQueryFailed => '查询失败，请重试。';
+
+  @override
+  String invalidJsonQuery(int position) {
+    return '第 $position 个字符附近的 JSONPath 语法无效或暂不支持。';
+  }
+
+  @override
+  String get jsonQueryHelp =>
+      '支持字段、数组下标、* 通配符和 [?条件]。条件支持 @ 相对路径、存在判断、标量比较、&&、|| 和 !。点击结果定位源码。';
+
+  @override
+  String queryResultCount(int count) {
+    return '$count 条结果';
+  }
+
+  @override
+  String get extractQueryResults => '提取结果到新标签页';
+
+  @override
+  String get goToSource => '定位源码';
+
+  @override
+  String get captureReplacementHelp => '\$1、\$2 引用捕获组，\$\$ 插入美元符号。';
+
+  @override
+  String get formatIndentation => '格式化缩进';
+
+  @override
+  String get indentTwo => '2 个空格';
+
+  @override
+  String get indentFour => '4 个空格';
+
+  @override
+  String get indentEight => '8 个空格';
+
+  @override
+  String get indentTabs => '制表符';
+
+  @override
+  String get lineEnding => '换行符';
+
+  @override
+  String get preserveLineEnding => '保留原样';
+
+  @override
+  String get toolPreferenceFailed => '无法保存设置，请重试。';
+
+  @override
+  String get saveQuery => '收藏查询';
+
+  @override
+  String get unsaveQuery => '取消收藏';
+
+  @override
+  String get savedQueries => '收藏的查询';
+
+  @override
+  String get noSavedQueries => '暂无收藏的查询';
+
+  @override
+  String get moveArrayItemUp => '上移数组项';
+
+  @override
+  String get moveArrayItemDown => '下移数组项';
+
+  @override
+  String get duplicateArrayItem => '复制数组项';
+
+  @override
+  String get sortArray => '排序数组';
+
+  @override
+  String get sortField => '排序依据';
+
+  @override
+  String get sortValue => '元素值';
+
+  @override
+  String get sortAscending => '升序';
+
+  @override
+  String get sortDescending => '降序';
+
+  @override
+  String get sortArrayHelp => '缺失字段的元素排在末尾，相等的值保留原顺序。';
+
+  @override
+  String get sortArrayAmbiguous => '排序字段存在重复键，请选择其他字段。';
+
+  @override
+  String get readingDisplay => '阅读显示';
+
+  @override
+  String get readingFont => '阅读字体';
+
+  @override
+  String get fontSize => '字号';
+
+  @override
+  String get decreaseFontSize => '减小字号';
+
+  @override
+  String get increaseFontSize => '增大字号';
+
+  @override
+  String get lineSpacing => '行距';
+
+  @override
+  String get spacingCompact => '紧凑';
+
+  @override
+  String get spacingStandard => '标准';
+
+  @override
+  String get spacingSpacious => '宽松';
+
+  @override
+  String get readingPreview => '预览';
+
+  @override
+  String get resetReading => '恢复默认';
+
+  @override
+  String get defaultReadingFont => '系统默认等宽字体';
+
+  @override
+  String get searchFonts => '搜索本机字体';
+
+  @override
+  String get refreshFonts => '刷新字体列表';
+
+  @override
+  String get monospaceFont => '等宽字体';
+
+  @override
+  String get fontListFailed => '无法读取字体列表，点击重试。';
+
+  @override
+  String get noMatchingFonts => '没有匹配的字体';
+
+  @override
+  String fontUnavailable(String name) {
+    return '字体「$name」暂不可用，当前使用默认字体。';
+  }
+
+  @override
+  String get recentFiles => '最近文件';
+
+  @override
+  String get searchRecentFiles => '搜索文件名或路径';
+
+  @override
+  String get noRecentFiles => '暂无最近文件';
+
+  @override
+  String get removeRecentFile => '从最近列表移除';
+
+  @override
+  String get clearRecentFiles => '清空最近列表';
+
+  @override
+  String get recentSaveFailed => '文件已打开或保存，但无法记录最近文件。';
+
+  @override
+  String get commandPalette => '命令面板';
+
+  @override
+  String get searchCommands => '搜索命令…';
+
+  @override
+  String get noMatchingCommands => '没有匹配的命令';
+
+  @override
+  String get commandKeyboardHelp => '↑↓ 选择  ·  Enter 执行  ·  Esc 关闭';
+
+  @override
+  String get dropFilesToOpen => '松开以打开文件';
+
+  @override
+  String get noDroppedFiles => '拖入内容中没有可打开的本地文件。';
+
+  @override
+  String get droppedCopyOpened => '已将拖入的临时副本作为新文档打开。';
+
+  @override
+  String get someFilesFailed => '部分文件无法打开';
+
+  @override
+  String get settingsGeneral => '通用';
+
+  @override
+  String get settingsFormatting => '格式化';
+
+  @override
+  String get website => '官方网站';
+
+  @override
+  String get schemaValidation => 'JSON Schema 校验';
+
+  @override
+  String get schemaHelp => '粘贴或载入本地 Schema，点击校验结果定位节点。支持内嵌引用。';
+
+  @override
+  String get loadSchema => '载入 Schema';
+
+  @override
+  String get validateSchema => '校验';
+
+  @override
+  String get schemaChecking => '处理中…';
+
+  @override
+  String get schemaFailed => '校验失败';
+
+  @override
+  String get schemaValid => '符合 Schema';
+
+  @override
+  String get redactData => '数据脱敏';
+
+  @override
+  String get redactHelp =>
+      '字段名不区分大小写，以逗号或换行分隔。匹配值会替换为指定字符串。JSONPath 每行一条，支持通配符。';
+
+  @override
+  String get redactKeys => '字段名';
+
+  @override
+  String get redactPaths => 'JSONPath（可选）';
+
+  @override
+  String get redactReplacement => '替换字符串';
+
+  @override
+  String get openRedactedCopy => '打开脱敏副本';
+
+  @override
+  String get saveRedactedCopy => '保存脱敏副本';
+
+  @override
+  String get documentTools => '文档工具';
+
+  @override
+  String schemaIssues(int count) {
+    return '$count 个校验问题';
+  }
+
+  @override
+  String redactCount(int count) {
+    return '已替换 $count 处';
+  }
+
+  @override
+  String get comparisonSelectAll => '选择或取消全部已显示差异';
+
+  @override
+  String comparisonSelected(int count) {
+    return '已选 $count 项';
+  }
+
+  @override
+  String get comparisonPreviewChanges => '预览应用到左侧';
+
+  @override
+  String get comparisonApplyChanges => '应用差异';
+
+  @override
+  String get comparisonApplyPreview => '应用差异预览';
+
+  @override
+  String comparisonApplyTarget(String name) {
+    return '目标文档 · $name';
+  }
+
+  @override
+  String get comparisonApplyDirection => '右侧 → 左侧 · 交换两侧可反向应用';
+
+  @override
+  String get comparisonStale => '文档已变化，请重新比较。';
+
+  @override
+  String get comparisonRefresh => '重新比较';
+
+  @override
+  String get comparisonApplyFailed => '无法生成应用预览，请重新比较后重试。';
+
+  @override
+  String get formatConversion => '格式转换';
+
+  @override
+  String get conversionDirection => '转换方向';
+
+  @override
+  String get conversionInput => '源内容';
+
+  @override
+  String get conversionDocument => 'YAML 文档序号（从 1 起）';
+
+  @override
+  String get conversionDocumentError => '请输入从 1 开始的文档序号。';
+
+  @override
+  String get conversionYamlNotice =>
+      'JSON 中保留数据与精确数字。YAML 注释会移除，锚点、别名和合并键会展开；无法表示的类型会提示错误。';
+
+  @override
+  String get conversionCsvNotice =>
+      'CSV 支持对象或数组。对象字段按列输出，数组中的其他元素写入 \$ 值列。值写为文本，嵌套结构默认写为 JSON 字符串；缺失字段和空字符串均为空单元格，null 写为 null。预览后可选择并调整列顺序。';
+
+  @override
+  String get conversionDelimiter => '分隔符';
+
+  @override
+  String get conversionComma => '逗号';
+
+  @override
+  String get conversionSemicolon => '分号';
+
+  @override
+  String get conversionHeader => '包含表头';
+
+  @override
+  String get conversionFlatten => '将嵌套结构展开为 JSONPath 列';
+
+  @override
+  String get conversionColumns => '导出列与顺序';
+
+  @override
+  String get conversionCancel => '取消转换';
+
+  @override
+  String get conversionRun => '转换并预览';
+
+  @override
+  String get conversionCopy => '复制结果';
+
+  @override
+  String get conversionCopied => '已复制转换结果';
+
+  @override
+  String get conversionOpen => '在新标签页打开';
+
+  @override
+  String get conversionExport => '导出文件';
+
+  @override
+  String contentValid(String format) {
+    return '$format 格式有效';
+  }
+
+  @override
+  String conversionDocuments(int count) {
+    return '$count 份 YAML 文档';
+  }
+
+  @override
+  String get conversionColumnUp => '上移列';
+
+  @override
+  String get conversionColumnDown => '下移列';
+
+  @override
+  String get showReplace => '展开替换';
+
+  @override
+  String get hideReplace => '收起替换';
 }

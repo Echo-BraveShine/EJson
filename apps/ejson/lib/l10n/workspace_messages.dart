@@ -9,7 +9,7 @@ extension WorkspaceMessages on AppLocalizations {
       ? tab.name
       : tab.isDefault
       ? untitled
-      : numberedUntitled(tab.id);
+      : '${numberedUntitled(tab.id)}${tab.format == DocumentFormat.json ? '' : ' · ${tab.format.label}'}';
 
   String diagnosticMessage(JsonDiagnostic diagnostic) =>
       switch (diagnostic.code) {

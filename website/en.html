@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Edit source and explore its tree side by side. Format JSON, jump to errors, or change values right in the tree. All editing and parsing happen on your device.">
+  <meta name="description" content="Edit source and tree side by side. Find and replace, query JSONPath, explore array tables, and choose your font and size. Drop files to start. All editing and parsing happen on your device.">
   <meta name="theme-color" content="#10141e" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f4f7fc" media="(prefers-color-scheme: light)">
   <title>EJson · Desktop JSON editor</title>
@@ -28,7 +28,7 @@
       <div class="wrap hero-inner">
         <div class="hero-copy">
           <h1 id="hero-title">Edit JSON. <span>See every layer.</span></h1>
-          <p>Edit source and explore its tree side by side. Format JSON, jump to errors, or change values right in the tree. All editing and parsing happen on your device.</p>
+          <p>Edit source and tree side by side. Find and replace, query JSONPath, explore array tables, and choose your font and size. Drop files to start. All editing and parsing happen on your device.</p>
           <div class="actions">
             <a class="button primary" href="#download">Download EJson <span aria-hidden="true">↓</span></a>
             <a class="button secondary" href="https://github.com/Echo-BraveShine/EJson">View on GitHub <span aria-hidden="true">↗</span></a>
@@ -50,17 +50,47 @@
         <article class="feature-card">
           <span class="feature-icon" aria-hidden="true">{}</span>
           <h3>Source and tree, in sync</h3>
-          <p>Select a node to jump to its source. Rename keys or replace values in the tree, with changes and undo shared across both views.</p>
+          <p>Select a node to jump to source. Rename keys, replace values, or extract a subtree into a new tab. Both views share undo and redo.</p>
         </article>
         <article class="feature-card">
           <span class="feature-icon" aria-hidden="true">≡</span>
           <h3>Format and validate</h3>
-          <p>Format or minify without losing duplicate keys, number literals, or string escapes. Jump straight to a syntax error.</p>
+          <p>Preserve duplicate keys, number literals, and string escapes when formatting or minifying. Choose indentation and line endings, and jump to syntax errors.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">.*</span>
+          <h3>Find, replace, and convert</h3>
+          <p>Search source text, keys, or values with regular expressions and capture-group replacements. Escape content into a JSON string or unescape it into its original content.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">$.</span>
+          <h3>JSONPath queries</h3>
+          <p>Navigate by path, use wildcards and scalar filters, and save favorite queries. Extract results into a new tab for further editing.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">▦</span>
+          <h3>Array tables and sorting</h3>
+          <p>View arrays as tables, filter and sort rows, copy cells, and export CSV. Move or duplicate array items and sort them by value or field.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">↔</span>
+          <h3>Compare and inspect</h3>
+          <p>Compare two documents and inspect byte count, node count, maximum depth, and longest array to understand your JSON structure.</p>
         </article>
         <article class="feature-card">
           <span class="feature-icon" aria-hidden="true">▤</span>
-          <h3>Pick up where you left off</h3>
-          <p>Reopen your last files and tabs. Set syntax highlighting, tree styles, and the interface language independently.</p>
+          <h3>Files and workspace</h3>
+          <p>Drop multiple files to open them and switch to an existing tab when reopening a file. Search your 20 most recently opened or saved files and restore your workspace at startup.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">⌘</span>
+          <h3>Command palette</h3>
+          <p>Search commands with English or Chinese keywords, select with arrow keys, and run with Enter. Open with Cmd+Shift+P on macOS or Ctrl+Shift+P on Windows and Linux. Use Cmd/Ctrl+P for recent files.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon" aria-hidden="true">Aa</span>
+          <h3>Read your way</h3>
+          <p>Choose a local font, size, and line spacing with live preview. Set light or dark mode, syntax highlighting, and tree styles, with English and Simplified Chinese interfaces.</p>
         </article>
       </div>
     </section>

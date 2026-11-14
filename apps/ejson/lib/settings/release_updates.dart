@@ -9,6 +9,7 @@ final latestReleasePage = Uri.https(
   'github.com',
   '/Echo-BraveShine/EJson/releases/latest',
 );
+final websitePage = Uri.https('echo-braveshine.github.io', '/EJson/');
 final supportPage = Uri.https('buymeacoffee.com', '/1239383708p');
 
 enum UpdateStatus { noRelease, current, available }

@@ -2,7 +2,7 @@
 
 [简体中文](README.md) · English
 
-A desktop JSON editor with side-by-side source and tree editing, syntax diagnostics, and workspace restore.
+A desktop JSON editor with side-by-side source and tree editing, find and replace, JSONPath queries, array tools, and workspace restore.
 
 [Website](https://echo-braveshine.github.io/EJson/) · [Download](https://github.com/Echo-BraveShine/EJson/releases/latest) · [Report an issue](https://github.com/Echo-BraveShine/EJson/issues) · [Buy me a coffee](https://buymeacoffee.com/1239383708p)
 
@@ -12,13 +12,29 @@ A desktop JSON editor with side-by-side source and tree editing, syntax diagnost
 
 | Feature | What it does |
 | --- | --- |
-| Source editor | Syntax highlighting, line numbers, diagnostic navigation, formatting, and minifying |
-| JSON tree | Expand deep nodes, scroll horizontally, focus a subtree, jump to source, rename keys, and replace values |
-| Lossless formatting | Preserve duplicate keys, raw numbers, and string escapes |
-| Local workspace | Multiple tabs, unsaved-change confirmation, external-change detection, and startup restore |
-| Appearance | Light and dark modes, English and Simplified Chinese, and independent editor and tree styles |
+| Source editor | Syntax highlighting, line numbers, validation, diagnostic navigation, undo, and redo |
+| JSON tree | Expand deep nodes, scroll horizontally, focus subtrees, jump to source, rename keys, replace values, and extract subtrees into new tabs |
+| Find and replace | Search source text, keys, or values with case matching, regular expressions, capture-group replacements, and Replace all |
+| String conversion | Escape content into a JSON string or unescape a JSON string into its original content |
+| Lossless formatting | Format and minify while preserving duplicate keys, raw numbers, and string escapes, with configurable indentation and line endings |
+| JSONPath queries | Navigate to nodes, use wildcards and scalar filters, save favorite queries, and extract results into new tabs |
+| Array tools | View tables, filter and sort rows, copy cells, and export CSV. Move, duplicate, and sort array items by value or field |
+| Comparison and statistics | Compare two documents and inspect byte count, node count, maximum depth, and longest array |
+| Local workspace | Multiple tabs, opening JSON from your file manager, multi-file drag and drop, unsaved-change confirmation, external-change detection, and startup restore |
+| Recent files | Keep the 20 most recently opened or saved files, search names or paths, remove entries, and clear the list |
+| Command palette | Search commands with English or Chinese keywords, select with arrow keys, run with Enter, and close with Escape |
+| Reading and appearance | Choose a local font, size, and line spacing with live preview. Light and dark modes, English and Simplified Chinese, and independent editor and tree styles |
 
 Editing and parsing run locally. Checking for updates queries GitHub Releases only on demand. The support button opens Buy Me a Coffee in your browser.
+
+## Quick access
+
+| Action | macOS | Windows / Linux |
+| --- | --- | --- |
+| Open command palette | `Cmd+Shift+P` | `Ctrl+Shift+P` |
+| Open recent files | `Cmd+P` | `Ctrl+P` |
+
+Both are also available from the toolbar. Drop multiple local files onto the workbench to open them. Opening a file again switches to its existing tab. Temporary dropped copies open as new documents.
 
 ## Install
 
@@ -57,6 +73,8 @@ sudo apt install ./EJson-linux-amd64.deb
 # ARM64
 sudo apt install ./EJson-linux-arm64.deb
 ```
+
+After installation, choose EJson from a `.json` file’s Open With menu. Set EJson as the default app for this file type to open it with a double-click.
 
 ## Development
 

@@ -129,5 +129,215 @@
   "updateFailed": "暂时无法检查更新，请稍后重试。",
   "downloadRelease": "查看发布版本",
   "buyCoffee": "请我喝杯咖啡",
-  "browserFailed": "无法打开浏览器。"
+  "browserFailed": "无法打开浏览器。",
+  "replaceText": "替换为",
+  "replaceCurrent": "替换当前",
+  "replaceAll": "全部替换",
+  "matchCase": "区分大小写",
+  "useRegex": "正则表达式",
+  "invalidRegex": "正则表达式无效",
+  "escapeJson": "转义为 JSON 字符串",
+  "unescapeJson": "反转义 JSON 字符串",
+  "unescapeFailed": "请输入带双引号的有效 JSON 字符串。",
+  "extractSubtree": "提取到新标签页",
+  "arrayTable": "数组表格",
+  "copyNodeValue": "复制 JSON 值",
+  "copyDecodedString": "复制字符串内容",
+  "valueCopied": "已复制节点值",
+  "filterRows": "筛选行",
+  "emptyArray": "数组为空",
+  "exportCsv": "导出 CSV",
+  "csvExported": "已导出 CSV",
+  "exportFailed": "导出失败",
+  "tableInstructions": "点击列标题排序，点击单元格复制内容。导出使用当前筛选和排序结果。",
+  "tableRowCount": "{visible} / {total} 行",
+  "nodeCount": "{count} 个节点",
+  "documentBytes": "{bytes} 字节",
+  "documentStatistics": "{bytes} 字节 · {nodes} 个节点 · 最大深度 {depth}（根节点为 0）· 最长数组 {arrayLength} 项",
+  "@tableRowCount": {
+    "placeholders": {
+      "visible": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@nodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@documentBytes": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      }
+    }
+  },
+  "@documentStatistics": {
+    "placeholders": {
+      "bytes": {
+        "type": "int"
+      },
+      "nodes": {
+        "type": "int"
+      },
+      "depth": {
+        "type": "int"
+      },
+      "arrayLength": {
+        "type": "int"
+      }
+    }
+  },
+  "jsonQuery": "JSONPath 查询",
+  "runQuery": "查询",
+  "queryRunning": "正在查询…",
+  "jsonQueryFailed": "查询失败，请重试。",
+  "invalidJsonQuery": "第 {position} 个字符附近的 JSONPath 语法无效或暂不支持。",
+  "jsonQueryHelp": "支持字段、数组下标、* 通配符和 [?条件]。条件支持 @ 相对路径、存在判断、标量比较、&&、|| 和 !。点击结果定位源码。",
+  "queryResultCount": "{count} 条结果",
+  "extractQueryResults": "提取结果到新标签页",
+  "goToSource": "定位源码",
+  "captureReplacementHelp": "$1、$2 引用捕获组，$$ 插入美元符号。",
+  "@invalidJsonQuery": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "@queryResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "formatIndentation": "格式化缩进",
+  "indentTwo": "2 个空格",
+  "indentFour": "4 个空格",
+  "indentEight": "8 个空格",
+  "indentTabs": "制表符",
+  "lineEnding": "换行符",
+  "preserveLineEnding": "保留原样",
+  "toolPreferenceFailed": "无法保存设置，请重试。",
+  "saveQuery": "收藏查询",
+  "unsaveQuery": "取消收藏",
+  "savedQueries": "收藏的查询",
+  "noSavedQueries": "暂无收藏的查询",
+  "moveArrayItemUp": "上移数组项",
+  "moveArrayItemDown": "下移数组项",
+  "duplicateArrayItem": "复制数组项",
+  "sortArray": "排序数组",
+  "sortField": "排序依据",
+  "sortValue": "元素值",
+  "sortAscending": "升序",
+  "sortDescending": "降序",
+  "sortArrayHelp": "缺失字段的元素排在末尾，相等的值保留原顺序。",
+  "sortArrayAmbiguous": "排序字段存在重复键，请选择其他字段。",
+  "readingDisplay": "阅读显示",
+  "readingFont": "阅读字体",
+  "fontSize": "字号",
+  "decreaseFontSize": "减小字号",
+  "increaseFontSize": "增大字号",
+  "lineSpacing": "行距",
+  "spacingCompact": "紧凑",
+  "spacingStandard": "标准",
+  "spacingSpacious": "宽松",
+  "readingPreview": "预览",
+  "resetReading": "恢复默认",
+  "defaultReadingFont": "系统默认等宽字体",
+  "searchFonts": "搜索本机字体",
+  "refreshFonts": "刷新字体列表",
+  "monospaceFont": "等宽字体",
+  "fontListFailed": "无法读取字体列表，点击重试。",
+  "noMatchingFonts": "没有匹配的字体",
+  "fontUnavailable": "字体「{name}」暂不可用，当前使用默认字体。",
+  "@fontUnavailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recentFiles": "最近文件",
+  "searchRecentFiles": "搜索文件名或路径",
+  "noRecentFiles": "暂无最近文件",
+  "removeRecentFile": "从最近列表移除",
+  "clearRecentFiles": "清空最近列表",
+  "recentSaveFailed": "文件已打开或保存，但无法记录最近文件。",
+  "commandPalette": "命令面板",
+  "searchCommands": "搜索命令…",
+  "noMatchingCommands": "没有匹配的命令",
+  "commandKeyboardHelp": "↑↓ 选择  ·  Enter 执行  ·  Esc 关闭",
+  "dropFilesToOpen": "松开以打开文件",
+  "noDroppedFiles": "拖入内容中没有可打开的本地文件。",
+  "droppedCopyOpened": "已将拖入的临时副本作为新文档打开。",
+  "someFilesFailed": "部分文件无法打开",
+  "settingsGeneral": "通用",
+  "settingsFormatting": "格式化",
+  "website": "官方网站",
+  "schemaValidation": "JSON Schema 校验",
+  "schemaHelp": "粘贴或载入本地 Schema，点击校验结果定位节点。支持内嵌引用。",
+  "loadSchema": "载入 Schema",
+  "validateSchema": "校验",
+  "schemaChecking": "处理中…",
+  "schemaFailed": "校验失败",
+  "schemaValid": "符合 Schema",
+  "redactData": "数据脱敏",
+  "redactHelp": "字段名不区分大小写，以逗号或换行分隔。匹配值会替换为指定字符串。JSONPath 每行一条，支持通配符。",
+  "redactKeys": "字段名",
+  "redactPaths": "JSONPath（可选）",
+  "redactReplacement": "替换字符串",
+  "openRedactedCopy": "打开脱敏副本",
+  "saveRedactedCopy": "保存脱敏副本",
+  "documentTools": "文档工具",
+  "schemaIssues": "{count} 个校验问题",
+  "@schemaIssues": {"placeholders": {"count": {"type": "int"}}},
+  "redactCount": "已替换 {count} 处",
+  "@redactCount": {"placeholders": {"count": {"type": "int"}}},
+  "comparisonSelectAll": "选择或取消全部已显示差异",
+  "comparisonSelected": "已选 {count} 项",
+  "comparisonPreviewChanges": "预览应用到左侧",
+  "comparisonApplyChanges": "应用差异",
+  "comparisonApplyPreview": "应用差异预览",
+  "comparisonApplyTarget": "目标文档 · {name}",
+  "comparisonApplyDirection": "右侧 → 左侧 · 交换两侧可反向应用",
+  "comparisonStale": "文档已变化，请重新比较。",
+  "comparisonRefresh": "重新比较",
+  "comparisonApplyFailed": "无法生成应用预览，请重新比较后重试。",
+  "@comparisonSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@comparisonApplyTarget": {"placeholders": {"name": {"type": "String"}}},
+  "formatConversion": "格式转换",
+  "conversionDirection": "转换方向",
+  "conversionInput": "源内容",
+  "conversionDocument": "YAML 文档序号（从 1 起）",
+  "conversionDocumentError": "请输入从 1 开始的文档序号。",
+  "conversionYamlNotice": "JSON 中保留数据与精确数字。YAML 注释会移除，锚点、别名和合并键会展开；无法表示的类型会提示错误。",
+  "conversionCsvNotice": "CSV 支持对象或数组。对象字段按列输出，数组中的其他元素写入 $ 值列。值写为文本，嵌套结构默认写为 JSON 字符串；缺失字段和空字符串均为空单元格，null 写为 null。预览后可选择并调整列顺序。",
+  "conversionDelimiter": "分隔符",
+  "conversionComma": "逗号",
+  "conversionSemicolon": "分号",
+  "conversionHeader": "包含表头",
+  "conversionFlatten": "将嵌套结构展开为 JSONPath 列",
+  "conversionColumns": "导出列与顺序",
+  "conversionCancel": "取消转换",
+  "conversionRun": "转换并预览",
+  "conversionCopy": "复制结果",
+  "conversionCopied": "已复制转换结果",
+  "conversionOpen": "在新标签页打开",
+  "conversionExport": "导出文件",
+  "contentValid": "{format} 格式有效",
+  "conversionDocuments": "{count} 份 YAML 文档",
+  "@contentValid": {"placeholders": {"format": {"type": "String"}}},
+  "@conversionDocuments": {"placeholders": {"count": {"type": "int"}}},
+  "conversionColumnUp": "上移列",
+  "conversionColumnDown": "下移列",
+  "showReplace": "展开替换",
+  "hideReplace": "收起替换"
 }

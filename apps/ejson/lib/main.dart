@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -11,17 +12,23 @@ import 'design/workbench_style.dart';
 import 'editor/json_highlight.dart';
 import 'editor/tree_style.dart';
 import 'l10n/app_localizations.dart';
+import 'settings/tool_preferences.dart';
+import 'settings/installed_fonts.dart';
+import 'design/reading_style.dart';
 import 'workspace/workbench.dart';
 import 'workspace/workspace.dart';
 import 'workspace/workspace_session.dart';
+import 'workspace/external_file_opens.dart';
 
 const _languageKey = 'language';
 const _themeModeKey = 'themeMode';
 const _highlightKey = 'jsonHighlight';
 const _treeStyleKey = 'jsonTreeStyle';
 
-Future<void> main() async {
+Future<void> main(List<String> arguments) async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
+  final externalFiles = ExternalFileOpens(arguments);
+  if (Platform.isMacOS) await externalFiles.connectMacOS();
   await windowManager.ensureInitialized();
   await windowManager.setPreventClose(true);
   final preferences = SharedPreferencesAsync();
@@ -68,6 +75,15 @@ Future<void> main() async {
   } on PlatformException catch (error) {
     debugPrint('Could not read preferences: ${error.code}');
   }
+  var toolPreferences = const ToolPreferences();
+  try {
+    final saved = await preferences.getString('toolPreferences');
+    if (saved != null) {
+      toolPreferences = ToolPreferences.fromJson(jsonDecode(saved));
+    }
+  } on Exception catch (error) {
+    debugPrint('Could not read tool preferences: ${error.runtimeType}');
+  }
   final session = WorkspaceSession(preferences);
   var restoreOnStartup = true;
   var restored = const RestoredWorkspace();
@@ -80,6 +96,14 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        externalFileOpensProvider.overrideWithValue(externalFiles),
+        initialToolPreferencesProvider.overrideWithValue(toolPreferences),
+        saveToolPreferencesProvider.overrideWithValue(
+          (value) => preferences.setString(
+            'toolPreferences',
+            jsonEncode(value.toJson()),
+          ),
+        ),
         initialWorkspaceProvider.overrideWithValue((
           files: restored.files,
           activePath: restored.activePath,
@@ -204,6 +228,16 @@ class _EJsonAppState extends State<EJsonApp> {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'EJson',
+    builder: (context, child) => Consumer(
+      builder: (context, ref, _) {
+        final reading = ref.watch(toolPreferencesProvider).reading;
+        final fonts = ref.watch(installedFontsProvider).value;
+        return ReadingStyleScope(
+          style: ReadingStyle.resolve(context, reading, fonts),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+    ),
     locale: language == null ? null : Locale(language!),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,

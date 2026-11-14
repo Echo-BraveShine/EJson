@@ -22,10 +22,11 @@ SourcePatch appendJsonChild(String source, JsonNode container, String entry) {
 ({SourcePatch? patch, JsonDiagnostic? error}) appendFormattedJsonChild(
   String source,
   JsonNode container,
-  String entry,
-) {
+  String entry, {
+  JsonFormatOptions options = const JsonFormatOptions(),
+}) {
   final lineBreak = RegExp(r'\r\n|\r|\n');
-  final newline = lineBreak.firstMatch(source)?.group(0) ?? '\n';
+  final newline = options.lineEnding.resolve(source);
   final addition = appendJsonChild(
     source,
     container,
@@ -38,6 +39,7 @@ SourcePatch appendJsonChild(String source, JsonNode container, String entry) {
   }
   final formatted = rewriteJson(
     JsonDocument(SourceBuffer(text), snapshot: snapshot),
+    options: options,
   );
   return (patch: SourcePatch.between(source, formatted), error: null);
 }

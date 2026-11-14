@@ -1,6 +1,8 @@
 #include "flutter_window.h"
 
 #include <dwmapi.h>
+#include <dwrite_1.h>
+#include <wrl/client.h>
 
 #include <optional>
 #include <variant>
@@ -8,6 +10,52 @@
 #include <flutter/standard_method_codec.h>
 #include "flutter/generated_plugin_registrant.h"
 #include "resource.h"
+#include "utils.h"
+
+namespace {
+std::string FontFamilyName(IDWriteLocalizedStrings* names, UINT32 index) {
+  UINT32 length = 0;
+  if (FAILED(names->GetStringLength(index, &length))) return {};
+  std::wstring value(length + 1, L'\0');
+  if (FAILED(names->GetString(index, value.data(), length + 1))) return {};
+  return Utf8FromUtf16(value.c_str());
+}
+
+std::optional<flutter::EncodableList> InstalledFonts() {
+  using Microsoft::WRL::ComPtr;
+  ComPtr<IDWriteFactory> factory;
+  if (FAILED(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+      reinterpret_cast<IUnknown**>(factory.GetAddressOf())))) return std::nullopt;
+  ComPtr<IDWriteFontCollection> collection;
+  if (FAILED(factory->GetSystemFontCollection(&collection, TRUE))) return std::nullopt;
+  wchar_t locale[LOCALE_NAME_MAX_LENGTH] = {};
+  GetUserDefaultLocaleName(locale, LOCALE_NAME_MAX_LENGTH);
+  flutter::EncodableList result;
+  for (UINT32 index = 0; index < collection->GetFontFamilyCount(); ++index) {
+    ComPtr<IDWriteFontFamily> family;
+    ComPtr<IDWriteLocalizedStrings> names;
+    if (FAILED(collection->GetFontFamily(index, &family)) ||
+        FAILED(family->GetFamilyNames(&names)) || names->GetCount() == 0) continue;
+    UINT32 canonical = 0;
+    BOOL found = FALSE;
+    names->FindLocaleName(L"en-us", &canonical, &found);
+    if (!found) canonical = 0;
+    UINT32 localized = canonical;
+    names->FindLocaleName(locale, &localized, &found);
+    if (!found) localized = canonical;
+    ComPtr<IDWriteFont> font;
+    ComPtr<IDWriteFont1> extended;
+    const bool monospace = SUCCEEDED(family->GetFont(0, &font)) &&
+        SUCCEEDED(font.As(&extended)) && extended->IsMonospacedFont();
+    result.emplace_back(flutter::EncodableMap{
+      {flutter::EncodableValue("family"), flutter::EncodableValue(FontFamilyName(names.Get(), canonical))},
+      {flutter::EncodableValue("name"), flutter::EncodableValue(FontFamilyName(names.Get(), localized))},
+      {flutter::EncodableValue("monospace"), flutter::EncodableValue(monospace)},
+    });
+  }
+  return result;
+}
+}  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -63,6 +111,22 @@ bool FlutterWindow::OnCreate() {
         result->Success();
       });
 
+  fonts_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "dev.ekko.ejson/fonts",
+      &flutter::StandardMethodCodec::GetInstance());
+  fonts_channel_->SetMethodCallHandler([](const auto& call, auto result) {
+    if (call.method_name() != "list") {
+      result->NotImplemented();
+      return;
+    }
+    const auto fonts = InstalledFonts();
+    if (fonts) {
+      result->Success(flutter::EncodableValue(*fonts));
+    } else {
+      result->Error("font_list_failed", "Could not enumerate installed fonts");
+    }
+  });
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -106,6 +170,10 @@ void FlutterWindow::OnDestroy() {
   small_icon_ = nullptr;
   large_icon_ = nullptr;
 
+  if (fonts_channel_) {
+    fonts_channel_->SetMethodCallHandler(nullptr);
+    fonts_channel_.reset();
+  }
   if (appearance_channel_) {
     appearance_channel_->SetMethodCallHandler(nullptr);
     appearance_channel_.reset();

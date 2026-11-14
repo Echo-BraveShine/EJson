@@ -28,7 +28,7 @@ class WorkspaceSession {
   static const _files = MethodChannel('dev.ekko.ejson/files');
 
   final SharedPreferencesAsync _preferences;
-  final _accessedPaths = <String>{};
+  final _accessedPaths = <String, String>{};
 
   Future<bool> isEnabled() async =>
       await _preferences.getBool(_enabledKey) ?? true;
@@ -47,17 +47,8 @@ class WorkspaceSession {
       final path = tab.file?.path;
       if (path == null) continue;
       final entry = {'path': path};
-      if (Platform.isMacOS) {
-        try {
-          final bookmark = await _files.invokeMethod<String>(
-            'createBookmark',
-            path,
-          );
-          if (bookmark != null) entry['bookmark'] = bookmark;
-        } on PlatformException {
-          // The path remains usable for files the app can already access.
-        }
-      }
+      final bookmark = await bookmarkFor(path);
+      if (bookmark != null) entry['bookmark'] = bookmark;
       entries.add(entry);
     }
 
@@ -93,13 +84,7 @@ class WorkspaceSession {
 
       try {
         final bookmark = entry['bookmark'];
-        if (Platform.isMacOS && bookmark is String) {
-          final opened = await _files.invokeMethod<bool>('accessBookmark', {
-            'path': path,
-            'bookmark': bookmark,
-          });
-          if (opened == true) _accessedPaths.add(path);
-        }
+        if (bookmark is String) await accessFile(path, bookmark);
         final file = await LocalJsonFile.read(path);
         if (file.path != path) {
           // The saved tab refers to the original location.
@@ -122,10 +107,43 @@ class WorkspaceSession {
     );
   }
 
-  Future<void> releaseAccess(String path) async {
-    if (!_accessedPaths.remove(path)) return;
+  Future<String?> bookmarkFor(String path) async {
+    if (!Platform.isMacOS) return null;
     try {
-      await _files.invokeMethod<void>('releaseBookmark', path);
+      return await _files.invokeMethod<String>('createBookmark', path);
+    } on PlatformException {
+      return null;
+    }
+  }
+
+  /// Returns true only for newly acquired access, for cleanup on failed opens.
+  Future<bool> accessFile(String path, String? bookmark) async {
+    if (!Platform.isMacOS ||
+        bookmark == null ||
+        _accessedPaths.containsKey(path) ||
+        _accessedPaths.containsValue(path)) {
+      return false;
+    }
+    final accessed = await _files.invokeMethod<bool>('accessBookmark', {
+      'path': path,
+      'bookmark': bookmark,
+    });
+    if (accessed != true) return false;
+    _accessedPaths[path] = path;
+    return true;
+  }
+
+  void trackAccess(String requestedPath, String canonicalPath) {
+    if (requestedPath == canonicalPath) return;
+    final grant = _accessedPaths.remove(requestedPath);
+    if (grant != null) _accessedPaths[canonicalPath] = grant;
+  }
+
+  Future<void> releaseAccess(String path) async {
+    final grantedPath = _accessedPaths.remove(path);
+    if (grantedPath == null) return;
+    try {
+      await _files.invokeMethod<void>('releaseBookmark', grantedPath);
     } on PlatformException {
       // The native runner also releases retained access on termination.
     }

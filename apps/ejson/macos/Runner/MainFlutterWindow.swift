@@ -28,6 +28,30 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: false)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    (NSApp.delegate as? AppDelegate)?.configureFileOpens(
+      messenger: flutterViewController.engine.binaryMessenger
+    )
+
+    let fonts = FlutterMethodChannel(
+      name: "dev.ekko.ejson/fonts",
+      binaryMessenger: flutterViewController.engine.binaryMessenger
+    )
+    fonts.setMethodCallHandler { call, reply in
+      guard call.method == "list" else {
+        reply(FlutterMethodNotImplemented)
+        return
+      }
+      let manager = NSFontManager.shared
+      let families = manager.availableFontFamilies.filter { !$0.hasPrefix(".") }
+      reply(families.map { family -> [String: Any] in
+        let font = manager.font(withFamily: family, traits: [], weight: 5, size: 13)
+        return [
+          "family": family,
+          "name": manager.localizedName(forFamily: family, face: nil),
+          "monospace": font.map { manager.traits(of: $0).contains(.fixedPitchFontMask) } ?? false
+        ]
+      })
+    }
 
     let files = FlutterMethodChannel(
       name: "dev.ekko.ejson/files",

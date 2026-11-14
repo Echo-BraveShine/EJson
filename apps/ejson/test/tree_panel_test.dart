@@ -41,7 +41,7 @@ void main() {
     }
 
     final horizontal = tester
-        .widget<SingleChildScrollView>(find.byType(SingleChildScrollView))
+        .widget<SingleChildScrollView>(find.byType(SingleChildScrollView).last)
         .controller!;
     expect(horizontal.position.maxScrollExtent, greaterThan(0));
     await tester.drag(find.text('level8'), const Offset(-80, 0));
@@ -70,11 +70,14 @@ void main() {
     }
 
     await focusLevel6();
-    expect(find.text('root › … › level5 › level6'), findsOneWidget);
-    expect(find.text('level1'), findsNothing);
+    expect(find.byKey(const ValueKey('breadcrumb-6')), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(ListView), matching: find.text('level1')),
+      findsNothing,
+    );
     await tester.tap(find.byTooltip('Go to parent'));
     await tester.pumpAndSettle();
-    expect(find.text('root › … › level4 › level5'), findsOneWidget);
+    expect(find.byKey(const ValueKey('breadcrumb-5')), findsOneWidget);
     await tester.tap(find.byTooltip('Back to root'));
     await tester.pumpAndSettle();
     expect(find.text('level1'), findsOneWidget);

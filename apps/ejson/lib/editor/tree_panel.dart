@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 
 import '../design/workbench_style.dart';
+import '../design/reading_style.dart';
 import '../l10n/app_localizations.dart';
 import 'tree_style.dart';
 
@@ -17,14 +18,22 @@ class TreePanel extends StatefulWidget {
     required this.onReveal,
     required this.onEdit,
     this.style = JsonTreeStyle.classic,
+    this.readOnly = false,
     this.reveal,
     this.onAdd,
     this.onDelete,
     this.onCopyPath,
+    this.onExtract,
+    this.onCopyValue,
+    this.onTable,
+    this.onMoveArrayItem,
+    this.onDuplicateArrayItem,
+    this.onSortArray,
   });
 
   final ParseSnapshot snapshot;
   final JsonTreeStyle style;
+  final bool readOnly;
   final String source;
   final bool current;
   final ValueChanged<SourceRange> onReveal;
@@ -33,12 +42,33 @@ class TreePanel extends StatefulWidget {
   final ValueChanged<JsonNode>? onAdd;
   final void Function(JsonNode parent, int index)? onDelete;
   final ValueChanged<String>? onCopyPath;
+  final ValueChanged<SourceRange>? onExtract;
+  final void Function(SourceRange range, bool decoded)? onCopyValue;
+  final ValueChanged<JsonNode>? onTable;
+  final void Function(JsonNode array, int index, int delta)? onMoveArrayItem;
+  final void Function(JsonNode array, int index)? onDuplicateArrayItem;
+  final ValueChanged<JsonNode>? onSortArray;
 
   @override
   State<TreePanel> createState() => _TreePanelState();
 }
 
-enum _NodeAction { focus, replace, rename, add, delete, copyPath }
+enum _NodeAction {
+  focus,
+  replace,
+  rename,
+  add,
+  delete,
+  copyPath,
+  extract,
+  copyValue,
+  copyString,
+  table,
+  moveUp,
+  moveDown,
+  duplicate,
+  sort,
+}
 
 typedef _Step = ({int index, String? key});
 
@@ -55,11 +85,22 @@ class _TreePanelState extends State<TreePanel> {
   static const _rowLimit = 10000;
   final _horizontal = ScrollController();
   final _vertical = ScrollController();
+  final _breadcrumbs = ScrollController();
+  String? _breadcrumbPath;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.current && widget.reveal != null) {
+      _showMatch(widget.reveal!.range.start);
+    }
+  }
 
   @override
   void dispose() {
     _horizontal.dispose();
     _vertical.dispose();
+    _breadcrumbs.dispose();
     super.dispose();
   }
 
@@ -68,6 +109,15 @@ class _TreePanelState extends State<TreePanel> {
   List<_Step> _focus = const [];
   String? _selected;
   final _expanded = <String>{'root'};
+
+  JsonNode? _parent(List<_Step> steps) {
+    if (steps.isEmpty) return null;
+    var parent = widget.snapshot.root!;
+    for (final step in steps.take(steps.length - 1)) {
+      parent = parent.children[step.index].value;
+    }
+    return parent;
+  }
 
   void _focusOn(List<_Step> steps) {
     if (_horizontal.hasClients) _horizontal.jumpTo(0);
@@ -185,7 +235,10 @@ class _TreePanelState extends State<TreePanel> {
     visit(root, trail.last, rootPath, _focus, 0, rootKey);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final code = WorkbenchStyle.code(theme.platform);
+    final reading = ReadingStyle.of(context);
+    final code = reading.text;
+    final rowHeight = reading.rowHeight(minimum: style.rowHeight);
+    final indent = math.max(style.indent, reading.scaledFontSize * .7);
     if (widget.reveal != null && widget.current && _selected != null) {
       final index = rows.indexWhere((row) => row.path == _selected);
       if (index < 0 && _pendingReveal && clipped && _revealSteps.isNotEmpty) {
@@ -207,14 +260,14 @@ class _TreePanelState extends State<TreePanel> {
             return;
           }
           _vertical.jumpTo(
-            (index * style.rowHeight - style.rowHeight).clamp(
+            (index * rowHeight - rowHeight).clamp(
               0.0,
               _vertical.position.maxScrollExtent,
             ),
           );
-          final indent = rows[index].depth * style.indent;
+          final horizontalOffset = rows[index].depth * indent;
           _horizontal.jumpTo(
-            indent.clamp(0.0, _horizontal.position.maxScrollExtent),
+            horizontalOffset.clamp(0.0, _horizontal.position.maxScrollExtent),
           );
         });
       }
@@ -223,7 +276,7 @@ class _TreePanelState extends State<TreePanel> {
       controller: _vertical,
       primary: false,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      itemExtent: style.rowHeight,
+      itemExtent: rowHeight,
       itemCount: rows.length + (clipped ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == rows.length) {
@@ -263,12 +316,12 @@ class _TreePanelState extends State<TreePanel> {
                     widget.onReveal(range);
                   }
                 : null,
-            onDoubleTap: widget.current
+            onDoubleTap: widget.current && !widget.readOnly
                 ? () => widget.onEdit(range, false)
                 : null,
             child: Padding(
               padding: EdgeInsets.only(
-                left: 2.0 + style.indent * row.depth,
+                left: 2.0 + indent * row.depth,
                 right: 8,
               ),
               child: Row(
@@ -304,9 +357,7 @@ class _TreePanelState extends State<TreePanel> {
                             row.label,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: WorkbenchStyle.body.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: code.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -323,7 +374,8 @@ class _TreePanelState extends State<TreePanel> {
                       ],
                     ),
                   ),
-                  if (widget.current || hasChildren && row.depth > 0)
+                  if (widget.current && !widget.readOnly ||
+                      hasChildren && row.depth > 0)
                     PopupMenuButton<_NodeAction>(
                       key: ValueKey('node-menu:${row.path}'),
                       tooltip: widget.current
@@ -336,6 +388,33 @@ class _TreePanelState extends State<TreePanel> {
                       ),
                       onSelected: (action) {
                         switch (action) {
+                          case _NodeAction.sort:
+                            widget.onSortArray?.call(node);
+                          case _NodeAction.moveUp:
+                            widget.onMoveArrayItem?.call(
+                              _parent(row.steps)!,
+                              row.steps.last.index,
+                              -1,
+                            );
+                          case _NodeAction.moveDown:
+                            widget.onMoveArrayItem?.call(
+                              _parent(row.steps)!,
+                              row.steps.last.index,
+                              1,
+                            );
+                          case _NodeAction.duplicate:
+                            widget.onDuplicateArrayItem?.call(
+                              _parent(row.steps)!,
+                              row.steps.last.index,
+                            );
+                          case _NodeAction.copyValue:
+                            widget.onCopyValue?.call(range, false);
+                          case _NodeAction.copyString:
+                            widget.onCopyValue?.call(range, true);
+                          case _NodeAction.table:
+                            widget.onTable?.call(node);
+                          case _NodeAction.extract:
+                            widget.onExtract?.call(range);
                           case _NodeAction.focus:
                             _focusOn(row.steps);
                           case _NodeAction.replace:
@@ -365,49 +444,110 @@ class _TreePanelState extends State<TreePanel> {
                             );
                         }
                       },
-                      itemBuilder: (context) => [
-                        if (hasChildren && row.depth > 0)
-                          WorkbenchMenuItem(
-                            value: _NodeAction.focus,
-                            icon: Icons.center_focus_strong_outlined,
-                            label: strings.focusSubtree,
-                          ),
-                        if (widget.current) ...[
-                          if (widget.onCopyPath != null)
+                      itemBuilder: (context) {
+                        final parent = _parent(row.steps);
+                        final arrayItem = parent?.kind == JsonKind.array;
+                        return [
+                          if (hasChildren && row.depth > 0)
                             WorkbenchMenuItem(
-                              value: _NodeAction.copyPath,
-                              icon: CupertinoIcons.doc_on_doc,
-                              label: strings.copyJsonPath,
+                              value: _NodeAction.focus,
+                              icon: Icons.center_focus_strong_outlined,
+                              label: strings.focusSubtree,
                             ),
-                          if (widget.onAdd != null &&
-                              (node.kind == JsonKind.array ||
-                                  node.kind == JsonKind.object))
+                          if (widget.current && !widget.readOnly) ...[
+                            if (arrayItem) ...[
+                              if (widget.onMoveArrayItem != null &&
+                                  row.steps.last.index > 0)
+                                WorkbenchMenuItem(
+                                  value: _NodeAction.moveUp,
+                                  icon: CupertinoIcons.arrow_up,
+                                  label: strings.moveArrayItemUp,
+                                ),
+                              if (widget.onMoveArrayItem != null &&
+                                  row.steps.last.index <
+                                      parent!.children.length - 1)
+                                WorkbenchMenuItem(
+                                  value: _NodeAction.moveDown,
+                                  icon: CupertinoIcons.arrow_down,
+                                  label: strings.moveArrayItemDown,
+                                ),
+                              if (widget.onDuplicateArrayItem != null)
+                                WorkbenchMenuItem(
+                                  value: _NodeAction.duplicate,
+                                  icon: CupertinoIcons.plus_square_on_square,
+                                  label: strings.duplicateArrayItem,
+                                ),
+                            ],
+                            if (widget.onSortArray != null &&
+                                node.kind == JsonKind.array &&
+                                node.children.length > 1)
+                              WorkbenchMenuItem(
+                                value: _NodeAction.sort,
+                                icon: CupertinoIcons.sort_down,
+                                label: strings.sortArray,
+                              ),
+                            if (widget.onTable != null &&
+                                node.kind == JsonKind.array)
+                              WorkbenchMenuItem(
+                                value: _NodeAction.table,
+                                icon: CupertinoIcons.table,
+                                label: strings.arrayTable,
+                              ),
+                            if (widget.onCopyValue != null) ...[
+                              WorkbenchMenuItem(
+                                value: _NodeAction.copyValue,
+                                icon: CupertinoIcons.doc_on_doc,
+                                label: strings.copyNodeValue,
+                              ),
+                              if (node.kind == JsonKind.string)
+                                WorkbenchMenuItem(
+                                  value: _NodeAction.copyString,
+                                  icon: CupertinoIcons.text_quote,
+                                  label: strings.copyDecodedString,
+                                ),
+                            ],
+                            if (widget.onExtract != null)
+                              WorkbenchMenuItem(
+                                value: _NodeAction.extract,
+                                icon: CupertinoIcons.doc_on_doc,
+                                label: strings.extractSubtree,
+                              ),
+                            if (widget.onCopyPath != null)
+                              WorkbenchMenuItem(
+                                value: _NodeAction.copyPath,
+                                icon: CupertinoIcons.doc_on_doc,
+                                label: strings.copyJsonPath,
+                              ),
+                            if (widget.onAdd != null &&
+                                (node.kind == JsonKind.array ||
+                                    node.kind == JsonKind.object))
+                              WorkbenchMenuItem(
+                                value: _NodeAction.add,
+                                icon: CupertinoIcons.plus,
+                                label: node.kind == JsonKind.object
+                                    ? strings.addProperty
+                                    : strings.addArrayItem,
+                              ),
+                            if (widget.onDelete != null && row.steps.isNotEmpty)
+                              WorkbenchMenuItem(
+                                value: _NodeAction.delete,
+                                icon: CupertinoIcons.trash,
+                                label: strings.deleteNode,
+                              ),
                             WorkbenchMenuItem(
-                              value: _NodeAction.add,
-                              icon: CupertinoIcons.plus,
-                              label: node.kind == JsonKind.object
-                                  ? strings.addProperty
-                                  : strings.addArrayItem,
+                              value: _NodeAction.replace,
+                              icon: CupertinoIcons.arrow_left_right,
+                              label: strings.replaceValue,
                             ),
-                          if (widget.onDelete != null && row.steps.isNotEmpty)
-                            WorkbenchMenuItem(
-                              value: _NodeAction.delete,
-                              icon: CupertinoIcons.trash,
-                              label: strings.deleteNode,
-                            ),
-                          WorkbenchMenuItem(
-                            value: _NodeAction.replace,
-                            icon: CupertinoIcons.arrow_left_right,
-                            label: strings.replaceValue,
-                          ),
-                          if (row.keyRange != null)
-                            WorkbenchMenuItem(
-                              value: _NodeAction.rename,
-                              icon: CupertinoIcons.pencil,
-                              label: strings.renameKey,
-                            ),
-                        ],
-                      ],
+                            if (row.keyRange != null)
+                              WorkbenchMenuItem(
+                                value: _NodeAction.rename,
+                                icon: CupertinoIcons.pencil,
+                                label: strings.renameKey,
+                              ),
+                          ],
+                        ];
+                      },
                     ),
                 ],
               ),
@@ -421,7 +561,7 @@ class _TreePanelState extends State<TreePanel> {
         // Preserve room for the key, value and menu as indentation grows.
         final width = math.max(
           constraints.maxWidth,
-          224.0 + style.indent * deepestRow,
+          224.0 * reading.widthScale + indent * deepestRow,
         );
         return Scrollbar(
           controller: _horizontal,
@@ -441,39 +581,107 @@ class _TreePanelState extends State<TreePanel> {
         );
       },
     );
-    if (_focus.isEmpty) return scrollableTree;
-
-    final label = trail.length <= 3
-        ? trail.join(' › ')
-        : '${strings.rootNode} › … › ${trail[trail.length - 2]} › ${trail.last}';
+    final selectedSteps =
+        rows.where((row) => row.path == _selected).firstOrNull?.steps ?? _focus;
+    var breadcrumbNode = widget.snapshot.root!;
+    final crumbs = <({String label, SourceRange range, List<_Step> steps})>[
+      (label: r'$', range: breadcrumbNode.range, steps: const []),
+    ];
+    for (var index = 0; index < selectedSteps.length; index++) {
+      final step = selectedSteps[index];
+      breadcrumbNode = breadcrumbNode.children[step.index].value;
+      crumbs.add((
+        label: step.key ?? '[${step.index}]',
+        range: breadcrumbNode.range,
+        steps: selectedSteps.take(index + 1).toList(),
+      ));
+    }
+    final fullPath = formatJsonPath(
+      selectedSteps.map(
+        (step) => (key: step.key, index: step.key == null ? step.index : null),
+      ),
+    );
+    if (fullPath != _breadcrumbPath) {
+      _breadcrumbPath = fullPath;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _breadcrumbPath == fullPath && _breadcrumbs.hasClients) {
+          _breadcrumbs.jumpTo(_breadcrumbs.position.maxScrollExtent);
+        }
+      });
+    }
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+        SizedBox(
+          height: WorkbenchStyle.rowHeight,
           child: Row(
             children: [
-              IconButton(
-                tooltip: strings.goToParent,
-                icon: const Icon(CupertinoIcons.arrow_left, size: 17),
-                onPressed: () =>
-                    _focusOn(_focus.take(_focus.length - 1).toList()),
-              ),
+              if (_focus.isNotEmpty)
+                IconButton(
+                  tooltip: strings.goToParent,
+                  icon: const Icon(
+                    CupertinoIcons.arrow_left,
+                    size: WorkbenchStyle.controlIconSize,
+                  ),
+                  onPressed: () =>
+                      _focusOn(_focus.take(_focus.length - 1).toList()),
+                ),
               Expanded(
                 child: Tooltip(
-                  message: trail.join(' › '),
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelMedium,
+                  message: fullPath,
+                  child: SingleChildScrollView(
+                    controller: _breadcrumbs,
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (var index = 0; index < crumbs.length; index++) ...[
+                          if (index > 0)
+                            const Icon(CupertinoIcons.chevron_right, size: 12),
+                          TextButton(
+                            key: ValueKey('breadcrumb-$index'),
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(0, 28),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: WorkbenchStyle.space8,
+                              ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: !widget.current
+                                ? null
+                                : () {
+                                    _focusOn(crumbs[index].steps);
+                                    widget.onReveal(crumbs[index].range);
+                                  },
+                            child: Text(
+                              crumbs[index].label,
+                              style: WorkbenchStyle.label,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-              IconButton(
-                tooltip: strings.backToRoot,
-                icon: const Icon(CupertinoIcons.house, size: 17),
-                onPressed: () => _focusOn(const []),
-              ),
+              if (_focus.isNotEmpty)
+                IconButton(
+                  tooltip: strings.backToRoot,
+                  icon: const Icon(
+                    CupertinoIcons.house,
+                    size: WorkbenchStyle.controlIconSize,
+                  ),
+                  onPressed: () => _focusOn(const []),
+                ),
+              if (widget.onCopyPath != null)
+                IconButton(
+                  tooltip: strings.copyJsonPath,
+                  icon: const Icon(
+                    CupertinoIcons.doc_on_clipboard,
+                    size: WorkbenchStyle.controlIconSize,
+                  ),
+                  onPressed: widget.current
+                      ? () => widget.onCopyPath!(fullPath)
+                      : null,
+                ),
             ],
           ),
         ),

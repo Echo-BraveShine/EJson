@@ -127,10 +127,12 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
     await tester.sendKeyUpEvent(modifier);
     await tester.pumpAndSettle();
-    final search = find.descendant(
-      of: find.byType(DocumentFind),
-      matching: find.byType(TextField),
-    );
+    final search = find
+        .descendant(
+          of: find.byType(DocumentFind),
+          matching: find.byType(TextField),
+        )
+        .first;
     await tester.tap(find.text('Source text'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Keys'));
@@ -138,7 +140,10 @@ void main() {
     await tester.enterText(search, 'x.y');
     await tester.pumpAndSettle();
     expect(find.text('1 / 1'), findsOneWidget);
-    expect(find.text('x.y'), findsNWidgets(2));
+    expect(
+      find.descendant(of: find.byType(ListView), matching: find.text('x.y')),
+      findsOneWidget,
+    );
     expect(editor.selection.extentOffset - editor.selection.baseOffset, 5);
     final nextMatch = find.byTooltip('Next match');
     final closeFind = find.byTooltip('Close find');
@@ -278,7 +283,10 @@ void main() {
     await tester.enterText(find.byType(TextField), r'$.items[0].name');
     await tester.tap(find.widgetWithText(FilledButton, 'Go to node'));
     await tester.pumpAndSettle();
-    expect(find.text('name'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(ListView), matching: find.text('name')),
+      findsOneWidget,
+    );
     final selection = tester
         .widget<CodeEditor>(find.byType(CodeEditor))
         .controller!
@@ -313,11 +321,10 @@ void main() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsPanel), findsOneWidget);
-    final about = find.text('About EJson');
-    expect(
-      tester.getTopLeft(about).dy,
-      greaterThan(tester.getTopLeft(find.text('Language')).dy),
-    );
+    expect(find.text('Language'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('settings-about')));
+    await tester.pumpAndSettle();
+    final about = find.text('About EJson').last;
     final checkUpdates = find.text('Check for updates');
     await tester.ensureVisible(checkUpdates);
     await tester.pumpAndSettle();
@@ -345,12 +352,15 @@ void main() {
         )
         .last;
     expect(
-      tester.getCenter(buyCoffee).dy - tester.getCenter(footerDivider).dy,
-      closeTo(
-        tester.getCenter(footerDivider).dy - tester.getCenter(about).dy,
-        1,
-      ),
+      tester.getCenter(footerDivider).dy,
+      greaterThan(tester.getCenter(about).dy),
     );
+    expect(
+      tester.getCenter(footerDivider).dy,
+      lessThan(tester.getCenter(buyCoffee).dy),
+    );
+    await tester.tap(find.byKey(const ValueKey('settings-appearance')));
+    await tester.pumpAndSettle();
     final darkOption = find.text('Dark');
     await tester.ensureVisible(darkOption);
     await tester.tap(darkOption);
@@ -370,6 +380,12 @@ void main() {
     await tester.tap(glassSwitch);
     await tester.pumpAndSettle();
     expect(find.byType(BackdropFilter), findsNothing);
+    final toolbarGroups = find.byType(GlassGroup);
+    expect(toolbarGroups, findsNWidgets(3));
+    expect([
+      for (var i = 0; i < 3; i++) tester.getSize(toolbarGroups.at(i)).height,
+    ], everyElement(WorkbenchStyle.toolbarControlHeight + 4));
+
     expect(
       tester.getSize(find.widgetWithText(FilledButton, 'Done')).height,
       WorkbenchStyle.dialogButtonHeight,
@@ -417,6 +433,8 @@ void main() {
 
       await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('settings-appearance')));
+      await tester.pumpAndSettle();
       final highlightPicker = find.byTooltip('JSON highlighting');
       await tester.ensureVisible(highlightPicker);
       await tester.tap(highlightPicker);
@@ -426,7 +444,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(saved, [JsonHighlight.github]);
       expect(
-        tester.widget<EJsonCodeEditor>(find.byType(EJsonCodeEditor)).highlight,
+        tester
+            .widget<EJsonCodeEditor>(find.byType(EJsonCodeEditor).first)
+            .highlight,
         JsonHighlight.github,
       );
       await tester.tap(find.text('Done'));
@@ -448,6 +468,8 @@ void main() {
 
       await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('settings-appearance')));
+      await tester.pumpAndSettle();
       final treePicker = find.byTooltip('JSON tree style');
       await tester.ensureVisible(treePicker);
       await tester.tap(treePicker);
@@ -460,7 +482,9 @@ void main() {
         JsonTreeStyle.compact,
       );
       expect(
-        tester.widget<EJsonCodeEditor>(find.byType(EJsonCodeEditor)).highlight,
+        tester
+            .widget<EJsonCodeEditor>(find.byType(EJsonCodeEditor).first)
+            .highlight,
         JsonHighlight.github,
       );
       await tester.ensureVisible(highlightPicker);
@@ -469,7 +493,10 @@ void main() {
       await tester.tap(find.text('Monochrome'));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<CodeEditor>(find.byType(CodeEditor)).style?.codeTheme,
+        tester
+            .widget<CodeEditor>(find.byType(CodeEditor).first)
+            .style
+            ?.codeTheme,
         isNull,
       );
     },

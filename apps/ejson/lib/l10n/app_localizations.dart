@@ -877,6 +877,864 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the browser.'**
   String get browserFailed;
+
+  /// No description provided for @replaceText.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with'**
+  String get replaceText;
+
+  /// No description provided for @replaceCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace current'**
+  String get replaceCurrent;
+
+  /// No description provided for @replaceAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all'**
+  String get replaceAll;
+
+  /// No description provided for @matchCase.
+  ///
+  /// In en, this message translates to:
+  /// **'Match case'**
+  String get matchCase;
+
+  /// No description provided for @useRegex.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular expression'**
+  String get useRegex;
+
+  /// No description provided for @invalidRegex.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid regular expression'**
+  String get invalidRegex;
+
+  /// No description provided for @escapeJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Escape as JSON string'**
+  String get escapeJson;
+
+  /// No description provided for @unescapeJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Unescape JSON string'**
+  String get unescapeJson;
+
+  /// No description provided for @unescapeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid, double-quoted JSON string.'**
+  String get unescapeFailed;
+
+  /// No description provided for @extractSubtree.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract to new tab'**
+  String get extractSubtree;
+
+  /// No description provided for @arrayTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Array table'**
+  String get arrayTable;
+
+  /// No description provided for @copyNodeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy JSON value'**
+  String get copyNodeValue;
+
+  /// No description provided for @copyDecodedString.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy string contents'**
+  String get copyDecodedString;
+
+  /// No description provided for @valueCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Node value copied'**
+  String get valueCopied;
+
+  /// No description provided for @filterRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter rows'**
+  String get filterRows;
+
+  /// No description provided for @emptyArray.
+  ///
+  /// In en, this message translates to:
+  /// **'The array is empty'**
+  String get emptyArray;
+
+  /// No description provided for @exportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get exportCsv;
+
+  /// No description provided for @csvExported.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV exported'**
+  String get csvExported;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed'**
+  String get exportFailed;
+
+  /// No description provided for @tableInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a column header to sort, or a cell to copy its contents. Export uses the current filter and sort order.'**
+  String get tableInstructions;
+
+  /// No description provided for @tableRowCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{visible} / {total} rows'**
+  String tableRowCount(int visible, int total);
+
+  /// No description provided for @nodeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} nodes'**
+  String nodeCount(int count);
+
+  /// No description provided for @documentBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} bytes'**
+  String documentBytes(int bytes);
+
+  /// No description provided for @documentStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} bytes · {nodes} nodes · Maximum depth {depth} (root is 0) · Longest array {arrayLength} items'**
+  String documentStatistics(int bytes, int nodes, int depth, int arrayLength);
+
+  /// No description provided for @jsonQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'JSONPath query'**
+  String get jsonQuery;
+
+  /// No description provided for @runQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Run query'**
+  String get runQuery;
+
+  /// No description provided for @queryRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running query…'**
+  String get queryRunning;
+
+  /// No description provided for @jsonQueryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The query failed. Try again.'**
+  String get jsonQueryFailed;
+
+  /// No description provided for @invalidJsonQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid or unsupported JSONPath syntax near character {position}.'**
+  String invalidJsonQuery(int position);
+
+  /// No description provided for @jsonQueryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports fields, array indices, * wildcards and [?condition] filters. Conditions support @ paths, existence, scalar comparisons, &&, || and !. Click a result to reveal its source.'**
+  String get jsonQueryHelp;
+
+  /// No description provided for @queryResultCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} results'**
+  String queryResultCount(int count);
+
+  /// No description provided for @extractQueryResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract results to new tab'**
+  String get extractQueryResults;
+
+  /// No description provided for @goToSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal in source'**
+  String get goToSource;
+
+  /// No description provided for @captureReplacementHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'\$1 and \$2 insert capture groups. \$\$ inserts a dollar sign.'**
+  String get captureReplacementHelp;
+
+  /// No description provided for @formatIndentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Format indentation'**
+  String get formatIndentation;
+
+  /// No description provided for @indentTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'2 spaces'**
+  String get indentTwo;
+
+  /// No description provided for @indentFour.
+  ///
+  /// In en, this message translates to:
+  /// **'4 spaces'**
+  String get indentFour;
+
+  /// No description provided for @indentEight.
+  ///
+  /// In en, this message translates to:
+  /// **'8 spaces'**
+  String get indentEight;
+
+  /// No description provided for @indentTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Tabs'**
+  String get indentTabs;
+
+  /// No description provided for @lineEnding.
+  ///
+  /// In en, this message translates to:
+  /// **'Line endings'**
+  String get lineEnding;
+
+  /// No description provided for @preserveLineEnding.
+  ///
+  /// In en, this message translates to:
+  /// **'Preserve existing'**
+  String get preserveLineEnding;
+
+  /// No description provided for @toolPreferenceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save preferences. Try again.'**
+  String get toolPreferenceFailed;
+
+  /// No description provided for @saveQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Save query'**
+  String get saveQuery;
+
+  /// No description provided for @unsaveQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsave query'**
+  String get unsaveQuery;
+
+  /// No description provided for @savedQueries.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved queries'**
+  String get savedQueries;
+
+  /// No description provided for @noSavedQueries.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved queries'**
+  String get noSavedQueries;
+
+  /// No description provided for @moveArrayItemUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move array item up'**
+  String get moveArrayItemUp;
+
+  /// No description provided for @moveArrayItemDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move array item down'**
+  String get moveArrayItemDown;
+
+  /// No description provided for @duplicateArrayItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate array item'**
+  String get duplicateArrayItem;
+
+  /// No description provided for @sortArray.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort array'**
+  String get sortArray;
+
+  /// No description provided for @sortField.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get sortField;
+
+  /// No description provided for @sortValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Element value'**
+  String get sortValue;
+
+  /// No description provided for @sortAscending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get sortAscending;
+
+  /// No description provided for @sortDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get sortDescending;
+
+  /// No description provided for @sortArrayHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Items with missing fields stay last. Equal values retain their order.'**
+  String get sortArrayHelp;
+
+  /// No description provided for @sortArrayAmbiguous.
+  ///
+  /// In en, this message translates to:
+  /// **'The sort field has duplicate keys. Choose another field.'**
+  String get sortArrayAmbiguous;
+
+  /// No description provided for @readingDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading display'**
+  String get readingDisplay;
+
+  /// No description provided for @readingFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading font'**
+  String get readingFont;
+
+  /// No description provided for @fontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font size'**
+  String get fontSize;
+
+  /// No description provided for @decreaseFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease font size'**
+  String get decreaseFontSize;
+
+  /// No description provided for @increaseFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase font size'**
+  String get increaseFontSize;
+
+  /// No description provided for @lineSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Line spacing'**
+  String get lineSpacing;
+
+  /// No description provided for @spacingCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get spacingCompact;
+
+  /// No description provided for @spacingStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get spacingStandard;
+
+  /// No description provided for @spacingSpacious.
+  ///
+  /// In en, this message translates to:
+  /// **'Spacious'**
+  String get spacingSpacious;
+
+  /// No description provided for @readingPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get readingPreview;
+
+  /// No description provided for @resetReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to defaults'**
+  String get resetReading;
+
+  /// No description provided for @defaultReadingFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Default monospace font'**
+  String get defaultReadingFont;
+
+  /// No description provided for @searchFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search installed fonts'**
+  String get searchFonts;
+
+  /// No description provided for @refreshFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh fonts'**
+  String get refreshFonts;
+
+  /// No description provided for @monospaceFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Monospace'**
+  String get monospaceFont;
+
+  /// No description provided for @fontListFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load fonts. Retry.'**
+  String get fontListFailed;
+
+  /// No description provided for @noMatchingFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching fonts'**
+  String get noMatchingFonts;
+
+  /// No description provided for @fontUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The font “{name}” is unavailable. Using the default font.'**
+  String fontUnavailable(String name);
+
+  /// No description provided for @recentFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent files'**
+  String get recentFiles;
+
+  /// No description provided for @searchRecentFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Search file names or paths'**
+  String get searchRecentFiles;
+
+  /// No description provided for @noRecentFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent files'**
+  String get noRecentFiles;
+
+  /// No description provided for @removeRecentFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from recent files'**
+  String get removeRecentFile;
+
+  /// No description provided for @clearRecentFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear recent files'**
+  String get clearRecentFiles;
+
+  /// No description provided for @recentSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The file was opened or saved, but recent files could not be recorded.'**
+  String get recentSaveFailed;
+
+  /// No description provided for @commandPalette.
+  ///
+  /// In en, this message translates to:
+  /// **'Command palette'**
+  String get commandPalette;
+
+  /// No description provided for @searchCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Search commands…'**
+  String get searchCommands;
+
+  /// No description provided for @noMatchingCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching commands'**
+  String get noMatchingCommands;
+
+  /// No description provided for @commandKeyboardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'↑↓ Select  ·  Enter Run  ·  Esc Close'**
+  String get commandKeyboardHelp;
+
+  /// No description provided for @dropFilesToOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop files to open'**
+  String get dropFilesToOpen;
+
+  /// No description provided for @noDroppedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'The drop contains no local files to open.'**
+  String get noDroppedFiles;
+
+  /// No description provided for @droppedCopyOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'The dropped temporary copy was opened as a new document.'**
+  String get droppedCopyOpened;
+
+  /// No description provided for @someFilesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Some files could not be opened'**
+  String get someFilesFailed;
+
+  /// No description provided for @settingsGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsGeneral;
+
+  /// No description provided for @settingsFormatting.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatting'**
+  String get settingsFormatting;
+
+  /// No description provided for @website.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get website;
+
+  /// No description provided for @schemaValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON Schema validation'**
+  String get schemaValidation;
+
+  /// No description provided for @schemaHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste or load a local schema. Select an issue to reveal its node. Internal references are supported.'**
+  String get schemaHelp;
+
+  /// No description provided for @loadSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Load schema'**
+  String get loadSchema;
+
+  /// No description provided for @validateSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Validate'**
+  String get validateSchema;
+
+  /// No description provided for @schemaChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get schemaChecking;
+
+  /// No description provided for @schemaFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Validation failed'**
+  String get schemaFailed;
+
+  /// No description provided for @schemaValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches schema'**
+  String get schemaValid;
+
+  /// No description provided for @redactData.
+  ///
+  /// In en, this message translates to:
+  /// **'Redact data'**
+  String get redactData;
+
+  /// No description provided for @redactHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate case-insensitive field names with commas or newlines. Matching values become the replacement string. Enter one JSONPath per line, with wildcards supported.'**
+  String get redactHelp;
+
+  /// No description provided for @redactKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Field names'**
+  String get redactKeys;
+
+  /// No description provided for @redactPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'JSONPath (optional)'**
+  String get redactPaths;
+
+  /// No description provided for @redactReplacement.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement string'**
+  String get redactReplacement;
+
+  /// No description provided for @openRedactedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Open redacted copy'**
+  String get openRedactedCopy;
+
+  /// No description provided for @saveRedactedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save redacted copy'**
+  String get saveRedactedCopy;
+
+  /// No description provided for @documentTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Document tools'**
+  String get documentTools;
+
+  /// No description provided for @schemaIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} validation issues'**
+  String schemaIssues(int count);
+
+  /// No description provided for @redactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} values replaced'**
+  String redactCount(int count);
+
+  /// No description provided for @comparisonSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select or clear all displayed differences'**
+  String get comparisonSelectAll;
+
+  /// No description provided for @comparisonSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String comparisonSelected(int count);
+
+  /// No description provided for @comparisonPreviewChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview changes to left'**
+  String get comparisonPreviewChanges;
+
+  /// No description provided for @comparisonApplyChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply changes'**
+  String get comparisonApplyChanges;
+
+  /// No description provided for @comparisonApplyPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview applying differences'**
+  String get comparisonApplyPreview;
+
+  /// No description provided for @comparisonApplyTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target document · {name}'**
+  String comparisonApplyTarget(String name);
+
+  /// No description provided for @comparisonApplyDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Right → Left · Swap sides to apply in reverse'**
+  String get comparisonApplyDirection;
+
+  /// No description provided for @comparisonStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents changed. Compare again.'**
+  String get comparisonStale;
+
+  /// No description provided for @comparisonRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare again'**
+  String get comparisonRefresh;
+
+  /// No description provided for @comparisonApplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not prepare changes. Compare again and retry.'**
+  String get comparisonApplyFailed;
+
+  /// No description provided for @formatConversion.
+  ///
+  /// In en, this message translates to:
+  /// **'Format conversion'**
+  String get formatConversion;
+
+  /// No description provided for @conversionDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion direction'**
+  String get conversionDirection;
+
+  /// No description provided for @conversionInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get conversionInput;
+
+  /// No description provided for @conversionDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'YAML document (starting at 1)'**
+  String get conversionDocument;
+
+  /// No description provided for @conversionDocumentError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a document number starting at 1.'**
+  String get conversionDocumentError;
+
+  /// No description provided for @conversionYamlNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Data and exact numbers are retained in JSON. YAML comments are removed, and anchors, aliases and merge keys are expanded. Unsupported types produce an error.'**
+  String get conversionYamlNotice;
+
+  /// No description provided for @conversionCsvNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV accepts an object or an array. Object fields become columns and other array items use the \$ value column. Values become text and nested structures become JSON strings. Missing fields and empty strings produce empty cells, while null becomes null. Preview to choose and reorder columns.'**
+  String get conversionCsvNotice;
+
+  /// No description provided for @conversionDelimiter.
+  ///
+  /// In en, this message translates to:
+  /// **'Delimiter'**
+  String get conversionDelimiter;
+
+  /// No description provided for @conversionComma.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma'**
+  String get conversionComma;
+
+  /// No description provided for @conversionSemicolon.
+  ///
+  /// In en, this message translates to:
+  /// **'Semicolon'**
+  String get conversionSemicolon;
+
+  /// No description provided for @conversionHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Include header'**
+  String get conversionHeader;
+
+  /// No description provided for @conversionFlatten.
+  ///
+  /// In en, this message translates to:
+  /// **'Flatten nested structures into JSONPath columns'**
+  String get conversionFlatten;
+
+  /// No description provided for @conversionColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns and order'**
+  String get conversionColumns;
+
+  /// No description provided for @conversionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel conversion'**
+  String get conversionCancel;
+
+  /// No description provided for @conversionRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert and preview'**
+  String get conversionRun;
+
+  /// No description provided for @conversionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy result'**
+  String get conversionCopy;
+
+  /// No description provided for @conversionCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion result copied'**
+  String get conversionCopied;
+
+  /// No description provided for @conversionOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in new tab'**
+  String get conversionOpen;
+
+  /// No description provided for @conversionExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export file'**
+  String get conversionExport;
+
+  /// No description provided for @contentValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid {format}'**
+  String contentValid(String format);
+
+  /// No description provided for @conversionDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} YAML documents'**
+  String conversionDocuments(int count);
+
+  /// No description provided for @conversionColumnUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move column up'**
+  String get conversionColumnUp;
+
+  /// No description provided for @conversionColumnDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move column down'**
+  String get conversionColumnDown;
+
+  /// No description provided for @showReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Show replace'**
+  String get showReplace;
+
+  /// No description provided for @hideReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide replace'**
+  String get hideReplace;
 }
 
 class _AppLocalizationsDelegate

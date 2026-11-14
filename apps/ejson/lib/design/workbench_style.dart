@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
@@ -12,6 +13,9 @@ abstract final class WorkbenchStyle {
   static const space20 = 20.0;
 
   static const controlRadius = 7.0;
+  static const inputHeight = 40.0;
+  static const inputVerticalPadding = 10.0;
+  static const settingsRowHeight = 56.0;
   static const groupRadius = 11.0;
   static const dialogRadius = 15.0;
   static const rowHeight = 32.0;
@@ -36,6 +40,24 @@ abstract final class WorkbenchStyle {
   );
   static const menuElevation = 6.0;
   static const dialogElevation = 12.0;
+
+  static double inputHeightFor(BuildContext context, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: 'Ag',
+        style: style.copyWith(height: body.height),
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final height = math.max(
+      inputHeight,
+      painter.height + inputVerticalPadding * 2,
+    );
+    painter.dispose();
+    return height;
+  }
 
   static String codeFont(TargetPlatform platform) => switch (platform) {
     TargetPlatform.macOS => 'Menlo',
@@ -70,15 +92,7 @@ ButtonStyle workbenchDialogButtonStyle(
   return ButtonStyle(
     foregroundColor: WidgetStatePropertyAll(foreground),
     backgroundColor: WidgetStatePropertyAll(background),
-    overlayColor: WidgetStateProperty.resolveWith((states) {
-      if (states.contains(WidgetState.pressed)) {
-        return foreground.withValues(alpha: .14);
-      }
-      if (states.contains(WidgetState.hovered)) {
-        return foreground.withValues(alpha: .06);
-      }
-      return Colors.transparent;
-    }),
+    overlayColor: workbenchInteractionOverlay(foreground),
     side: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.focused)) {
         return BorderSide(
@@ -116,6 +130,19 @@ ButtonStyle workbenchDialogButtonStyle(
     splashFactory: NoSplash.splashFactory,
   );
 }
+
+WidgetStateProperty<Color?> workbenchInteractionOverlay(
+  Color color,
+) => WidgetStateProperty.resolveWith((states) {
+  if (states.contains(WidgetState.pressed)) return color.withValues(alpha: .14);
+  if (states.contains(WidgetState.focused)) return color.withValues(alpha: .10);
+  return Colors.transparent;
+});
+
+OutlineInputBorder workbenchInputBorder(Color color) => OutlineInputBorder(
+  borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
+  borderSide: BorderSide(color: color, width: 1),
+);
 
 ThemeData workbenchTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
@@ -168,7 +195,43 @@ ThemeData workbenchTheme(Brightness brightness) {
     ).apply(bodyColor: colors.onSurface, displayColor: colors.onSurface),
     visualDensity: VisualDensity.compact,
     splashFactory: NoSplash.splashFactory,
-    hoverColor: colors.onSurface.withValues(alpha: .07),
+    hoverColor: Colors.transparent,
+    iconButtonTheme: IconButtonThemeData(
+      style: ButtonStyle(
+        overlayColor: workbenchInteractionOverlay(colors.onSurface),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: ButtonStyle(
+        overlayColor: workbenchInteractionOverlay(colors.primary),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ButtonStyle(
+        overlayColor: workbenchInteractionOverlay(colors.primary),
+        elevation: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.pressed) ? 1.0 : 0.0,
+        ),
+      ),
+    ),
+    checkboxTheme: CheckboxThemeData(
+      overlayColor: workbenchInteractionOverlay(colors.primary),
+    ),
+    radioTheme: RadioThemeData(
+      overlayColor: workbenchInteractionOverlay(colors.primary),
+    ),
+    switchTheme: SwitchThemeData(
+      overlayColor: workbenchInteractionOverlay(colors.primary),
+    ),
+    scrollbarTheme: ScrollbarThemeData(
+      thickness: const WidgetStatePropertyAll(6),
+      trackVisibility: const WidgetStatePropertyAll(false),
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => colors.onSurface.withValues(
+          alpha: states.contains(WidgetState.dragged) ? .45 : .25,
+        ),
+      ),
+    ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: colors.onSurface,
@@ -176,15 +239,21 @@ ThemeData workbenchTheme(Brightness brightness) {
         minimumSize: const Size(56, 28),
         padding: const EdgeInsets.symmetric(horizontal: 12),
         textStyle: WorkbenchStyle.body.copyWith(fontWeight: FontWeight.w500),
-      ),
+      ).copyWith(overlayColor: workbenchInteractionOverlay(colors.onSurface)),
     ),
     filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        shape: buttonShape,
-        minimumSize: const Size(68, 28),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        textStyle: WorkbenchStyle.body.copyWith(fontWeight: FontWeight.w600),
-      ),
+      style:
+          FilledButton.styleFrom(
+            shape: buttonShape,
+            minimumSize: const Size(68, 28),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            textStyle: WorkbenchStyle.body.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ).copyWith(
+            overlayColor: workbenchInteractionOverlay(colors.onPrimary),
+            elevation: const WidgetStatePropertyAll(0),
+          ),
     ),
     dividerTheme: DividerThemeData(color: colors.outlineVariant, thickness: 1),
     popupMenuTheme: PopupMenuThemeData(
@@ -224,16 +293,29 @@ ThemeData workbenchTheme(Brightness brightness) {
       ),
     ),
     inputDecorationTheme: InputDecorationThemeData(
+      visualDensity: VisualDensity.standard,
+      hoverColor: Colors.transparent,
       filled: true,
       fillColor: colors.surface,
-      contentPadding: const EdgeInsets.all(12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(WorkbenchStyle.groupRadius),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: WorkbenchStyle.space8,
+        vertical: WorkbenchStyle.inputVerticalPadding,
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(WorkbenchStyle.groupRadius),
-        borderSide: BorderSide(color: colors.outlineVariant),
+      prefixIconConstraints: const BoxConstraints(
+        minWidth: WorkbenchStyle.inputHeight,
+        minHeight: WorkbenchStyle.inputHeight,
       ),
+      suffixIconConstraints: const BoxConstraints(
+        minWidth: WorkbenchStyle.inputHeight,
+        minHeight: WorkbenchStyle.inputHeight,
+      ),
+      border: workbenchInputBorder(colors.outlineVariant),
+      enabledBorder: workbenchInputBorder(colors.outlineVariant),
+      focusedBorder: workbenchInputBorder(colors.primary),
+      disabledBorder: workbenchInputBorder(colors.outlineVariant),
+      errorBorder: workbenchInputBorder(colors.error),
+      focusedErrorBorder: workbenchInputBorder(colors.error),
     ),
   );
 }
@@ -274,6 +356,136 @@ class WorkbenchDialog extends StatelessWidget {
   );
 }
 
+/// A labeled selector using the same menu rows as the workbench toolbar.
+class WorkbenchSelect<T> extends StatelessWidget {
+  const WorkbenchSelect({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String label;
+  final T value;
+  final List<({T value, String label})> options;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: WorkbenchStyle.label),
+        const SizedBox(height: WorkbenchStyle.space4),
+        PopupMenuButton<T>(
+          tooltip: label,
+          initialValue: value,
+          onSelected: onChanged,
+          itemBuilder: (_) => [
+            for (final option in options)
+              WorkbenchMenuItem(
+                value: option.value,
+                label: option.label,
+                checked: option.value == value,
+              ),
+          ],
+          child: Container(
+            constraints: const BoxConstraints(
+              minHeight: WorkbenchStyle.inputHeight,
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: WorkbenchStyle.space8,
+              vertical: WorkbenchStyle.space4,
+            ),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
+              border: Border.all(color: colors.outlineVariant),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    options.firstWhere((option) => option.value == value).label,
+                    style: WorkbenchStyle.body,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: WorkbenchStyle.space8),
+                Icon(
+                  CupertinoIcons.chevron_down,
+                  size: 12,
+                  color: colors.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Compact form controls and fixed dialog chrome for document tools.
+class WorkbenchToolDialog extends StatelessWidget {
+  const WorkbenchToolDialog({
+    super.key,
+    required this.title,
+    required this.content,
+    required this.actions,
+    this.scrollable = true,
+  });
+
+  final String title;
+  final Widget content;
+  final List<Widget> actions;
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Theme(
+      data: theme.copyWith(
+        checkboxTheme: theme.checkboxTheme.copyWith(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+          side: BorderSide(color: colors.outlineVariant),
+          visualDensity: VisualDensity.compact,
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: workbenchDialogButtonStyle(context),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: workbenchDialogButtonStyle(
+            context,
+            role: DialogButtonRole.primary,
+          ),
+        ),
+      ),
+      child: WorkbenchDialog(
+        title: title,
+        scrollable: false,
+        content: scrollable
+            ? ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: (MediaQuery.sizeOf(context).height - 180).clamp(
+                    220.0,
+                    560.0,
+                  ),
+                ),
+                child: SingleChildScrollView(child: content),
+              )
+            : content,
+        actions: actions,
+      ),
+    );
+  }
+}
+
 /// A translucent control surface over the workbench's own background.
 class GlassGroup extends StatelessWidget {
   const GlassGroup({super.key, required this.enabled, required this.child});
@@ -295,7 +507,13 @@ class GlassGroup extends StatelessWidget {
     if (!glass) {
       return Material(
         color: Colors.transparent,
-        child: Padding(padding: const EdgeInsets.all(2), child: child),
+        child: Padding(
+          padding: const EdgeInsets.all(2),
+          child: SizedBox(
+            height: WorkbenchStyle.toolbarControlHeight,
+            child: child,
+          ),
+        ),
       );
     }
     return ClipRRect(
@@ -310,7 +528,13 @@ class GlassGroup extends StatelessWidget {
               color: colors.outlineVariant.withValues(alpha: .80),
             ),
           ),
-          child: Padding(padding: const EdgeInsets.all(2), child: child),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: SizedBox(
+              height: WorkbenchStyle.toolbarControlHeight,
+              child: child,
+            ),
+          ),
         ),
       ),
     );
@@ -321,12 +545,12 @@ class GlassGroup extends StatelessWidget {
 class WorkbenchMenuItem<T> extends PopupMenuItem<T> {
   WorkbenchMenuItem({
     super.key,
-    required T value,
-    required IconData icon,
+    required T super.value,
+    IconData? icon,
     required String label,
     bool checked = false,
+    super.enabled,
   }) : super(
-         value: value,
          height: WorkbenchStyle.rowHeight,
          padding: const EdgeInsets.symmetric(horizontal: 10),
          child: Builder(
@@ -334,12 +558,14 @@ class WorkbenchMenuItem<T> extends PopupMenuItem<T> {
              final colors = Theme.of(context).colorScheme;
              return Row(
                children: [
-                 Icon(
-                   icon,
-                   size: WorkbenchStyle.controlIconSize,
-                   color: checked ? colors.primary : colors.onSurfaceVariant,
-                 ),
-                 const SizedBox(width: 10),
+                 if (icon != null) ...[
+                   Icon(
+                     icon,
+                     size: WorkbenchStyle.controlIconSize,
+                     color: checked ? colors.primary : colors.onSurfaceVariant,
+                   ),
+                   const SizedBox(width: 10),
+                 ],
                  Expanded(
                    child: Text(
                      label,

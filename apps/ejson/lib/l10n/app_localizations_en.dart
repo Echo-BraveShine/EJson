@@ -419,4 +419,474 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get browserFailed => 'Could not open the browser.';
+
+  @override
+  String get replaceText => 'Replace with';
+
+  @override
+  String get replaceCurrent => 'Replace current';
+
+  @override
+  String get replaceAll => 'Replace all';
+
+  @override
+  String get matchCase => 'Match case';
+
+  @override
+  String get useRegex => 'Regular expression';
+
+  @override
+  String get invalidRegex => 'Invalid regular expression';
+
+  @override
+  String get escapeJson => 'Escape as JSON string';
+
+  @override
+  String get unescapeJson => 'Unescape JSON string';
+
+  @override
+  String get unescapeFailed => 'Enter a valid, double-quoted JSON string.';
+
+  @override
+  String get extractSubtree => 'Extract to new tab';
+
+  @override
+  String get arrayTable => 'Array table';
+
+  @override
+  String get copyNodeValue => 'Copy JSON value';
+
+  @override
+  String get copyDecodedString => 'Copy string contents';
+
+  @override
+  String get valueCopied => 'Node value copied';
+
+  @override
+  String get filterRows => 'Filter rows';
+
+  @override
+  String get emptyArray => 'The array is empty';
+
+  @override
+  String get exportCsv => 'Export CSV';
+
+  @override
+  String get csvExported => 'CSV exported';
+
+  @override
+  String get exportFailed => 'Export failed';
+
+  @override
+  String get tableInstructions =>
+      'Click a column header to sort, or a cell to copy its contents. Export uses the current filter and sort order.';
+
+  @override
+  String tableRowCount(int visible, int total) {
+    return '$visible / $total rows';
+  }
+
+  @override
+  String nodeCount(int count) {
+    return '$count nodes';
+  }
+
+  @override
+  String documentBytes(int bytes) {
+    return '$bytes bytes';
+  }
+
+  @override
+  String documentStatistics(int bytes, int nodes, int depth, int arrayLength) {
+    return '$bytes bytes · $nodes nodes · Maximum depth $depth (root is 0) · Longest array $arrayLength items';
+  }
+
+  @override
+  String get jsonQuery => 'JSONPath query';
+
+  @override
+  String get runQuery => 'Run query';
+
+  @override
+  String get queryRunning => 'Running query…';
+
+  @override
+  String get jsonQueryFailed => 'The query failed. Try again.';
+
+  @override
+  String invalidJsonQuery(int position) {
+    return 'Invalid or unsupported JSONPath syntax near character $position.';
+  }
+
+  @override
+  String get jsonQueryHelp =>
+      'Supports fields, array indices, * wildcards and [?condition] filters. Conditions support @ paths, existence, scalar comparisons, &&, || and !. Click a result to reveal its source.';
+
+  @override
+  String queryResultCount(int count) {
+    return '$count results';
+  }
+
+  @override
+  String get extractQueryResults => 'Extract results to new tab';
+
+  @override
+  String get goToSource => 'Reveal in source';
+
+  @override
+  String get captureReplacementHelp =>
+      '\$1 and \$2 insert capture groups. \$\$ inserts a dollar sign.';
+
+  @override
+  String get formatIndentation => 'Format indentation';
+
+  @override
+  String get indentTwo => '2 spaces';
+
+  @override
+  String get indentFour => '4 spaces';
+
+  @override
+  String get indentEight => '8 spaces';
+
+  @override
+  String get indentTabs => 'Tabs';
+
+  @override
+  String get lineEnding => 'Line endings';
+
+  @override
+  String get preserveLineEnding => 'Preserve existing';
+
+  @override
+  String get toolPreferenceFailed => 'Could not save preferences. Try again.';
+
+  @override
+  String get saveQuery => 'Save query';
+
+  @override
+  String get unsaveQuery => 'Unsave query';
+
+  @override
+  String get savedQueries => 'Saved queries';
+
+  @override
+  String get noSavedQueries => 'No saved queries';
+
+  @override
+  String get moveArrayItemUp => 'Move array item up';
+
+  @override
+  String get moveArrayItemDown => 'Move array item down';
+
+  @override
+  String get duplicateArrayItem => 'Duplicate array item';
+
+  @override
+  String get sortArray => 'Sort array';
+
+  @override
+  String get sortField => 'Sort by';
+
+  @override
+  String get sortValue => 'Element value';
+
+  @override
+  String get sortAscending => 'Ascending';
+
+  @override
+  String get sortDescending => 'Descending';
+
+  @override
+  String get sortArrayHelp =>
+      'Items with missing fields stay last. Equal values retain their order.';
+
+  @override
+  String get sortArrayAmbiguous =>
+      'The sort field has duplicate keys. Choose another field.';
+
+  @override
+  String get readingDisplay => 'Reading display';
+
+  @override
+  String get readingFont => 'Reading font';
+
+  @override
+  String get fontSize => 'Font size';
+
+  @override
+  String get decreaseFontSize => 'Decrease font size';
+
+  @override
+  String get increaseFontSize => 'Increase font size';
+
+  @override
+  String get lineSpacing => 'Line spacing';
+
+  @override
+  String get spacingCompact => 'Compact';
+
+  @override
+  String get spacingStandard => 'Standard';
+
+  @override
+  String get spacingSpacious => 'Spacious';
+
+  @override
+  String get readingPreview => 'Preview';
+
+  @override
+  String get resetReading => 'Reset to defaults';
+
+  @override
+  String get defaultReadingFont => 'Default monospace font';
+
+  @override
+  String get searchFonts => 'Search installed fonts';
+
+  @override
+  String get refreshFonts => 'Refresh fonts';
+
+  @override
+  String get monospaceFont => 'Monospace';
+
+  @override
+  String get fontListFailed => 'Could not load fonts. Retry.';
+
+  @override
+  String get noMatchingFonts => 'No matching fonts';
+
+  @override
+  String fontUnavailable(String name) {
+    return 'The font “$name” is unavailable. Using the default font.';
+  }
+
+  @override
+  String get recentFiles => 'Recent files';
+
+  @override
+  String get searchRecentFiles => 'Search file names or paths';
+
+  @override
+  String get noRecentFiles => 'No recent files';
+
+  @override
+  String get removeRecentFile => 'Remove from recent files';
+
+  @override
+  String get clearRecentFiles => 'Clear recent files';
+
+  @override
+  String get recentSaveFailed =>
+      'The file was opened or saved, but recent files could not be recorded.';
+
+  @override
+  String get commandPalette => 'Command palette';
+
+  @override
+  String get searchCommands => 'Search commands…';
+
+  @override
+  String get noMatchingCommands => 'No matching commands';
+
+  @override
+  String get commandKeyboardHelp => '↑↓ Select  ·  Enter Run  ·  Esc Close';
+
+  @override
+  String get dropFilesToOpen => 'Drop files to open';
+
+  @override
+  String get noDroppedFiles => 'The drop contains no local files to open.';
+
+  @override
+  String get droppedCopyOpened =>
+      'The dropped temporary copy was opened as a new document.';
+
+  @override
+  String get someFilesFailed => 'Some files could not be opened';
+
+  @override
+  String get settingsGeneral => 'General';
+
+  @override
+  String get settingsFormatting => 'Formatting';
+
+  @override
+  String get website => 'Website';
+
+  @override
+  String get schemaValidation => 'JSON Schema validation';
+
+  @override
+  String get schemaHelp =>
+      'Paste or load a local schema. Select an issue to reveal its node. Internal references are supported.';
+
+  @override
+  String get loadSchema => 'Load schema';
+
+  @override
+  String get validateSchema => 'Validate';
+
+  @override
+  String get schemaChecking => 'Working…';
+
+  @override
+  String get schemaFailed => 'Validation failed';
+
+  @override
+  String get schemaValid => 'Matches schema';
+
+  @override
+  String get redactData => 'Redact data';
+
+  @override
+  String get redactHelp =>
+      'Separate case-insensitive field names with commas or newlines. Matching values become the replacement string. Enter one JSONPath per line, with wildcards supported.';
+
+  @override
+  String get redactKeys => 'Field names';
+
+  @override
+  String get redactPaths => 'JSONPath (optional)';
+
+  @override
+  String get redactReplacement => 'Replacement string';
+
+  @override
+  String get openRedactedCopy => 'Open redacted copy';
+
+  @override
+  String get saveRedactedCopy => 'Save redacted copy';
+
+  @override
+  String get documentTools => 'Document tools';
+
+  @override
+  String schemaIssues(int count) {
+    return '$count validation issues';
+  }
+
+  @override
+  String redactCount(int count) {
+    return '$count values replaced';
+  }
+
+  @override
+  String get comparisonSelectAll => 'Select or clear all displayed differences';
+
+  @override
+  String comparisonSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get comparisonPreviewChanges => 'Preview changes to left';
+
+  @override
+  String get comparisonApplyChanges => 'Apply changes';
+
+  @override
+  String get comparisonApplyPreview => 'Preview applying differences';
+
+  @override
+  String comparisonApplyTarget(String name) {
+    return 'Target document · $name';
+  }
+
+  @override
+  String get comparisonApplyDirection =>
+      'Right → Left · Swap sides to apply in reverse';
+
+  @override
+  String get comparisonStale => 'Documents changed. Compare again.';
+
+  @override
+  String get comparisonRefresh => 'Compare again';
+
+  @override
+  String get comparisonApplyFailed =>
+      'Could not prepare changes. Compare again and retry.';
+
+  @override
+  String get formatConversion => 'Format conversion';
+
+  @override
+  String get conversionDirection => 'Conversion direction';
+
+  @override
+  String get conversionInput => 'Input';
+
+  @override
+  String get conversionDocument => 'YAML document (starting at 1)';
+
+  @override
+  String get conversionDocumentError =>
+      'Enter a document number starting at 1.';
+
+  @override
+  String get conversionYamlNotice =>
+      'Data and exact numbers are retained in JSON. YAML comments are removed, and anchors, aliases and merge keys are expanded. Unsupported types produce an error.';
+
+  @override
+  String get conversionCsvNotice =>
+      'CSV accepts an object or an array. Object fields become columns and other array items use the \$ value column. Values become text and nested structures become JSON strings. Missing fields and empty strings produce empty cells, while null becomes null. Preview to choose and reorder columns.';
+
+  @override
+  String get conversionDelimiter => 'Delimiter';
+
+  @override
+  String get conversionComma => 'Comma';
+
+  @override
+  String get conversionSemicolon => 'Semicolon';
+
+  @override
+  String get conversionHeader => 'Include header';
+
+  @override
+  String get conversionFlatten =>
+      'Flatten nested structures into JSONPath columns';
+
+  @override
+  String get conversionColumns => 'Columns and order';
+
+  @override
+  String get conversionCancel => 'Cancel conversion';
+
+  @override
+  String get conversionRun => 'Convert and preview';
+
+  @override
+  String get conversionCopy => 'Copy result';
+
+  @override
+  String get conversionCopied => 'Conversion result copied';
+
+  @override
+  String get conversionOpen => 'Open in new tab';
+
+  @override
+  String get conversionExport => 'Export file';
+
+  @override
+  String contentValid(String format) {
+    return 'Valid $format';
+  }
+
+  @override
+  String conversionDocuments(int count) {
+    return '$count YAML documents';
+  }
+
+  @override
+  String get conversionColumnUp => 'Move column up';
+
+  @override
+  String get conversionColumnDown => 'Move column down';
+
+  @override
+  String get showReplace => 'Show replace';
+
+  @override
+  String get hideReplace => 'Hide replace';
 }

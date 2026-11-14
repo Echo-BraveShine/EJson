@@ -16,6 +16,7 @@ class LocalJsonFile {
     String name,
     String text, {
     Future<void> Function(String, Uint8List)? writeAtomically,
+    bool bom = false,
   }) async {
     await drafts.create(recursive: true);
     // Give each draft its own directory so repeated names cannot collide.
@@ -25,6 +26,7 @@ class LocalJsonFile {
       return await LocalJsonFile(
         file.path,
         '',
+        bom: bom,
       ).save(text, destination: file.path, writeAtomically: writeAtomically);
     } on Exception {
       try {
