@@ -5,7 +5,8 @@ Summary: Desktop JSON editor with a synchronized tree view
 License: LicenseRef-EJson
 URL: https://github.com/Echo-BraveShine/EJson
 Source0: ejson.tar.gz
-BuildRequires: patchelf
+# The packaging script checks for patchelf on PATH. Ubuntu CI installs it via
+# APT, so rpmbuild cannot resolve it through the RPM database.
 
 # The archive contains Flutter's existing release binaries.
 %global debug_package %{nil}

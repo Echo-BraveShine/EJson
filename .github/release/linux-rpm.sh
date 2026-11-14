@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if ! command -v patchelf >/dev/null; then
+  echo '::error::RPM packaging requires patchelf on PATH.' >&2
+  exit 1
+fi
+
 bundle_archive=$(realpath "$1")
 arch=$2
 output="$PWD/EJson-linux-$arch.rpm"
