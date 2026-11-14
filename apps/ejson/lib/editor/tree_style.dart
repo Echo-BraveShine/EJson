@@ -8,7 +8,9 @@ enum JsonTreeStyle {
   colorByType,
   striped,
   compact,
-  outline;
+  outline,
+  structure,
+  guides;
 
   String label(AppLocalizations strings) => switch (this) {
     classic => strings.treeStyleClassic,
@@ -16,7 +18,11 @@ enum JsonTreeStyle {
     striped => strings.treeStyleStriped,
     compact => strings.treeStyleCompact,
     outline => strings.treeStyleOutline,
+    structure => strings.treeStyleStructure,
+    guides => strings.treeStyleGuides,
   };
+
+  bool get typeIcons => this == structure || this == guides;
 
   double get rowHeight => this == compact ? 28 : 34;
   double get indent => this == compact ? 10 : 12;
@@ -25,7 +31,7 @@ enum JsonTreeStyle {
     if (this == outline || kind == JsonKind.object || kind == JsonKind.array) {
       return colors.onSurfaceVariant;
     }
-    if (this != colorByType) return colors.primary;
+    if (this != colorByType && !typeIcons) return colors.primary;
 
     final dark = colors.brightness == Brightness.dark;
     return switch (kind) {

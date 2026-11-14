@@ -889,4 +889,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hideReplace => 'Hide replace';
+
+  @override
+  String get treeStyleStructure => 'Structure navigator';
+
+  @override
+  String get treeStyleGuides => 'Hierarchy guides';
+
+  @override
+  String get highlightPreview => 'Highlight preview';
+
+  @override
+  String get treePreview => 'Tree preview';
 }

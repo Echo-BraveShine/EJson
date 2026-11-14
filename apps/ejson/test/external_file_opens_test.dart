@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:ejson/main.dart';
 import 'package:ejson/settings/installed_fonts.dart';
 import 'package:ejson/settings/tool_preferences.dart';
@@ -56,7 +57,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(batches.expand((b) => b).map((f) => f.path), [
         '/path with spaces/中文.json',
-        '/tmp/a b.json',
+        Uri.parse(
+          'file:///tmp/a%20b.json',
+        ).toFilePath(windows: Platform.isWindows),
         '/startup.json',
         '/running.json',
       ]);
@@ -65,6 +68,21 @@ void main() {
       await requests.dispose();
     },
   );
+
+  test('file URI arguments decode drive paths, Unicode and spaces', () async {
+    final requests = ExternalFileOpens([
+      'file:///C:/Users/test/%E4%B8%AD%E6%96%87%20file.json',
+      r'C:\Documents\raw file.json',
+    ]);
+    final files = await requests.requests.first;
+    expect(files.map((file) => file.path), [
+      Platform.isWindows
+          ? r'C:\Users\test\中文 file.json'
+          : '/C:/Users/test/中文 file.json',
+      r'C:\Documents\raw file.json',
+    ]);
+    await requests.dispose();
+  });
 
   testWidgets(
     'external opens wait for dialogs, preserve dirty tabs and record recents',

@@ -339,5 +339,9 @@
   "conversionColumnUp": "上移列",
   "conversionColumnDown": "下移列",
   "showReplace": "展开替换",
-  "hideReplace": "收起替换"
+  "hideReplace": "收起替换",
+  "treeStyleStructure": "结构导航",
+  "treeStyleGuides": "层级引导线",
+  "highlightPreview": "高亮预览",
+  "treePreview": "树样式预览"
 }

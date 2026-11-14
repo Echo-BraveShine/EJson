@@ -161,6 +161,27 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     final reading = ReadingStyle.of(context);
     final code = reading.text.copyWith(fontSize: reading.scaledFontSize);
     final highlight = widget.highlight.colors(theme.brightness);
+    final schemeBackground = widget.highlight.editorBackground(
+      theme.brightness,
+    );
+    final background = schemeBackground ?? colors.surface;
+    final foreground = schemeBackground == null
+        ? colors.onSurface
+        : highlight!['root']!.color!;
+    final editorDark =
+        ThemeData.estimateBrightnessForColor(background) == Brightness.dark;
+    final accent = schemeBackground == null
+        ? colors.primary
+        : editorDark
+        ? const Color(0xff79b7ff)
+        : const Color(0xff0066cc);
+    final muted = schemeBackground == null
+        ? colors.onSurfaceVariant
+        : foreground.withValues(alpha: .72);
+    final divider = schemeBackground == null
+        ? colors.outlineVariant
+        : foreground.withValues(alpha: .20);
+
     return CodeEditor(
       controller: _controller,
       focusNode: _focus,
@@ -172,14 +193,14 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
       wordWrap: false,
       padding: const EdgeInsets.fromLTRB(13, 10, 14, 10),
       style: CodeEditorStyle(
-        backgroundColor: colors.surface,
-        textColor: colors.onSurface,
+        backgroundColor: background,
+        textColor: foreground,
         fontFamily: code.fontFamily,
         fontFamilyFallback: code.fontFamilyFallback,
         fontHeight: code.height,
-        cursorColor: colors.primary,
-        selectionColor: colors.primary.withValues(alpha: .25),
-        cursorLineColor: colors.primary.withValues(alpha: .055),
+        cursorColor: accent,
+        selectionColor: accent.withValues(alpha: .25),
+        cursorLineColor: accent.withValues(alpha: .055),
         fontSize: code.fontSize,
         codeTheme: highlight == null
             ? null
@@ -196,13 +217,13 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
                 theme: highlight,
               ),
       ),
-      leadingDivider: VerticalDivider(width: 1, color: colors.outlineVariant),
+      leadingDivider: VerticalDivider(width: 1, color: divider),
       indicatorBuilder: (context, controller, _, notifier) =>
           DefaultCodeLineNumber(
             controller: controller,
             notifier: notifier,
-            textStyle: code.copyWith(color: colors.onSurfaceVariant),
-            focusedTextStyle: code.copyWith(color: colors.primary),
+            textStyle: code.copyWith(color: muted),
+            focusedTextStyle: code.copyWith(color: accent),
           ),
     );
   }

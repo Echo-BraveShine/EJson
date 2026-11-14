@@ -874,4 +874,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hideReplace => '收起替换';
+
+  @override
+  String get treeStyleStructure => '结构导航';
+
+  @override
+  String get treeStyleGuides => '层级引导线';
+
+  @override
+  String get highlightPreview => '高亮预览';
+
+  @override
+  String get treePreview => '树样式预览';
 }

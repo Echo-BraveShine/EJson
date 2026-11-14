@@ -244,7 +244,14 @@ void main() {
       );
       addTearDown(container.dispose);
       String? copied;
-      String? destination = '/tmp/ejson-array-export-test.csv';
+      final exportDirectory = Directory.systemTemp.createTempSync(
+        'ejson-array-export-',
+      );
+      addTearDown(() => exportDirectory.deleteSync(recursive: true));
+      final exportPath = File.fromUri(
+        exportDirectory.uri.resolve('ejson-array-export-test.csv'),
+      ).path;
+      String? destination = exportPath;
       final messenger = tester.binding.defaultBinaryMessenger;
       const fileSelector = MethodChannel('plugins.flutter.io/file_selector');
       messenger.setMockMethodCallHandler(fileSelector, (call) async {
@@ -306,6 +313,11 @@ void main() {
         }
       });
       await tester.pumpAndSettle();
+      expect(
+        exportedBytes,
+        isNotNull,
+        reason: 'CSV export should invoke the writer',
+      );
       expect(utf8.decode(exportedBytes!), '"id"\r\n"1"');
       expect(find.text('CSV exported'), findsOneWidget);
       exportedBytes = null;
@@ -313,7 +325,7 @@ void main() {
       await tester.tap(find.text('Export CSV'));
       await tester.pumpAndSettle();
       expect(exportedBytes, isNull);
-      destination = '/tmp/ejson-array-export-test.csv';
+      destination = exportPath;
       failExport = true;
       await tester.runAsync(() async {
         await tester.tap(find.text('Export CSV'));

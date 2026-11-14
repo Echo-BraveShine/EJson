@@ -1735,6 +1735,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide replace'**
   String get hideReplace;
+
+  /// No description provided for @treeStyleStructure.
+  ///
+  /// In en, this message translates to:
+  /// **'Structure navigator'**
+  String get treeStyleStructure;
+
+  /// No description provided for @treeStyleGuides.
+  ///
+  /// In en, this message translates to:
+  /// **'Hierarchy guides'**
+  String get treeStyleGuides;
+
+  /// No description provided for @highlightPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight preview'**
+  String get highlightPreview;
+
+  /// No description provided for @treePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Tree preview'**
+  String get treePreview;
 }
 
 class _AppLocalizationsDelegate

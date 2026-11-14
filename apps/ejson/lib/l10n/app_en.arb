@@ -414,5 +414,9 @@
   "conversionColumnUp": "Move column up",
   "conversionColumnDown": "Move column down",
   "showReplace": "Show replace",
-  "hideReplace": "Hide replace"
+  "hideReplace": "Hide replace",
+  "treeStyleStructure": "Structure navigator",
+  "treeStyleGuides": "Hierarchy guides",
+  "highlightPreview": "Highlight preview",
+  "treePreview": "Tree preview"
 }
