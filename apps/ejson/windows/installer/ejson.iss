@@ -35,3 +35,12 @@ Root: HKCU; Subkey: "Software\Classes\.json\OpenWithProgids"; ValueType: string;
 Root: HKCU; Subkey: "Software\Classes\EJson.Json"; ValueType: string; ValueData: "JSON document"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\EJson.Json\DefaultIcon"; ValueType: string; ValueData: "{app}\ejson.exe,0"
 Root: HKCU; Subkey: "Software\Classes\EJson.Json\shell\open\command"; ValueType: string; ValueData: """{app}\ejson.exe"" ""%1"""
+
+Root: HKCU; Subkey: "Software\Classes\.xml\OpenWithProgids"; ValueType: string; ValueName: "EJson.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.csv\OpenWithProgids"; ValueType: string; ValueName: "EJson.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.yaml\OpenWithProgids"; ValueType: string; ValueName: "EJson.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.yml\OpenWithProgids"; ValueType: string; ValueName: "EJson.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.toml\OpenWithProgids"; ValueType: string; ValueName: "EJson.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\EJson.Document"; ValueType: string; ValueData: "Structured data document"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\EJson.Document\DefaultIcon"; ValueType: string; ValueData: "{app}\ejson.exe,0"
+Root: HKCU; Subkey: "Software\Classes\EJson.Document\shell\open\command"; ValueType: string; ValueData: """{app}\ejson.exe"" ""%1"""

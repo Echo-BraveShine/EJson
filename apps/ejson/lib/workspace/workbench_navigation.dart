@@ -149,14 +149,12 @@ extension _WorkbenchNavigation on _WorkbenchState {
                 _tool(
                   strings.minify,
                   CupertinoIcons.arrow_down_right_arrow_up_left,
-                  valid ? () => controller.rewrite(tab.id, minify: true) : null,
+                  tab.canMinify ? () => _rewrite(tab, minify: true) : null,
                 ),
                 _tool(
                   strings.format,
                   CupertinoIcons.text_alignleft,
-                  valid
-                      ? () => controller.rewrite(tab.id, minify: false)
-                      : null,
+                  tab.canFormat ? () => _rewrite(tab, minify: false) : null,
                 ),
               ],
             ),
@@ -171,7 +169,7 @@ extension _WorkbenchNavigation on _WorkbenchState {
                   height: WorkbenchStyle.toolbarControlHeight,
                   child: PopupMenuButton<WorkbenchCommandId>(
                     tooltip: strings.documentTools,
-                    enabled: !tab.large && tab.format != DocumentFormat.csv,
+                    enabled: !tab.large,
                     padding: EdgeInsets.zero,
                     icon: const Icon(
                       CupertinoIcons.ellipsis,
@@ -184,7 +182,7 @@ extension _WorkbenchNavigation on _WorkbenchState {
                     itemBuilder: (_) => [
                       WorkbenchMenuItem(
                         value: WorkbenchCommandId.convert,
-                        enabled: tab.format != DocumentFormat.csv,
+                        enabled: true,
                         label: strings.formatConversion,
                         icon: CupertinoIcons.arrow_2_squarepath,
                       ),
@@ -237,10 +235,24 @@ extension _WorkbenchNavigation on _WorkbenchState {
         separatorBuilder: (_, _) => const SizedBox(width: 4),
         itemBuilder: (context, index) {
           if (index == model.tabs.length) {
-            return _tool(
-              strings.newTab,
-              CupertinoIcons.plus,
-              controller.newTab,
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _tool(strings.newTab, CupertinoIcons.plus, controller.newTab),
+                PopupMenuButton<DocumentFormat>(
+                  tooltip: strings.newDocumentFormat,
+                  onSelected: (format) => controller.newTab(format: format),
+                  itemBuilder: (_) => [
+                    for (final format in DocumentFormat.values)
+                      WorkbenchMenuItem(value: format, label: format.label),
+                  ],
+                  child: const SizedBox(
+                    width: 24,
+                    height: WorkbenchStyle.toolbarControlHeight,
+                    child: Icon(CupertinoIcons.chevron_down, size: 12),
+                  ),
+                ),
+              ],
             );
           }
           final item = model.tabs[index];

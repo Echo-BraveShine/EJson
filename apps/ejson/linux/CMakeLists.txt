@@ -106,6 +106,8 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${APPLICATION_ID}.xml"
+  DESTINATION "share/mime/packages" COMPONENT Runtime)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${APPLICATION_ID}.desktop"
   DESTINATION "share/applications" COMPONENT Runtime)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../assets/branding/logo_light.png"

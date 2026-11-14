@@ -11,27 +11,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/conversion_test_harness.dart';
 
 void main() {
-  test(
-    'saved YAML and CSV files are inferred when opening or restoring',
-    () async {
-      final container = ProviderContainer(
-        overrides: [
-          initialWorkspaceProvider.overrideWithValue((
-            files: const [
-              LocalJsonFile('/tmp/a.yaml', 'name: test'),
-              LocalJsonFile('/tmp/a.csv', '"a"\n"1"'),
-            ],
-            activePath: '/tmp/a.yaml',
-          )),
-        ],
-      );
-      addTearDown(container.dispose);
-      expect(container.read(workspaceProvider).tabs.map((t) => t.format), [
-        DocumentFormat.yaml,
-        DocumentFormat.csv,
-      ]);
-    },
-  );
+  test('saved native files are inferred when opening or restoring', () async {
+    final container = ProviderContainer(
+      overrides: [
+        initialWorkspaceProvider.overrideWithValue((
+          files: const [
+            LocalJsonFile('/tmp/a.yaml', 'name: test'),
+            LocalJsonFile('/tmp/a.csv', '"a"\n"1"'),
+            LocalJsonFile('/tmp/a.xml', '<a/>'),
+            LocalJsonFile('/tmp/a.toml', 'a=1'),
+          ],
+          activePath: '/tmp/a.yaml',
+        )),
+      ],
+    );
+    addTearDown(container.dispose);
+    expect(container.read(workspaceProvider).tabs.map((t) => t.format), [
+      DocumentFormat.yaml,
+      DocumentFormat.csv,
+      DocumentFormat.xml,
+      DocumentFormat.toml,
+    ]);
+  });
 
   testWidgets('promised YAML file drops retain format and BOM in a new draft', (
     tester,

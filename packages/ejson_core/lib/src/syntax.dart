@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'formats/format_structure.dart';
 
 /// Half-open UTF-16 code unit range, as used by Flutter selections.
 typedef SourceRange = ({int start, int end});
@@ -76,13 +77,19 @@ class ParseSnapshot {
     this.revision,
     this.lines,
     this.root,
-    List<JsonDiagnostic> diagnostics,
-  ) : diagnostics = List.unmodifiable(diagnostics);
+    List<JsonDiagnostic> diagnostics, {
+    this.structure,
+    this.table,
+    this.structureTruncated = false,
+  }) : diagnostics = List.unmodifiable(diagnostics);
 
   final int revision;
   final LineIndex lines;
   final JsonNode? root;
   final List<JsonDiagnostic> diagnostics;
+  final FormatTreeNode? structure;
+  final CsvData? table;
+  final bool structureTruncated;
 }
 
 /// Parses strict JSON while keeping the raw token ranges and member order.

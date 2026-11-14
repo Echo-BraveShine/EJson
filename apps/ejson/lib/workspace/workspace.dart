@@ -59,6 +59,13 @@ class WorkspaceTab {
   String get text => document.source.text;
   bool get dirty => text != (file?.source ?? '');
   bool get large => text.length > maxParsedUnits;
+  bool get canFormat =>
+      !large &&
+      document.snapshot != null &&
+      !document.snapshot!.diagnostics.any((d) => !d.warning);
+  bool get canMinify =>
+      canFormat &&
+      (format == DocumentFormat.json || format == DocumentFormat.xml);
 
   WorkspaceTab withDocument(JsonDocument document) => WorkspaceTab(
     id,
@@ -148,8 +155,8 @@ class WorkspaceController extends Notifier<Workspace> {
     );
   }
 
-  void newTab() {
-    final tab = _create('');
+  void newTab({DocumentFormat format = DocumentFormat.json}) {
+    final tab = _create('', format: format);
     state = Workspace([...state.tabs, tab], tab.id);
   }
 
@@ -247,11 +254,23 @@ class WorkspaceController extends Notifier<Workspace> {
 
   Future<void> rewrite(int id, {required bool minify}) async {
     final tab = state.tab(id);
-    if (tab == null || !tab.document.isValid || tab.large) return;
+    if (tab == null || !tab.canFormat || minify && !tab.canMinify) return;
     final document = tab.document;
     final options = ref.read(toolPreferencesProvider).format;
+    final format = tab.format;
+    final source = tab.text;
     final text = await Isolate.run(
-      () => rewriteJson(document, minify: minify, options: options),
+      () => format == DocumentFormat.json
+          ? rewriteJson(document, minify: minify, options: options)
+          : formatOtherDocument(
+              source,
+              format,
+              minify: minify,
+              indent: options.indentation == JsonIndentation.tabs
+                  ? 2
+                  : options.indentation.unit.length,
+              lineEnding: options.lineEnding.resolve(source),
+            ),
     );
     if (!ref.mounted || state.tab(id)?.document.revision != document.revision) {
       return;

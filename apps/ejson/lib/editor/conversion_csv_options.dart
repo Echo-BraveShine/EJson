@@ -6,6 +6,12 @@ extension _ConversionCsvOptions on _ConversionDialogState {
     return [
       Text(strings.conversionCsvNotice, style: WorkbenchStyle.caption),
       const SizedBox(height: WorkbenchStyle.space8),
+      WorkbenchTextField(
+        controller: _csvPath,
+        labelText: strings.conversionCsvPath,
+        onChanged: (_) => _invalidate(resetColumns: true),
+      ),
+      const SizedBox(height: WorkbenchStyle.space8),
       Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [

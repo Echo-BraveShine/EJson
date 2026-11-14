@@ -373,6 +373,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreFailed => 'Could not reopen some files';
 
   @override
+  String get restoreFailedDescription =>
+      'These files were part of the previous workspace. Their location may have changed, access may have been denied, or they may no longer be readable.';
+
+  @override
   String get workspaceSaveFailed =>
       'Could not remember the workspace for next launch.';
 
@@ -901,4 +905,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get treePreview => 'Tree preview';
+
+  @override
+  String formatFailed(String error) {
+    return 'Formatting failed: $error';
+  }
+
+  @override
+  String get conversionCsvPath => 'Source JSONPath';
+
+  @override
+  String get conversionTomlNotice =>
+      'TOML 1.0. Conversion to TOML requires an object, unique keys, no nulls, signed 64-bit integers and representable floats. Dates and times become JSON strings; comments are omitted.';
+
+  @override
+  String get conversionXmlNotice =>
+      'Typed mapping preserves JSON types, number spelling and keys using the ejson namespace. Element mapping accepts one root property and @attributes, #text and #content.';
+
+  @override
+  String get conversionXmlImportNotice =>
+      'Typed XML restores JSON types. Other XML uses @attributes, #text and ordered #content; text values remain strings. Comments and processing instructions are omitted.';
+
+  @override
+  String get xmlMapping => 'XML mapping';
+
+  @override
+  String get xmlTypedMapping => 'Typed JSON mapping';
+
+  @override
+  String get xmlElementMapping => 'Element mapping';
+
+  @override
+  String get xmlRootName => 'Root element name';
+
+  @override
+  String get csvImportNotice =>
+      'Cells are text by default, preserving leading zeros. Choose column names and types explicitly. Empty-cell handling applies to every column.';
+
+  @override
+  String get csvHeaderRow => 'First row contains column names';
+
+  @override
+  String get csvEmptyCells => 'Empty cells';
+
+  @override
+  String get csvEmptyString => 'Empty string';
+
+  @override
+  String get csvOmitField => 'Omit field';
+
+  @override
+  String get csvImportColumns => 'Column names and types';
+
+  @override
+  String get csvColumnName => 'Column name';
+
+  @override
+  String get csvColumnType => 'Column type';
+
+  @override
+  String get csvTypeText => 'Text';
+
+  @override
+  String get csvTypeNumber => 'Number';
+
+  @override
+  String get csvTypeBoolean => 'Boolean';
+
+  @override
+  String get documentStructure => 'Structure';
+
+  @override
+  String csvVisibleColumns(int visible, int total) {
+    return 'Showing $visible / $total columns';
+  }
+
+  @override
+  String get csvTableHeader => 'Header row';
+
+  @override
+  String get noStructure => 'No structure available';
+
+  @override
+  String newDocument(String format) {
+    return 'New $format document';
+  }
+
+  @override
+  String get newDocumentFormat => 'New document format';
 }

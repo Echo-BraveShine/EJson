@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 
+import 'workbench_typography.dart';
+
 part 'workbench_controls.dart';
 
 abstract final class WorkbenchStyle {
@@ -69,6 +71,7 @@ abstract final class WorkbenchStyle {
 
   static TextStyle code(TargetPlatform platform) => TextStyle(
     fontFamily: codeFont(platform),
+    fontFamilyFallback: WorkbenchTypography.codeFallback(platform),
     fontSize: 13,
     fontWeight: FontWeight.w400,
     letterSpacing: 0,
@@ -180,6 +183,10 @@ ThemeData workbenchTheme(Brightness brightness) {
   );
   return ThemeData(
     colorScheme: colors,
+    fontFamily: WorkbenchTypography.interfaceFamily(defaultTargetPlatform),
+    fontFamilyFallback: WorkbenchTypography.interfaceFallback(
+      defaultTargetPlatform,
+    ),
     scaffoldBackgroundColor: dark
         ? const Color(0xff2b2b2d)
         : const Color(0xffefeff1),

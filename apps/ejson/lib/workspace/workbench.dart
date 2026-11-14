@@ -24,6 +24,8 @@ import '../editor/document_statistics.dart';
 import '../editor/document_find.dart';
 import '../editor/json_highlight.dart';
 import '../editor/tree_panel.dart';
+import '../editor/format_tree_view.dart';
+import '../editor/csv_document_view.dart';
 import '../editor/tree_style.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/workspace_messages.dart';
@@ -39,6 +41,7 @@ import 'workspace.dart';
 import 'workspace_session.dart';
 import 'recent_file.dart';
 import 'recent_files_dialog.dart';
+import 'restore_failures_dialog.dart';
 import 'file_drop_zone.dart';
 import 'command_palette.dart';
 import 'external_file_opens.dart';
@@ -49,6 +52,7 @@ part 'workbench_commands.dart';
 part 'workbench_document_actions.dart';
 part 'workbench_navigation.dart';
 part 'workbench_panes.dart';
+part 'workbench_format_panes.dart';
 part 'workbench_node_dialogs.dart';
 
 final localFileReaderProvider =
@@ -220,13 +224,20 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
 
   @override
   Future<void> onWindowClose() async {
-    if (_exitApproved || !await _confirmExit()) return;
+    if (_exitApproved || !await _confirmExit() || !mounted) return;
     // The macOS runner calls back into onExitRequested during destroy().
     _exitApproved = true;
+    var hidden = false;
     try {
+      if (Theme.of(context).platform == TargetPlatform.windows) {
+        // Engine teardown can outlive the native message loop on Windows.
+        await windowManager.hide();
+        hidden = true;
+      }
       await windowManager.destroy();
     } catch (_) {
       _exitApproved = false;
+      if (hidden) await windowManager.show();
       rethrow;
     }
   }

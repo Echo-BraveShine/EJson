@@ -371,6 +371,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreFailed => '部分文件无法重新打开';
 
   @override
+  String get restoreFailedDescription =>
+      '这些文件属于上次打开的工作区。文件可能已移动、访问权限发生变化，或当前无法读取。';
+
+  @override
   String get workspaceSaveFailed => '无法记录下次启动要恢复的工作区。';
 
   @override
@@ -886,4 +890,91 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get treePreview => '树样式预览';
+
+  @override
+  String formatFailed(String error) {
+    return '格式化失败：$error';
+  }
+
+  @override
+  String get conversionCsvPath => '源数据 JSONPath';
+
+  @override
+  String get conversionTomlNotice =>
+      'TOML 1.0。转为 TOML 要求根节点为对象、键名唯一、无 null，整数在有符号 64 位范围内且浮点数可精确表达。日期时间转为 JSON 字符串，转换时省略注释。';
+
+  @override
+  String get conversionXmlNotice =>
+      '类型映射使用 ejson 命名空间保留 JSON 类型、数字原文和键名。元素映射要求单个根属性，支持 @attributes、#text 和 #content。';
+
+  @override
+  String get conversionXmlImportNotice =>
+      '类型 XML 还原 JSON 类型。普通 XML 使用 @attributes、#text 和有序 #content，文本保持字符串；转换时省略注释与处理指令。';
+
+  @override
+  String get xmlMapping => 'XML 映射方式';
+
+  @override
+  String get xmlTypedMapping => 'JSON 类型映射';
+
+  @override
+  String get xmlElementMapping => '元素映射';
+
+  @override
+  String get xmlRootName => '根元素名称';
+
+  @override
+  String get csvImportNotice => '单元格默认保持文本并保留前导零。可指定列名与类型，空单元格处理规则作用于所有列。';
+
+  @override
+  String get csvHeaderRow => '首行为列名';
+
+  @override
+  String get csvEmptyCells => '空单元格';
+
+  @override
+  String get csvEmptyString => '空字符串';
+
+  @override
+  String get csvOmitField => '省略字段';
+
+  @override
+  String get csvImportColumns => '列名与类型';
+
+  @override
+  String get csvColumnName => '列名';
+
+  @override
+  String get csvColumnType => '列类型';
+
+  @override
+  String get csvTypeText => '文本';
+
+  @override
+  String get csvTypeNumber => '数字';
+
+  @override
+  String get csvTypeBoolean => '布尔值';
+
+  @override
+  String get documentStructure => '结构';
+
+  @override
+  String csvVisibleColumns(int visible, int total) {
+    return '显示 $visible / $total 列';
+  }
+
+  @override
+  String get csvTableHeader => '表头行';
+
+  @override
+  String get noStructure => '暂无可显示的结构';
+
+  @override
+  String newDocument(String format) {
+    return '新建 $format 文档';
+  }
+
+  @override
+  String get newDocumentFormat => '新建文档格式';
 }

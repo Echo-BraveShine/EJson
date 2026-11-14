@@ -16,6 +16,8 @@ Source0: ejson.tar.gz
 
 Requires: libgtk-3.so.0()(64bit)
 Requires: libGL.so.1()(64bit)
+Requires: shared-mime-info
+Requires: desktop-file-utils
 
 %description
 EJson is an offline desktop JSON workspace with a source editor and tree view.
@@ -32,8 +34,25 @@ done
 mv %{buildroot}/opt/ejson/share %{buildroot}/usr/share
 ln -s ../../opt/ejson/ejson %{buildroot}/usr/bin/ejson
 
+%post
+if command -v update-mime-database >/dev/null 2>&1; then
+  update-mime-database /usr/share/mime || :
+fi
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database /usr/share/applications || :
+fi
+
+%postun
+if command -v update-mime-database >/dev/null 2>&1; then
+  update-mime-database /usr/share/mime || :
+fi
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database /usr/share/applications || :
+fi
+
 %files
 /opt/ejson
 /usr/bin/ejson
 /usr/share/applications/dev.ekko.ejson.desktop
 /usr/share/icons/hicolor/256x256/apps/dev.ekko.ejson.png
+/usr/share/mime/packages/dev.ekko.ejson.xml

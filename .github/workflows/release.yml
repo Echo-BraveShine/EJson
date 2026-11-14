@@ -236,10 +236,12 @@ jobs:
           Section: editors
           Priority: optional
           Maintainer: EJson <1239383708@qq.com>
-          Depends: libc6 (>= 2.39), libstdc++6, libgtk-3-0t64 | libgtk-3-0, libgl1
+          Depends: libc6 (>= 2.39), libstdc++6, libgtk-3-0t64 | libgtk-3-0, libgl1, shared-mime-info, desktop-file-utils
           Homepage: https://github.com/Echo-BraveShine/EJson
           Description: Desktop JSON editor with a synchronized tree view
           EOF
+          install -m 0755 linux/packaging/postinst "$staging/DEBIAN/postinst"
+          install -m 0755 linux/packaging/postrm "$staging/DEBIAN/postrm"
           dpkg-deb --build --root-owner-group "$staging" "$deb_file"
           test "$(dpkg-deb -f "$deb_file" Version)" = "$EXPECTED_VERSION-$EXPECTED_BUILD"
           test "$(dpkg-deb -f "$deb_file" Architecture)" = "$deb_arch"

@@ -31,6 +31,10 @@ enum WorkbenchCommandId {
   schema,
   redact,
   settings,
+  newYaml,
+  newCsv,
+  newXml,
+  newToml,
 }
 
 class WorkbenchCommand {

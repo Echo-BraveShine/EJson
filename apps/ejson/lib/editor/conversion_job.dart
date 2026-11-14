@@ -3,49 +3,8 @@ import 'dart:isolate';
 import 'package:ejson_core/ejson_core.dart';
 import 'array_table_data.dart';
 
-enum ConversionDirection { jsonToYaml, yamlToJson, jsonToCsv }
-
-class ConversionRequest {
-  const ConversionRequest(
-    this.source,
-    this.direction, {
-    this.indent = 2,
-    this.document = 0,
-    this.flatten = false,
-    this.delimiter = ',',
-    this.header = true,
-    this.crlf = true,
-    this.bom = false,
-    this.columns,
-  });
-  final String source;
-  final ConversionDirection direction;
-  final int indent;
-  final int document;
-  final bool flatten;
-  final String delimiter;
-  final bool header;
-  final bool crlf;
-  final bool bom;
-  final List<ArrayTableColumn>? columns;
-}
-
-class ConversionOutput {
-  const ConversionOutput(
-    this.source,
-    this.format, {
-    this.columns = const [],
-    this.documents = 1,
-    this.bom = false,
-  });
-  final String source;
-  final DocumentFormat format;
-  final List<ArrayTableColumn> columns;
-  final int documents;
-  final bool bom;
-}
-
-class ConversionCancelled implements Exception {}
+import 'conversion_models.dart';
+export 'conversion_models.dart';
 
 /// Checks whether the default CSV mapping can represent the input.
 bool canConvertJsonToCsv(String source) {
@@ -67,7 +26,41 @@ bool canConvertJsonToCsv(String source) {
       data.columns.length;
 }
 
+List<ConversionDirection> availableConversions(
+  String source,
+  DocumentFormat format,
+) {
+  if (format != DocumentFormat.json) {
+    return ConversionDirection.values
+        .where((d) => d.sourceFormat == format)
+        .toList();
+  }
+  final result = <ConversionDirection>[ConversionDirection.jsonToYaml];
+  if (parseJson(source).root != null) {
+    result.add(ConversionDirection.jsonToXml);
+    try {
+      jsonToToml(source);
+      result.add(ConversionDirection.jsonToToml);
+    } on FormatException {
+      /* The data cannot be represented by TOML. */
+    }
+    if (canConvertJsonToCsv(source)) result.add(ConversionDirection.jsonToCsv);
+  }
+  return result;
+}
+
 ConversionOutput convertDocument(ConversionRequest request) {
+  final result = _convertDocument(request);
+  final parsed = result.format == DocumentFormat.json
+      ? parseJson(result.source)
+      : parseOtherFormat(result.source, result.format);
+  if (parsed.diagnostics.any((d) => !d.warning)) {
+    throw FormatException(parsed.diagnostics.first.message);
+  }
+  return result;
+}
+
+ConversionOutput _convertDocument(ConversionRequest request) {
   switch (request.direction) {
     case ConversionDirection.jsonToYaml:
       return ConversionOutput(
@@ -84,8 +77,53 @@ ConversionOutput convertDocument(ConversionRequest request) {
         DocumentFormat.json,
         documents: yamlDocumentCount(request.source),
       );
+    case ConversionDirection.csvToJson:
+      return ConversionOutput(
+        csvToJson(
+          request.source,
+          delimiter: request.delimiter,
+          header: request.header,
+          columns: request.importColumns,
+          empty: request.emptyCells,
+          indent: request.indent,
+        ),
+        DocumentFormat.json,
+      );
+    case ConversionDirection.jsonToToml:
+      return ConversionOutput(jsonToToml(request.source), DocumentFormat.toml);
+    case ConversionDirection.tomlToJson:
+      return ConversionOutput(
+        tomlToJson(request.source, indent: request.indent),
+        DocumentFormat.json,
+      );
+    case ConversionDirection.jsonToXml:
+      return ConversionOutput(
+        jsonToXml(
+          request.source,
+          rootName: request.xmlRoot,
+          mode: request.xmlMapping,
+          indent: request.indent,
+        ),
+        DocumentFormat.xml,
+      );
+    case ConversionDirection.xmlToJson:
+      return ConversionOutput(
+        xmlToJson(request.source, indent: request.indent),
+        DocumentFormat.json,
+      );
     case ConversionDirection.jsonToCsv:
-      final parsed = parseJson(request.source);
+      final documentRoot = requireJsonRoot(request.source);
+      final path = resolveJsonPath(documentRoot, request.csvPath);
+      if (path.range == null) {
+        throw const FormatException(
+          'Choose an existing, unambiguous CSV source path.',
+        );
+      }
+      final selectedSource = request.source.substring(
+        path.range!.start,
+        path.range!.end,
+      );
+      final parsed = parseJson(selectedSource);
       final input = parsed.root;
       if (input == null) {
         final diagnostic = parsed.diagnostics.first;
@@ -101,8 +139,8 @@ ConversionOutput convertDocument(ConversionRequest request) {
         );
       }
       final rows = input.kind == JsonKind.object
-          ? '[${request.source}]'
-          : request.source;
+          ? '[$selectedSource]'
+          : selectedSource;
       final source = request.flatten ? flattenObjectArray(rows) : rows;
       final root = parseJson(source).root!;
       final data = ArrayTableData(source, root);

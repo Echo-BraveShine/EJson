@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/languages/json.dart';
 import 'package:re_highlight/languages/yaml.dart';
+import 'package:re_highlight/languages/xml.dart';
+import 'package:re_highlight/languages/ini.dart';
 import 'package:re_highlight/re_highlight.dart';
 
 import '../design/reading_style.dart';
@@ -211,6 +213,8 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
                       DocumentFormat.json => langJson,
                       DocumentFormat.yaml => langYaml,
                       DocumentFormat.csv => _csvMode,
+                      DocumentFormat.xml => langXml,
+                      DocumentFormat.toml => langIni,
                     },
                   ),
                 },

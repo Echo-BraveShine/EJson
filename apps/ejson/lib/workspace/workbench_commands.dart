@@ -50,6 +50,19 @@ extension _WorkbenchCommands on _WorkbenchState {
         keywords: 'new document tab 新建 文档 标签页',
         action: controller.newTab,
       ),
+      for (final entry in [
+        (WorkbenchCommandId.newYaml, DocumentFormat.yaml),
+        (WorkbenchCommandId.newCsv, DocumentFormat.csv),
+        (WorkbenchCommandId.newXml, DocumentFormat.xml),
+        (WorkbenchCommandId.newToml, DocumentFormat.toml),
+      ])
+        WorkbenchCommand(
+          id: entry.$1,
+          label: strings.newDocument(entry.$2.label),
+          icon: CupertinoIcons.doc,
+          keywords: 'new document ${entry.$2.extension} 新建 文档',
+          action: () => controller.newTab(format: entry.$2),
+        ),
       WorkbenchCommand(
         id: WorkbenchCommandId.open,
         label: strings.open,
@@ -123,14 +136,14 @@ extension _WorkbenchCommands on _WorkbenchState {
         label: strings.format,
         icon: CupertinoIcons.text_alignleft,
         keywords: 'format pretty json 格式化',
-        action: valid ? () => controller.rewrite(tab.id, minify: false) : null,
+        action: tab.canFormat ? () => _rewrite(tab, minify: false) : null,
       ),
       WorkbenchCommand(
         id: WorkbenchCommandId.minify,
         label: strings.minify,
         icon: CupertinoIcons.arrow_down_right_arrow_up_left,
         keywords: 'minify compact json 压缩',
-        action: valid ? () => controller.rewrite(tab.id, minify: true) : null,
+        action: tab.canMinify ? () => _rewrite(tab, minify: true) : null,
       ),
       WorkbenchCommand(
         id: WorkbenchCommandId.escape,
@@ -191,10 +204,8 @@ extension _WorkbenchCommands on _WorkbenchState {
         id: WorkbenchCommandId.convert,
         label: strings.formatConversion,
         icon: CupertinoIcons.arrow_2_squarepath,
-        keywords: 'convert conversion json yaml csv 转换 格式',
-        action: !tab.large && tab.format != DocumentFormat.csv
-            ? () => _openConversion(tab)
-            : null,
+        keywords: 'convert conversion json yaml csv xml toml 转换 格式',
+        action: !tab.large ? () => _openConversion(tab) : null,
       ),
       WorkbenchCommand(
         id: WorkbenchCommandId.schema,

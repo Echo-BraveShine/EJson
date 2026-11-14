@@ -18,13 +18,7 @@ extension _WorkbenchPanes on _WorkbenchState {
   );
 
   Widget _panes(WorkspaceTab tab, bool valid) {
-    if (tab.format != DocumentFormat.json) {
-      return _Panel(
-        title: '${strings.source} · ${tab.format.label}',
-        icon: CupertinoIcons.doc_text,
-        child: _sourceEditor(tab),
-      );
-    }
+    if (tab.format != DocumentFormat.json) return _otherPanes(tab);
     final colors = Theme.of(context).colorScheme;
     final doc = tab.document;
     return LayoutBuilder(

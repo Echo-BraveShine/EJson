@@ -43,22 +43,7 @@ extension _WorkbenchWindowActions on _WorkbenchState {
 
   Future<void> _showRestoreFailures() => showDialog<void>(
     context: context,
-    builder: (context) {
-      final labels = AppLocalizations.of(context);
-      return WorkbenchDialog(
-        title: labels.restoreFailed,
-        content: SizedBox(
-          width: 440,
-          child: Text(widget.failedRestorePaths.join('\n')),
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(labels.done),
-          ),
-        ],
-      );
-    },
+    builder: (_) => RestoreFailuresDialog(paths: widget.failedRestorePaths),
   );
 
   Future<bool> _setRestoreOnStartup(bool value) async {

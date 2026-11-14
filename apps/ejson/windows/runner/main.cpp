@@ -41,6 +41,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  // Tear down plugins and their COM resources while COM is still initialized.
+  window.Destroy();
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }

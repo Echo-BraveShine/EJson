@@ -11,6 +11,9 @@ import 'json_highlight.dart';
 import 'conversion_job.dart';
 
 part 'conversion_csv_options.dart';
+part 'conversion_import_options.dart';
+part 'conversion_format_options.dart';
+part 'conversion_execution.dart';
 
 class ConversionResult {
   const ConversionResult(this.output, {required this.save});
@@ -33,14 +36,17 @@ class ConversionDialog extends StatefulWidget {
 }
 
 class _ConversionDialogState extends State<ConversionDialog> {
+  void _updateView(VoidCallback update) => setState(update);
+
   final _document = TextEditingController(text: '1');
   final _scroll = ScrollController();
-  late ConversionDirection _direction = widget.format == DocumentFormat.yaml
-      ? ConversionDirection.yamlToJson
-      : ConversionDirection.jsonToYaml;
-  late final bool _csvAvailable =
-      widget.format == DocumentFormat.json &&
-      canConvertJsonToCsv(widget.source);
+  late final _directions = availableConversions(widget.source, widget.format);
+  late ConversionDirection _direction = _directions.first;
+  final _csvPath = TextEditingController(text: r'$');
+  final _xmlRoot = TextEditingController(text: 'root');
+  XmlMappingMode _xmlMapping = XmlMappingMode.typed;
+  CsvEmptyValue _emptyCells = CsvEmptyValue.emptyString;
+  late List<CsvImportColumn> _importColumns = _initialImportColumns();
   int _indent = 2;
   bool _flatten = false,
       _header = true,
@@ -48,7 +54,9 @@ class _ConversionDialogState extends State<ConversionDialog> {
       _bom = false,
       _busy = false,
       _columnsKnown = false;
-  String _delimiter = ',';
+  late String _delimiter = widget.format == DocumentFormat.csv
+      ? detectCsvDelimiter(widget.source)
+      : ',';
   List<ArrayTableColumn> _order = [];
   final _included = <ArrayTableColumn>{};
   ConversionOutput? _output;
@@ -76,67 +84,10 @@ class _ConversionDialogState extends State<ConversionDialog> {
   void dispose() {
     _job?.cancel();
     _document.dispose();
+    _csvPath.dispose();
+    _xmlRoot.dispose();
     _scroll.dispose();
     super.dispose();
-  }
-
-  Future<void> _convert() async {
-    final number = int.tryParse(_document.text);
-    if (_direction == ConversionDirection.yamlToJson &&
-        (number == null || number < 1)) {
-      setState(
-        () => _error = AppLocalizations.of(context).conversionDocumentError,
-      );
-      return;
-    }
-    final generation = ++_generation;
-    final job = ConversionJob();
-    _job = job;
-    setState(() {
-      _busy = true;
-      _error = null;
-      _output = null;
-    });
-    try {
-      final result = await job.run(
-        ConversionRequest(
-          widget.source,
-          _direction,
-          indent: _indent,
-          document: (number ?? 1) - 1,
-          flatten: _flatten,
-          delimiter: _delimiter,
-          header: _header,
-          crlf: _crlf,
-          bom: _bom,
-          columns: _columnsKnown
-              ? _order.where(_included.contains).toList()
-              : null,
-        ),
-      );
-      if (!mounted || generation != _generation) return;
-      setState(() {
-        _output = result;
-        if (!_columnsKnown && _direction == ConversionDirection.jsonToCsv) {
-          _order = List.of(result.columns);
-          _included.addAll(_order);
-          _columnsKnown = true;
-        }
-      });
-    } on ConversionCancelled {
-      /* The input or options changed, or the user cancelled. */
-    } catch (error) {
-      if (mounted && generation == _generation) {
-        setState(() => _error = error.toString());
-      }
-    } finally {
-      if (mounted && generation == _generation) {
-        setState(() {
-          _busy = false;
-          _job = null;
-        });
-      }
-    }
   }
 
   Widget _check(String label, bool value, ValueChanged<bool> change) =>
@@ -182,8 +133,6 @@ class _ConversionDialogState extends State<ConversionDialog> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final output = _output;
-    final csv = _direction == ConversionDirection.jsonToCsv;
-    final yaml = _direction == ConversionDirection.yamlToJson;
     return WorkbenchToolDialog(
       title: strings.formatConversion,
       scrollable: false,
@@ -210,78 +159,7 @@ class _ConversionDialogState extends State<ConversionDialog> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        WorkbenchSelect<ConversionDirection>(
-                          label: strings.conversionDirection,
-                          value: _direction,
-                          options: [
-                            if (widget.format == DocumentFormat.yaml)
-                              (
-                                value: ConversionDirection.yamlToJson,
-                                label: 'YAML → JSON',
-                              )
-                            else ...[
-                              (
-                                value: ConversionDirection.jsonToYaml,
-                                label: 'JSON → YAML',
-                              ),
-                              if (_csvAvailable)
-                                (
-                                  value: ConversionDirection.jsonToCsv,
-                                  label: 'JSON → CSV',
-                                ),
-                            ],
-                          ],
-                          onChanged: (direction) {
-                            _direction = direction;
-                            _invalidate(resetColumns: true);
-                          },
-                        ),
-                        const SizedBox(height: WorkbenchStyle.space12),
-                        if (!csv)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: WorkbenchSelect<int>(
-                                  label: strings.formatIndentation,
-                                  value: _indent,
-                                  options: [
-                                    (value: 2, label: strings.indentTwo),
-                                    (value: 4, label: strings.indentFour),
-                                    (value: 8, label: strings.indentEight),
-                                  ],
-                                  onChanged: (value) {
-                                    _indent = value;
-                                    _invalidate();
-                                  },
-                                ),
-                              ),
-                              if (yaml) ...[
-                                const SizedBox(width: WorkbenchStyle.space12),
-                                Expanded(
-                                  child: WorkbenchTextField(
-                                    controller: _document,
-                                    keyboardType: TextInputType.number,
-                                    labelText: strings.conversionDocument,
-                                    onChanged: (_) => _invalidate(),
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(width: WorkbenchStyle.space8),
-                              _runButton(),
-                            ],
-                          ),
-                        if (yaml)
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: WorkbenchStyle.space8,
-                            ),
-                            child: Text(
-                              strings.conversionYamlNotice,
-                              style: WorkbenchStyle.caption,
-                            ),
-                          ),
-                        if (csv) ..._csvOptions(),
+                        ..._formatOptions(),
                         if (_error != null)
                           Padding(
                             padding: const EdgeInsets.symmetric(

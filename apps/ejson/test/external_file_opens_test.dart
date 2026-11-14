@@ -85,6 +85,58 @@ void main() {
   });
 
   testWidgets(
+    'file-manager arguments open every supported extension with Unicode paths',
+    (tester) async {
+      final sources = {
+        'json': '{}',
+        'yaml': 'name: test',
+        'yml': 'name: test',
+        'toml': 'name="test"',
+        'csv': 'name\ntest',
+        'xml': '<name>test</name>',
+      };
+      final paths = [
+        for (final ext in sources.keys) '/folder with spaces/中文.$ext',
+      ];
+      final requests = ExternalFileOpens(paths);
+      final container = ProviderContainer(
+        overrides: [
+          externalFileOpensProvider.overrideWithValue(requests),
+          installedFontsProvider.overrideWith((_) async => []),
+          localFileReaderProvider.overrideWithValue(
+            (path) async => LocalJsonFile(path, sources[path.split('.').last]!),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const EJsonApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final opened = container
+          .read(workspaceProvider)
+          .tabs
+          .where((tab) => tab.file != null)
+          .toList();
+      expect(opened.map((tab) => tab.file!.path), paths);
+      expect(opened.map((tab) => tab.format), [
+        DocumentFormat.json,
+        DocumentFormat.yaml,
+        DocumentFormat.yaml,
+        DocumentFormat.toml,
+        DocumentFormat.csv,
+        DocumentFormat.xml,
+      ]);
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      await tester.runAsync(requests.dispose);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'external opens wait for dialogs, preserve dirty tabs and record recents',
     (tester) async {
       final requests = ExternalFileOpens(['/first.json']);

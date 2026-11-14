@@ -794,6 +794,12 @@ abstract class AppLocalizations {
   /// **'Could not reopen some files'**
   String get restoreFailed;
 
+  /// No description provided for @restoreFailedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'These files were part of the previous workspace. Their location may have changed, access may have been denied, or they may no longer be readable.'**
+  String get restoreFailedDescription;
+
   /// No description provided for @workspaceSaveFailed.
   ///
   /// In en, this message translates to:
@@ -1759,6 +1765,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tree preview'**
   String get treePreview;
+
+  /// No description provided for @formatFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatting failed: {error}'**
+  String formatFailed(String error);
+
+  /// No description provided for @conversionCsvPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Source JSONPath'**
+  String get conversionCsvPath;
+
+  /// No description provided for @conversionTomlNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'TOML 1.0. Conversion to TOML requires an object, unique keys, no nulls, signed 64-bit integers and representable floats. Dates and times become JSON strings; comments are omitted.'**
+  String get conversionTomlNotice;
+
+  /// No description provided for @conversionXmlNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Typed mapping preserves JSON types, number spelling and keys using the ejson namespace. Element mapping accepts one root property and @attributes, #text and #content.'**
+  String get conversionXmlNotice;
+
+  /// No description provided for @conversionXmlImportNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Typed XML restores JSON types. Other XML uses @attributes, #text and ordered #content; text values remain strings. Comments and processing instructions are omitted.'**
+  String get conversionXmlImportNotice;
+
+  /// No description provided for @xmlMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'XML mapping'**
+  String get xmlMapping;
+
+  /// No description provided for @xmlTypedMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Typed JSON mapping'**
+  String get xmlTypedMapping;
+
+  /// No description provided for @xmlElementMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Element mapping'**
+  String get xmlElementMapping;
+
+  /// No description provided for @xmlRootName.
+  ///
+  /// In en, this message translates to:
+  /// **'Root element name'**
+  String get xmlRootName;
+
+  /// No description provided for @csvImportNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Cells are text by default, preserving leading zeros. Choose column names and types explicitly. Empty-cell handling applies to every column.'**
+  String get csvImportNotice;
+
+  /// No description provided for @csvHeaderRow.
+  ///
+  /// In en, this message translates to:
+  /// **'First row contains column names'**
+  String get csvHeaderRow;
+
+  /// No description provided for @csvEmptyCells.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty cells'**
+  String get csvEmptyCells;
+
+  /// No description provided for @csvEmptyString.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty string'**
+  String get csvEmptyString;
+
+  /// No description provided for @csvOmitField.
+  ///
+  /// In en, this message translates to:
+  /// **'Omit field'**
+  String get csvOmitField;
+
+  /// No description provided for @csvImportColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Column names and types'**
+  String get csvImportColumns;
+
+  /// No description provided for @csvColumnName.
+  ///
+  /// In en, this message translates to:
+  /// **'Column name'**
+  String get csvColumnName;
+
+  /// No description provided for @csvColumnType.
+  ///
+  /// In en, this message translates to:
+  /// **'Column type'**
+  String get csvColumnType;
+
+  /// No description provided for @csvTypeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get csvTypeText;
+
+  /// No description provided for @csvTypeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get csvTypeNumber;
+
+  /// No description provided for @csvTypeBoolean.
+  ///
+  /// In en, this message translates to:
+  /// **'Boolean'**
+  String get csvTypeBoolean;
+
+  /// No description provided for @documentStructure.
+  ///
+  /// In en, this message translates to:
+  /// **'Structure'**
+  String get documentStructure;
+
+  /// No description provided for @csvVisibleColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {visible} / {total} columns'**
+  String csvVisibleColumns(int visible, int total);
+
+  /// No description provided for @csvTableHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Header row'**
+  String get csvTableHeader;
+
+  /// No description provided for @noStructure.
+  ///
+  /// In en, this message translates to:
+  /// **'No structure available'**
+  String get noStructure;
+
+  /// No description provided for @newDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'New {format} document'**
+  String newDocument(String format);
+
+  /// No description provided for @newDocumentFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'New document format'**
+  String get newDocumentFormat;
 }
 
 class _AppLocalizationsDelegate

@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:ejson_core/ejson_core.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show listEquals;
+import 'hierarchy_guide_painter.dart';
 
 import '../design/workbench_style.dart';
 import '../design/reading_style.dart';

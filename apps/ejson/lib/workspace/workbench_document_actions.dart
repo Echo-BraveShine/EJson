@@ -1,6 +1,14 @@
 part of 'workbench.dart';
 
 extension _WorkbenchDocumentActions on _WorkbenchState {
+  Future<void> _rewrite(WorkspaceTab tab, {required bool minify}) async {
+    try {
+      await controller.rewrite(tab.id, minify: minify);
+    } catch (error) {
+      if (mounted) _message(strings.formatFailed(error.toString()));
+    }
+  }
+
   void _reveal(SourceRange range, {bool search = false}) => _updateView(() {
     _searchJump = search;
     _jump = (

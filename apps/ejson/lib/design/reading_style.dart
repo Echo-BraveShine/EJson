@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../settings/installed_fonts.dart';
 import '../settings/reading_preferences.dart';
 import 'workbench_style.dart';
+import 'workbench_typography.dart';
 
 class ReadingStyle {
   ReadingStyle._(this.text, this.lineHeight, this.scaledFontSize);
@@ -18,19 +19,9 @@ class ReadingStyle {
     final family =
         findInstalledFont(fonts, preferences.fontFamily)?.family ??
         WorkbenchStyle.codeFont(platform);
-    final fallback = switch (platform) {
-      TargetPlatform.macOS ||
-      TargetPlatform.iOS => ['Menlo', 'PingFang SC', 'Apple Color Emoji'],
-      TargetPlatform.windows => [
-        'Consolas',
-        'Microsoft YaHei',
-        'Segoe UI Emoji',
-      ],
-      _ => ['monospace', 'Noto Sans CJK SC', 'Noto Color Emoji'],
-    };
     final text = WorkbenchStyle.code(platform).copyWith(
       fontFamily: family,
-      fontFamilyFallback: fallback,
+      fontFamilyFallback: WorkbenchTypography.codeFallback(platform),
       fontSize: preferences.fontSize.toDouble(),
       height: preferences.lineSpacing.height,
     );
