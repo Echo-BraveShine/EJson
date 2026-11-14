@@ -10,7 +10,7 @@ void main() {
     testWidgets('restore failures use the shared dialog style in $language', (
       tester,
     ) async {
-        await tester.binding.setSurfaceSize(const Size(720, 460));
+      await tester.binding.setSurfaceSize(const Size(720, 460));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final container = ProviderContainer(
         overrides: [installedFontsProvider.overrideWith((ref) async => [])],

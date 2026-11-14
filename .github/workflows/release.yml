@@ -44,20 +44,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # One universal Xcode build supplies the ZIP and both architecture DMGs.
           - os: macos-latest
             platform: macos
             arch: universal
             file: EJson-macos.zip
-          - os: macos-26
-            platform: macos
-            arch: arm64
-            xcode_arch: arm64
-            file: EJson-macos-arm64.dmg
-          - os: macos-26-intel
-            platform: macos
-            arch: x64
-            xcode_arch: x86_64
-            file: EJson-macos-x86_64.dmg
           - os: windows-2025
             platform: windows
             arch: x64
@@ -144,22 +135,23 @@ jobs:
       - run: flutter pub get --enforce-lockfile
       - run: flutter test --no-pub
       - name: Build app
-        env:
-          XCODE_ARCH: ${{ matrix.xcode_arch }}
-        run: |
-          if [[ -n "$XCODE_ARCH" ]]; then
-            export FLUTTER_XCODE_ARCHS="$XCODE_ARCH"
-          fi
-          flutter build ${{ matrix.platform }} --release --no-pub
+        run: flutter build ${{ matrix.platform }} --release --no-pub
       - name: Package macOS
         if: matrix.platform == 'macos'
         env:
           EXPECTED_VERSION: ${{ steps.version.outputs.name }}
           EXPECTED_BUILD: ${{ steps.version.outputs.build }}
         run: |
+          # Reuse the universal app instead of compiling it twice more.
           bash "$GITHUB_WORKSPACE/release-tools/.github/release/macos.sh" \
             build/macos/Build/Products/Release/EJson.app \
             '${{ matrix.file }}' '${{ matrix.xcode_arch || 'arm64 x86_64' }}'
+          THIN_ARCH=arm64 bash "$GITHUB_WORKSPACE/release-tools/.github/release/macos.sh" \
+            build/macos/Build/Products/Release/EJson.app \
+            EJson-macos-arm64.dmg arm64
+          THIN_ARCH=x86_64 bash "$GITHUB_WORKSPACE/release-tools/.github/release/macos.sh" \
+            build/macos/Build/Products/Release/EJson.app \
+            EJson-macos-x86_64.dmg x86_64
       - name: Set up .NET for WiX
         if: matrix.platform == 'windows'
         uses: actions/setup-dotnet@v4
@@ -254,6 +246,10 @@ jobs:
         run: |
           test -s '${{ matrix.file }}'
           case '${{ matrix.platform }}' in
+            macos)
+              test -s 'EJson-macos-arm64.dmg'
+              test -s 'EJson-macos-x86_64.dmg'
+              ;;
             windows)
               test -s EJson-windows-x64.zip
               test -s EJson-Windows-x64.msi
@@ -269,6 +265,8 @@ jobs:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             apps/ejson/${{ matrix.file }}
+            ${{ matrix.platform == 'macos' && 'apps/ejson/EJson-macos-arm64.dmg' || '' }}
+            ${{ matrix.platform == 'macos' && 'apps/ejson/EJson-macos-x86_64.dmg' || '' }}
             ${{ matrix.platform == 'windows' && 'apps/ejson/EJson-windows-x64.zip' || '' }}
             ${{ matrix.platform == 'windows' && 'apps/ejson/EJson-Windows-x64.msi' || '' }}
             ${{ matrix.platform == 'linux' && format('apps/ejson/EJson-linux-{0}.deb', matrix.deb_arch) || '' }}

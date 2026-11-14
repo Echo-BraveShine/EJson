@@ -26,10 +26,6 @@ check_slices() {
 
 runner="$app/Contents/MacOS/EJson"
 check_slices "$runner"
-if [[ "${#expected_archs[@]}" == 1 && "$(lipo -archs "$runner")" != "${expected_archs[0]}" ]]; then
-  echo "::error::Expected a single ${expected_archs[0]} slice in $runner"
-  exit 1
-fi
 while IFS= read -r -d '' binary; do
   if [[ "$(file -b "$binary")" == *Mach-O* ]]; then
     check_slices "$binary"
@@ -44,7 +40,28 @@ case "$output" in
   *.dmg)
     staging=$(mktemp -d)
     trap 'rm -rf "$staging"' EXIT
-    ditto "$app" "$staging/EJson.app"
+    if [[ -n "${THIN_ARCH:-}" ]]; then
+      # Thinning changes Mach-O files, so restore the existing signature metadata.
+      ditto --arch "$THIN_ARCH" "$app" "$staging/EJson.app"
+      codesign --force --deep --sign - \
+        --preserve-metadata=entitlements,requirements,flags,runtime \
+        "$staging/EJson.app"
+    else
+      ditto "$app" "$staging/EJson.app"
+    fi
+    packaged="$staging/EJson.app"
+    packaged_runner="$packaged/Contents/MacOS/EJson"
+    check_slices "$packaged_runner"
+    if [[ -n "${THIN_ARCH:-}" && "$(lipo -archs "$packaged_runner")" != "$THIN_ARCH" ]]; then
+      echo "::error::Expected a single $THIN_ARCH slice in $packaged_runner"
+      exit 1
+    fi
+    while IFS= read -r -d '' binary; do
+      if [[ "$(file -b "$binary")" == *Mach-O* ]]; then
+        check_slices "$binary"
+      fi
+    done < <(find "$packaged/Contents/Frameworks" -type f -print0)
+    codesign --verify --deep --strict "$packaged"
     ln -s /Applications "$staging/Applications"
     hdiutil create -volname EJson -srcfolder "$staging" -format UDZO "$output"
     hdiutil verify "$output"
