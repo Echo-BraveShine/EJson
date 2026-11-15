@@ -249,7 +249,7 @@ void main() {
       );
       expect(
         container.read(workspaceProvider).active.file?.path,
-        endsWith('/untitled.xml'),
+        target.resolveSymbolicLinksSync(),
       );
       expect(tester.takeException(), isNull);
     },
