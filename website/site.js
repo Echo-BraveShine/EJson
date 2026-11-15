@@ -6,6 +6,8 @@ function applyTheme() {
   const theme = themePreference === 'system' ? (systemTheme.matches ? 'dark' : 'light') : themePreference;
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.themePreference = themePreference;
+  const logo = theme === 'dark' ? 'logo-on-light.png' : 'logo-on-dark.png';
+  document.querySelector('[data-theme-icon]')?.setAttribute('href', `assets/${logo}`);
   if (themeSelect) themeSelect.value = themePreference;
   document.querySelectorAll('[data-screenshot]').forEach(link => {
     const name = link.dataset.screenshot;

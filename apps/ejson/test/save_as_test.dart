@@ -162,6 +162,100 @@ void main() {
     });
   }
 
+  testWidgets(
+    'first save of an untitled document selects and writes a file type on Windows',
+    (tester) async {
+      final directory = Directory.systemTemp.createTempSync(
+        'ejson-first-save-',
+      );
+      addTearDown(() => directory.deleteSync(recursive: true));
+      final target = File('${directory.path}/untitled.xml');
+      final container = await start(
+        tester,
+        (path) async => LocalJsonFile(path, '{}'),
+      );
+      container.read(workspaceProvider.notifier).editSource(1, _source);
+      await tester.pumpAndSettle();
+
+      const nativeFiles = MethodChannel('dev.ekko.ejson/files');
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        nativeFiles,
+        (call) async {
+          if (call.method == 'atomicWrite') {
+            final arguments = call.arguments as Map;
+            File(
+              arguments['path'] as String,
+            ).writeAsBytesSync(arguments['bytes'] as List<int>);
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          nativeFiles,
+          null,
+        ),
+      );
+      const selector = MethodChannel('plugins.flutter.io/file_selector');
+      Map<dynamic, dynamic>? arguments;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(selector, (
+        call,
+      ) async {
+        if (call.method == 'getSavePath') {
+          arguments = call.arguments as Map;
+          return target.path;
+        }
+        return null;
+      });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          selector,
+          null,
+        ),
+      );
+
+      await tester.tap(find.byTooltip('Save'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SaveAsDialog), findsOneWidget);
+      expect(find.text('JSON (.json)'), findsOneWidget);
+      expect(find.text('XML (.xml)'), findsNothing);
+
+      await tester.tap(find.byType(WorkbenchSelect<DocumentFormat>));
+      await tester.pumpAndSettle();
+      expect(find.text('JSON (.json)'), findsWidgets);
+      expect(find.text('XML (.xml)'), findsOneWidget);
+      expect(find.text('CSV (.csv)'), findsOneWidget);
+      expect(find.text('TOML (.toml)'), findsOneWidget);
+      await tester.tap(find.text('XML (.xml)').last);
+      await tester.pump();
+      await waitForConversion(
+        tester,
+        find.byKey(const ValueKey('save-as-preview')),
+      );
+      await tester.tap(saveButton());
+      await waitForConversion(tester, find.text('untitled.xml'));
+      await tester.pumpAndSettle();
+
+      final group =
+          (arguments!['acceptedTypeGroups'] as List).single
+              as Map<dynamic, dynamic>;
+      expect(group['label'], 'XML');
+      expect(group['extensions'], DocumentFormat.xml.extensions);
+      expect(arguments!['suggestedName'], 'untitled.xml');
+      expect(target.existsSync(), isTrue);
+      expect(
+        container.read(workspaceProvider).active.format,
+        DocumentFormat.xml,
+      );
+      expect(
+        container.read(workspaceProvider).active.file?.path,
+        endsWith('/untitled.xml'),
+      );
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant({TargetPlatform.windows}),
+  );
+
   testWidgets('unsupported conversion disables save and can be cancelled', (
     tester,
   ) async {

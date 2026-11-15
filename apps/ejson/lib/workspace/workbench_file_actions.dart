@@ -234,7 +234,8 @@ extension _WorkbenchFileActions on _WorkbenchState {
         return true;
       }
       var output = ConversionOutput(tab.text, tab.format, bom: tab.bom);
-      if (saveAs && chooseFormat) {
+      final choosingFormat = (saveAs || original == null) && chooseFormat;
+      if (choosingFormat) {
         final selected = await showDialog<ConversionOutput>(
           context: context,
           builder: (_) => SaveAsDialog(
@@ -265,7 +266,7 @@ extension _WorkbenchFileActions on _WorkbenchState {
         );
         if (selected == null || !mounted) return false;
         destination = selected.path;
-        if (saveAs && chooseFormat) {
+        if (choosingFormat) {
           final name = File(destination).uri.pathSegments.last;
           if (!name.contains('.')) {
             destination = '$destination.${output.format.extension}';

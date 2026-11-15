@@ -10,4 +10,6 @@
     : preference;
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.themePreference = preference;
+  const logo = theme === 'dark' ? 'logo-on-light.png' : 'logo-on-dark.png';
+  document.querySelector('[data-theme-icon]')?.setAttribute('href', `assets/${logo}`);
 })();

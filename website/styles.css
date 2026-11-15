@@ -41,6 +41,10 @@ img { display: block; max-width: 100%; }
 .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 750; letter-spacing: -.04em; }
 .brand img { border-radius: 8px; }
+/* Light pages use logo-on-dark; dark pages use logo-on-light. */
+.brand-logo-for-dark-theme { display: none; }
+:root[data-theme="dark"] .brand-logo-for-light-theme { display: none; }
+:root[data-theme="dark"] .brand-logo-for-dark-theme { display: block; }
 .nav-links { display: flex; align-items: center; gap: 30px; color: var(--muted); font-size: 14px; }
 .nav-links a:hover, .footer a:hover { color: var(--accent); }
 .language { border-left: 1px solid var(--line); padding-left: 28px; }
