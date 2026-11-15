@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,7 +26,6 @@ final diskSyncProvider =
 class DiskSyncController extends Notifier<Map<int, DiskSyncState>> {
   final _writes = <int, Timer>{};
   final _checking = <int, int>{};
-  final _observed = <int, (String, int, DateTime, DateTime)>{};
   Timer? _poll;
   bool _suspended = false;
 
@@ -59,11 +57,7 @@ class DiskSyncController extends Notifier<Map<int, DiskSyncState>> {
       return;
     }
     _updateFiles(null, ref.read(workspaceProvider));
-    // Metadata checks stay cheap, with full-content verification every ten ticks.
-    _poll = Timer.periodic(
-      const Duration(seconds: 1),
-      (timer) => checkAll(metadataOnly: timer.tick % 10 != 0),
-    );
+    _poll = Timer.periodic(const Duration(seconds: 1), (_) => checkAll());
     checkAll();
   }
 
@@ -74,7 +68,6 @@ class DiskSyncController extends Notifier<Map<int, DiskSyncState>> {
       timer.cancel();
     }
     _writes.clear();
-    _observed.clear();
   }
 
   void _set(int id, DiskSyncState value) {
@@ -95,7 +88,6 @@ class DiskSyncController extends Notifier<Map<int, DiskSyncState>> {
         .where((tab) => tab.file != null)
         .map((tab) => tab.id)
         .toSet();
-    _observed.removeWhere((id, _) => !ids.contains(id));
     for (final id in _writes.keys.toList()) {
       if (!ids.contains(id)) _writes.remove(id)?.cancel();
     }
@@ -130,21 +122,16 @@ class DiskSyncController extends Notifier<Map<int, DiskSyncState>> {
     });
   }
 
-  void checkAll({bool metadataOnly = false}) {
+  void checkAll() {
     if (!_enabled) return;
     for (final tab in ref.read(workspaceProvider).tabs) {
       if (tab.file != null && !_checking.containsKey(tab.id)) {
-        unawaited(check(tab.id, metadataOnly: metadataOnly));
+        unawaited(check(tab.id));
       }
     }
   }
 
-  Future<bool> check(
-    int id, {
-    bool write = false,
-    bool reload = false,
-    bool metadataOnly = false,
-  }) {
+  Future<bool> check(int id, {bool write = false, bool reload = false}) {
     if (!ref.mounted || !_enabled) return Future.value(false);
     _checking[id] = (_checking[id] ?? 0) + 1;
     return ref
@@ -155,19 +142,10 @@ class DiskSyncController extends Notifier<Map<int, DiskSyncState>> {
           final baseline = tab?.file;
           if (tab == null || baseline == null) return false;
           try {
-            final stat = await File(baseline.path).stat();
-            final observed = (
-              baseline.path,
-              stat.size,
-              stat.modified,
-              stat.changed,
-            );
-            if (metadataOnly && _observed[id] == observed) return true;
             final disk = await ref.read(localFileReaderProvider)(baseline.path);
             if (!ref.mounted || !_enabled) return false;
             final current = ref.read(workspaceProvider).tab(id);
             if (current == null || current.file != baseline) return false;
-            _observed[id] = observed;
             if (disk.path != baseline.path) {
               throw FileChangedException(baseline.path);
             }
@@ -222,11 +200,9 @@ class DiskSyncController extends Notifier<Map<int, DiskSyncState>> {
             }
             return true;
           } on FileChangedException catch (error) {
-            _observed.remove(id);
             _set(id, DiskSyncState(DiskSyncStatus.conflict, error: error));
             return false;
           } on Exception catch (error) {
-            _observed.remove(id);
             _set(
               id,
               DiskSyncState(
