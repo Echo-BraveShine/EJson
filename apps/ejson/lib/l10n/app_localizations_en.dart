@@ -428,6 +428,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get replaceText => 'Replace with';
 
   @override
+  String get replace => 'Replace';
+
+  @override
   String get replaceCurrent => 'Replace current';
 
   @override

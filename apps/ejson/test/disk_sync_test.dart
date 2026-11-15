@@ -120,8 +120,9 @@ void main() {
   ) async {
     final controller = container.read(workspaceProvider.notifier);
     for (final format in DocumentFormat.values) {
-      final target = File('${file.parent.path}/new.${format.extension}')
-        ..writeAsStringSync('before');
+      final target = File(
+        '${file.parent.path}${Platform.pathSeparator}new.${format.extension}',
+      )..writeAsStringSync('before');
       controller.newTabWithSource('before', format: format);
       final id = container.read(workspaceProvider).activeId;
       controller.markSaved(id, LocalJsonFile(target.path, 'before'));

@@ -88,6 +88,33 @@ Future<void> preview(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('comparison checkboxes use compact macOS styling', (
+    tester,
+  ) async {
+    await mount(tester);
+    final checkboxFinder = find.byKey(const ValueKey('comparison-select-0'));
+    final context = tester.element(checkboxFinder);
+    final theme = Theme.of(context);
+    final shape = theme.checkboxTheme.shape! as RoundedRectangleBorder;
+    expect(shape.borderRadius, const BorderRadius.all(Radius.circular(3.5)));
+    expect(
+      theme.checkboxTheme.materialTapTargetSize,
+      MaterialTapTargetSize.shrinkWrap,
+    );
+    expect(
+      theme.checkboxTheme.visualDensity,
+      const VisualDensity(horizontal: -4, vertical: -4),
+    );
+    expect(tester.getSize(checkboxFinder), const Size(24, 24));
+    await select(tester, 0);
+    final selectedTheme = Theme.of(tester.element(checkboxFinder));
+    expect(
+      selectedTheme.checkboxTheme.fillColor?.resolve({WidgetState.selected}),
+      selectedTheme.colorScheme.primary,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   for (final mode in [ThemeMode.light, ThemeMode.dark]) {
     testWidgets(
       'selected changes preview, apply atomically and undo in $mode',

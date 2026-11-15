@@ -207,6 +207,7 @@
     }
   },
   "replaceText": "Replace with",
+  "replace": "Replace",
   "replaceCurrent": "Replace current",
   "replaceAll": "Replace all",
   "matchCase": "Match case",

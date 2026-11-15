@@ -58,14 +58,13 @@ extension _ComparisonChanges on _CompareDocumentsState {
               children: [
                 Tooltip(
                   message: strings.comparisonSelectAll,
-                  child: Checkbox(
+                  child: WorkbenchCheckbox(
                     value: _checked.isEmpty
                         ? false
                         : _checked.length == result.differences.length
                         ? true
                         : null,
                     tristate: true,
-                    visualDensity: VisualDensity.compact,
                     onChanged: stale || _merging
                         ? null
                         : (_) => _updateView(() {
@@ -155,11 +154,10 @@ extension _ComparisonChanges on _CompareDocumentsState {
                         ),
                         child: Row(
                           children: [
-                            Checkbox(
-                              key: ValueKey('comparison-select-$index'),
+                            WorkbenchCheckbox(
+                              controlKey: ValueKey('comparison-select-$index'),
                               semanticLabel: '$label ${difference.path}',
                               value: _checked.contains(index),
-                              visualDensity: VisualDensity.compact,
                               onChanged: stale || _merging
                                   ? null
                                   : (checked) => _updateView(() {

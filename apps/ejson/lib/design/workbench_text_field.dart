@@ -22,6 +22,8 @@ class WorkbenchTextField extends StatelessWidget {
     this.errorText,
     this.errorMaxLines,
     this.prefixIcon,
+    this.suffixIcon,
+    this.suffixIconConstraints,
   });
 
   final TextEditingController? controller;
@@ -40,6 +42,8 @@ class WorkbenchTextField extends StatelessWidget {
   final String? errorText;
   final int? errorMaxLines;
   final Widget? prefixIcon;
+  final Widget? suffixIcon;
+  final BoxConstraints? suffixIconConstraints;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +77,8 @@ class WorkbenchTextField extends StatelessWidget {
               : null,
           hintText: hintText,
           prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          suffixIconConstraints: suffixIconConstraints,
           // Feedback is laid out below the fixed-height input surface.
           enabledBorder: errorText == null
               ? null

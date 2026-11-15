@@ -57,7 +57,10 @@ void main() {
       expect(container.read(workspaceProvider).active.text, '1');
       expect(file.readAsStringSync(), '2');
       expect(container.read(workspaceProvider).active.file!.source, '0');
-      expect(container.read(diskSyncProvider)[1]!.status, DiskSyncStatus.conflict);
+      expect(
+        container.read(diskSyncProvider)[1]!.status,
+        DiskSyncStatus.conflict,
+      );
       expect(find.text('Load disk version'), findsOneWidget);
       expect(find.text('Keep local edits'), findsOneWidget);
       await tester.tap(find.text('Compare versions'));

@@ -132,6 +132,7 @@
   "buyCoffee": "请我喝杯咖啡",
   "browserFailed": "无法打开浏览器。",
   "replaceText": "替换为",
+  "replace": "替换",
   "replaceCurrent": "替换当前",
   "replaceAll": "全部替换",
   "matchCase": "区分大小写",

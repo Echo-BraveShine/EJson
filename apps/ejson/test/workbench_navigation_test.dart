@@ -74,7 +74,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(search, 'x.y');
     await tester.pumpAndSettle();
-    expect(find.text('1 / 1'), findsOneWidget);
+    expect(find.text('1/1'), findsOneWidget);
     expect(
       find.descendant(of: find.byType(ListView), matching: find.text('x.y')),
       findsOneWidget,

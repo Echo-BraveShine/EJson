@@ -110,6 +110,71 @@ class WorkbenchSelect<T> extends StatelessWidget {
   }
 }
 
+/// A compact macOS-style checkbox with a square, lightly rounded indicator.
+class WorkbenchCheckbox extends StatelessWidget {
+  const WorkbenchCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.controlKey,
+    this.tristate = false,
+    this.semanticLabel,
+  });
+
+  final bool? value;
+  final ValueChanged<bool?>? onChanged;
+  final Key? controlKey;
+  final bool tristate;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final enabled = onChanged != null;
+    final borderColor = enabled
+        ? colors.onSurface.withValues(alpha: .28)
+        : colors.outlineVariant;
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          checkboxTheme: CheckboxThemeData(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(3.5)),
+            ),
+            side: WidgetStateBorderSide.resolveWith(
+              (states) => BorderSide(
+                color: states.contains(WidgetState.selected)
+                    ? colors.primary
+                    : borderColor,
+              ),
+            ),
+            fillColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? colors.primary
+                  : Colors.transparent,
+            ),
+            checkColor: WidgetStatePropertyAll(colors.onPrimary),
+            overlayColor: WidgetStatePropertyAll(
+              colors.primary.withValues(alpha: .10),
+            ),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+          ),
+        ),
+        child: Checkbox(
+          key: controlKey,
+          value: value,
+          tristate: tristate,
+          semanticLabel: semanticLabel,
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+}
+
 /// Compact form controls and fixed dialog chrome for document tools.
 class WorkbenchToolDialog extends StatelessWidget {
   const WorkbenchToolDialog({

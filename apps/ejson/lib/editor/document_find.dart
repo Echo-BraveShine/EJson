@@ -215,11 +215,14 @@ class _DocumentFindState extends State<DocumentFind> {
         ? ''
         : _matches.isEmpty
         ? strings.noMatches
-        : '${_index < 0 ? '–' : _index + 1} / ${_matches.length}${_limited ? '+' : ''}';
+        : '${_index < 0 ? '–' : _index + 1}/${_matches.length}${_limited ? '+' : ''}';
     final colors = theme.colorScheme;
     final controlHeight = WorkbenchStyle.inputHeightFor(
       context,
       theme.textTheme.bodyMedium!,
+    );
+    final statusStyle = theme.textTheme.bodySmall?.copyWith(
+      color: colors.onSurfaceVariant,
     );
     final actionStyle = workbenchDialogButtonStyle(context).copyWith(
       fixedSize: WidgetStatePropertyAll(Size.fromHeight(controlHeight)),
@@ -239,24 +242,7 @@ class _DocumentFindState extends State<DocumentFind> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (widget.onReplace != null) ...[
-                  Semantics(
-                    expanded: _showReplace,
-                    child: _button(
-                      _showReplace ? strings.hideReplace : strings.showReplace,
-                      _showReplace
-                          ? CupertinoIcons.chevron_down
-                          : CupertinoIcons.chevron_right,
-                      () {
-                        setState(() => _showReplace = !_showReplace);
-                        widget.focusNode.requestFocus();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: WorkbenchStyle.space4),
-                ],
                 Expanded(
                   child: WorkbenchTextField(
                     autofocus: true,
@@ -269,11 +255,78 @@ class _DocumentFindState extends State<DocumentFind> {
                       size: WorkbenchStyle.controlIconSize,
                       color: colors.onSurfaceVariant,
                     ),
+                    suffixIcon: status.isEmpty
+                        ? null
+                        : Tooltip(
+                            key: const ValueKey('find-status'),
+                            message: status,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Text(
+                                status,
+                                maxLines: 1,
+                                style: statusStyle,
+                              ),
+                            ),
+                          ),
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 0,
+                      minHeight: 0,
+                    ),
                     onChanged: (_) => _search(),
                     onEditingComplete: () => _move(1),
                   ),
                 ),
                 const SizedBox(width: WorkbenchStyle.space8),
+                if (widget.onReplace != null) ...[
+                  Tooltip(
+                    message: _showReplace
+                        ? strings.hideReplace
+                        : strings.showReplace,
+                    child: Semantics(
+                      expanded: _showReplace,
+                      child: TextButton.icon(
+                        style: workbenchDialogButtonStyle(context).copyWith(
+                          minimumSize: WidgetStatePropertyAll(
+                            Size(0, controlHeight),
+                          ),
+                          padding: const WidgetStatePropertyAll(
+                            EdgeInsets.symmetric(
+                              horizontal: WorkbenchStyle.space8,
+                            ),
+                          ),
+                          backgroundColor: WidgetStatePropertyAll(
+                            _showReplace
+                                ? colors.secondaryContainer
+                                : colors.surface,
+                          ),
+                          foregroundColor: WidgetStatePropertyAll(
+                            _showReplace
+                                ? colors.onSecondaryContainer
+                                : colors.onSurface,
+                          ),
+                          side: WidgetStatePropertyAll(
+                            BorderSide(
+                              color: _showReplace
+                                  ? colors.primary
+                                  : colors.outlineVariant,
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          setState(() => _showReplace = !_showReplace);
+                          widget.focusNode.requestFocus();
+                        },
+                        icon: const Icon(
+                          CupertinoIcons.arrow_2_squarepath,
+                          size: 14,
+                        ),
+                        label: Text(strings.replace),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: WorkbenchStyle.space8),
+                ],
                 _toggle(strings.matchCase, 'Aa', _caseSensitive, (value) {
                   _caseSensitive = value;
                   _search();
@@ -332,22 +385,6 @@ class _DocumentFindState extends State<DocumentFind> {
                     ),
                   ),
                 ),
-                if (status.isNotEmpty) ...[
-                  const SizedBox(width: WorkbenchStyle.space8),
-                  Flexible(
-                    child: Tooltip(
-                      message: status,
-                      child: Text(
-                        status,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
                 const SizedBox(width: WorkbenchStyle.space8),
                 DecoratedBox(
                   decoration: BoxDecoration(

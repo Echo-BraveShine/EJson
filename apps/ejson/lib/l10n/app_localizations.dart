@@ -890,6 +890,12 @@ abstract class AppLocalizations {
   /// **'Replace with'**
   String get replaceText;
 
+  /// No description provided for @replace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replace;
+
   /// No description provided for @replaceCurrent.
   ///
   /// In en, this message translates to:

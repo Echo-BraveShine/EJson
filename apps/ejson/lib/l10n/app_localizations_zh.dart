@@ -424,6 +424,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get replaceText => '替换为';
 
   @override
+  String get replace => '替换';
+
+  @override
   String get replaceCurrent => '替换当前';
 
   @override

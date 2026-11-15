@@ -13,6 +13,41 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('find row keeps its search geometry at minimum width', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(720, 460));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final container = ProviderContainer(
+      overrides: [
+        parseDocumentProvider.overrideWithValue(
+          (source, revision) async => parseJson(source, revision: revision),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: const EJsonApp()),
+    );
+    await tester.pumpAndSettle();
+    final id = container.read(workspaceProvider).activeId;
+    container
+        .read(workspaceProvider.notifier)
+        .editSource(id, '{"alpha":"first","beta":"second"}');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Find in document'));
+    await tester.pumpAndSettle();
+
+    final search = find.byType(TextField);
+    final initialSize = tester.getSize(search);
+    await tester.enterText(search, 'a');
+    await tester.pumpAndSettle();
+
+    expect(find.text('1/3'), findsOneWidget);
+    expect(tester.getSize(find.byType(TextField)), initialSize);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('replace, undo, string conversion and subtree extraction', (
     tester,
   ) async {
@@ -39,10 +74,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsOneWidget);
     expect(find.text('Replace all'), findsNothing);
+    final findArea = find.byType(DocumentFind);
+    final inputLeft = tester.getTopLeft(find.byType(TextField)).dx;
+    expect(
+      inputLeft,
+      closeTo(tester.getTopLeft(findArea).dx + WorkbenchStyle.space12, 0.1),
+    );
+    expect(find.text('Replace'), findsOneWidget);
+    expect(
+      tester.getCenter(find.byTooltip('Show replace')).dx,
+      lessThan(tester.getCenter(find.byTooltip('Match case')).dx),
+    );
     final compactHeight = tester.getSize(find.byType(DocumentFind)).height;
+    final inputWidth = tester.getSize(find.byType(TextField)).width;
     await tester.tap(find.byTooltip('Show replace'));
     await tester.pumpAndSettle();
-    final findArea = find.byType(DocumentFind);
+    expect(tester.getTopLeft(find.byType(TextField).first).dx, inputLeft);
+    expect(tester.getSize(find.byType(TextField).first).width, inputWidth);
     for (final type in [TextField, TextButton, IconButton]) {
       final controls = find.descendant(
         of: findArea,
@@ -88,6 +136,8 @@ void main() {
     await tester.enterText(find.byType(TextField).first, 'alice');
     await tester.enterText(find.byType(TextField).last, 'Bob');
     expect(tester.getSize(findArea).height, greaterThan(compactHeight));
+    expect(tester.getSize(find.byType(TextField).first).width, inputWidth);
+    expect(find.text('1/2'), findsOneWidget);
     await tester.tap(find.byTooltip('Hide replace'));
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsOneWidget);
