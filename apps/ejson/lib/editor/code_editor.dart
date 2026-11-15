@@ -29,6 +29,7 @@ class EJsonCodeEditor extends StatefulWidget {
     this.highlight = JsonHighlight.atomOne,
     this.useWorkspaceShortcuts = true,
     this.format = DocumentFormat.json,
+    this.preserveViewOnUpdate = false,
   });
 
   final String source;
@@ -38,6 +39,7 @@ class EJsonCodeEditor extends StatefulWidget {
   final JsonHighlight highlight;
   final bool useWorkspaceShortcuts;
   final bool focusOnJump;
+  final bool preserveViewOnUpdate;
   final ({SourceRange range, int sequence})? jump;
 
   @override
@@ -76,6 +78,13 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
       _source = widget.source;
       final display = _normalize(_source);
       if (display != _display) {
+        final selection = _controller.selection;
+        final vertical = _scroll.verticalScroller.hasClients
+            ? _scroll.verticalScroller.offset
+            : null;
+        final horizontal = _scroll.horizontalScroller.hasClients
+            ? _scroll.horizontalScroller.offset
+            : null;
         final change = SourcePatch.between(_display, display);
         final lines = LineIndex(_display);
         final start = _position(change.range.start, lines);
@@ -88,6 +97,38 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         );
         if (_controller.text != display) {
           _controller.text = display;
+        }
+        if (widget.preserveViewOnUpdate) {
+          final lines = display.split('\n');
+          final base = selection.baseIndex.clamp(0, lines.length - 1);
+          final extent = selection.extentIndex.clamp(0, lines.length - 1);
+          _controller.selection = CodeLineSelection(
+            baseIndex: base,
+            baseOffset: selection.baseOffset.clamp(0, lines[base].length),
+            extentIndex: extent,
+            extentOffset: selection.extentOffset.clamp(0, lines[extent].length),
+            baseAffinity: selection.baseAffinity,
+            extentAffinity: selection.extentAffinity,
+          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (vertical != null && _scroll.verticalScroller.hasClients) {
+              _scroll.verticalScroller.jumpTo(
+                vertical.clamp(
+                  0.0,
+                  _scroll.verticalScroller.position.maxScrollExtent,
+                ),
+              );
+            }
+            if (horizontal != null && _scroll.horizontalScroller.hasClients) {
+              _scroll.horizontalScroller.jumpTo(
+                horizontal.clamp(
+                  0.0,
+                  _scroll.horizontalScroller.position.maxScrollExtent,
+                ),
+              );
+            }
+          });
         }
         _lines = _controller.codeLines;
         _controller.addListener(_edited);
@@ -208,9 +249,12 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
             ? null
             : CodeHighlightTheme(
                 languages: {
-                  widget.format.name: CodeHighlightThemeMode(
+                  (widget.format == DocumentFormat.jsonLines
+                      ? 'json'
+                      : widget.format.name): CodeHighlightThemeMode(
                     mode: switch (widget.format) {
-                      DocumentFormat.json => langJson,
+                      DocumentFormat.json ||
+                      DocumentFormat.jsonLines => langJson,
                       DocumentFormat.yaml => langYaml,
                       DocumentFormat.csv => _csvMode,
                       DocumentFormat.xml => langXml,

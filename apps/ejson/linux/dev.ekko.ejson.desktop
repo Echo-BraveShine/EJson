@@ -5,4 +5,4 @@ Exec=ejson %F
 Icon=dev.ekko.ejson
 Categories=Development;
 Terminal=false
-MimeType=application/json;application/xml;text/xml;text/csv;application/yaml;text/yaml;application/toml;text/x-yaml;application/x-yaml;text/x-toml;
+MimeType=application/x-ndjson;application/json;application/xml;text/xml;text/csv;application/yaml;text/yaml;application/toml;text/x-yaml;application/x-yaml;text/x-toml;

@@ -73,6 +73,57 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
   late ThemeMode _theme = widget.themeMode;
   late bool _restoreOnStartup = widget.restoreOnStartup;
   bool _savingRestorePreference = false;
+  bool _savingAutosavePreference = false;
+  bool _savingDiskSyncPreference = false;
+  bool _savingTreeConnectors = false;
+
+  Future<void> _setTreeConnectors(bool enabled) async {
+    setState(() => _savingTreeConnectors = true);
+    final saved = await ref
+        .read(toolPreferencesProvider.notifier)
+        .setTreeConnectors(enabled);
+    if (!mounted) return;
+    setState(() => _savingTreeConnectors = false);
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).workspacePreferenceFailed),
+        ),
+      );
+    }
+  }
+
+  Future<void> _setDiskSync(bool enabled) async {
+    setState(() => _savingDiskSyncPreference = true);
+    final saved = await ref
+        .read(toolPreferencesProvider.notifier)
+        .setSyncDiskFiles(enabled);
+    if (!mounted) return;
+    setState(() => _savingDiskSyncPreference = false);
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).workspacePreferenceFailed),
+        ),
+      );
+    }
+  }
+
+  Future<void> _setAutosave(bool enabled) async {
+    setState(() => _savingAutosavePreference = true);
+    final saved = await ref
+        .read(toolPreferencesProvider.notifier)
+        .setAutosave(enabled);
+    if (!mounted) return;
+    setState(() => _savingAutosavePreference = false);
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).workspacePreferenceFailed),
+        ),
+      );
+    }
+  }
 
   Future<void> _setRestoreOnStartup(bool value) async {
     setState(() => _savingRestorePreference = true);

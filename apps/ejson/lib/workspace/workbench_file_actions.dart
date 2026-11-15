@@ -212,6 +212,7 @@ extension _WorkbenchFileActions on _WorkbenchState {
     int id, {
     bool saveAs = false,
     bool saveDraftOnExit = false,
+    bool chooseFormat = true,
   }) async {
     if (_fileBusy || !mounted) return false;
     final tab = workspace.tab(id);
@@ -232,15 +233,76 @@ extension _WorkbenchFileActions on _WorkbenchState {
         if (mounted) controller.markSaved(id, saved);
         return true;
       }
+      var output = ConversionOutput(tab.text, tab.format, bom: tab.bom);
+      if (saveAs && chooseFormat) {
+        final selected = await showDialog<ConversionOutput>(
+          context: context,
+          builder: (_) => SaveAsDialog(
+            source: tab.text,
+            format: tab.format,
+            bom: tab.bom,
+            highlight: widget.highlight,
+          ),
+        );
+        if (selected == null || !mounted) return false;
+        output = selected;
+      }
+      final converted = output.format != tab.format;
       String? destination;
       if (saveAs || original == null) {
         final selected = await getSaveLocation(
+          acceptedTypeGroups: [
+            XTypeGroup(
+              label: output.format.label,
+              extensions: output.format.extensions,
+            ),
+          ],
           suggestedName: original == null
-              ? 'untitled.${tab.format.extension}'
+              ? 'untitled.${output.format.extension}'
+              : converted
+              ? '${tab.name.replaceFirst(RegExp(r'\.[^.]+$'), '')}.${output.format.extension}'
               : tab.name,
         );
         if (selected == null || !mounted) return false;
         destination = selected.path;
+        if (saveAs && chooseFormat) {
+          final name = File(destination).uri.pathSegments.last;
+          if (!name.contains('.')) {
+            destination = '$destination.${output.format.extension}';
+            if (await File(destination).exists()) {
+              if (!mounted) return false;
+              final replace = await showDialog<bool>(
+                context: context,
+                builder: (context) => WorkbenchDialog(
+                  title: strings.saveAs,
+                  content: Text(strings.saveAsOverwrite(destination!)),
+                  actions: [
+                    TextButton(
+                      style: workbenchDialogButtonStyle(context),
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(strings.cancel),
+                    ),
+                    FilledButton(
+                      style: workbenchDialogButtonStyle(
+                        context,
+                        role: DialogButtonRole.primary,
+                      ),
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(strings.save),
+                    ),
+                  ],
+                ),
+              );
+              if (replace != true || !mounted) return false;
+            }
+          } else {
+            final extension = name.split('.').last.toLowerCase();
+            if (!output.format.extensions.contains(extension)) {
+              _message(strings.saveAsExtensionError(output.format.extension));
+              return false;
+            }
+          }
+        }
         final target = File(destination);
         if (await target.exists()) {
           final resolved = await target.resolveSymbolicLinks();
@@ -251,21 +313,55 @@ extension _WorkbenchFileActions on _WorkbenchState {
             _message(strings.fileAlreadyOpen);
             return false;
           }
-          if (original?.path == resolved) destination = null;
+          if (original?.path == resolved) {
+            if (converted) {
+              _message(strings.fileAlreadyOpen);
+              return false;
+            }
+            destination = null;
+          }
         }
       }
-      final saved =
-          await (original ?? LocalJsonFile(destination!, '', bom: tab.bom))
-              .save(
-                tab.text,
-                destination: destination,
-                writeAtomically: writeAtomically,
-              );
-      if (mounted) {
-        controller.markSaved(id, saved);
-        await _rememberSavedFile(saved);
+      if (!mounted || workspace.tab(id)?.text != tab.text) {
+        if (mounted) _message(strings.staleNode);
+        return false;
       }
-      if (original != null && original.path != saved.path) {
+      final saved = await ref.read(fileOperationQueueProvider).run(() async {
+        if (!mounted || workspace.tab(id)?.text != tab.text) return null;
+        final currentFile = workspace.tab(id)?.file;
+        final base = converted
+            ? LocalJsonFile(destination!, '', bom: output.bom)
+            : currentFile ?? LocalJsonFile(destination!, '', bom: output.bom);
+        final saved = await base.save(
+          output.source,
+          destination: destination,
+          writeAtomically: writeAtomically,
+        );
+        if (mounted) {
+          if (converted) {
+            controller.newTabWithSource(
+              output.source,
+              format: output.format,
+              bom: output.bom,
+            );
+            controller.markSaved(workspace.activeId, saved);
+          } else if (workspace.tab(id)?.file == currentFile) {
+            controller.markSaved(id, saved);
+          }
+        }
+        return saved;
+      });
+      if (saved == null) {
+        if (mounted) _message(strings.staleNode);
+        return false;
+      }
+      if (mounted) {
+        await _rememberSavedFile(saved);
+        if (mounted) {
+          await ref.read(workspaceAutosaveProvider.notifier).flush();
+        }
+      }
+      if (!converted && original != null && original.path != saved.path) {
         await widget.workspaceSession?.releaseAccess(original.path);
       }
       return true;

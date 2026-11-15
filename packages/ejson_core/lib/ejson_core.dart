@@ -9,4 +9,5 @@ export 'src/json_query.dart';
 export 'src/array_edits.dart';
 export 'src/value_compare.dart';
 export 'src/document_tools.dart';
+export 'src/json_repair.dart';
 export 'src/conversion.dart';

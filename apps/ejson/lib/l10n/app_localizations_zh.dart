@@ -977,4 +977,190 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get newDocumentFormat => '新建文档格式';
+
+  @override
+  String get saveAsFormat => '文件类型';
+
+  @override
+  String get saveAsConversionHint =>
+      '转换使用默认设置，请检查预览后保存。CSV 列设置、YAML 文档选择及 XML 映射可通过「格式转换」调整。';
+
+  @override
+  String saveAsExtensionError(String extension) {
+    return '所选文件类型需要使用 .$extension 扩展名。';
+  }
+
+  @override
+  String saveAsOverwrite(String path) {
+    return '文件已存在，是否覆盖？\n$path';
+  }
+
+  @override
+  String get autosaveDrafts => '自动保存恢复草稿';
+
+  @override
+  String get autosaveDescription =>
+      '停止编辑 2 秒后保存恢复草稿，持续编辑时最多间隔 10 秒保存。异常退出后，下次启动会恢复草稿。';
+
+  @override
+  String get autosaveDisabled => '恢复草稿自动保存已关闭';
+
+  @override
+  String get autosaveWaiting => '等待保存恢复草稿';
+
+  @override
+  String get autosaveSaving => '正在保存恢复草稿';
+
+  @override
+  String get autosaveSaved => '恢复草稿已保存';
+
+  @override
+  String get autosaveFailed => '恢复草稿保存失败，点击重试。';
+
+  @override
+  String recoveryRestored(int count) {
+    return '已恢复 $count 个文档的未保存修改。';
+  }
+
+  @override
+  String get autosaveUnavailable => '恢复草稿存储初始化失败，自动保存暂不可用。';
+
+  @override
+  String get diskSyncSetting => '磁盘文件双向同步';
+
+  @override
+  String get diskSyncDescription =>
+      '停止输入 500 毫秒后将修改写入已命名文件，包括语法未完成的内容。每秒检查外部修改，发生冲突时暂停同步。';
+
+  @override
+  String get diskSyncWaiting => '等待写入磁盘';
+
+  @override
+  String get diskSyncSaving => '正在写入磁盘';
+
+  @override
+  String get diskSyncSaved => '已保存到磁盘';
+
+  @override
+  String get diskSyncFailed => '磁盘同步失败';
+
+  @override
+  String get diskSyncConflict => '文件同步冲突';
+
+  @override
+  String get diskSyncConflictDescription =>
+      '磁盘文件已被外部修改，当前也有本地编辑。同步已暂停，请选择保留的版本。';
+
+  @override
+  String diskSyncError(String error) {
+    return '文件同步已暂停。$error';
+  }
+
+  @override
+  String get diskSyncCompare => '对照查看';
+
+  @override
+  String get diskSyncLocal => '当前编辑内容';
+
+  @override
+  String get diskSyncDisk => '磁盘版本';
+
+  @override
+  String get diskSyncReload => '加载磁盘版本';
+
+  @override
+  String get diskSyncOverwrite => '保留本地修改';
+
+  @override
+  String get diskSyncRetry => '重试';
+
+  @override
+  String get diskSyncReloadConfirm => '加载最新磁盘版本并放弃当前本地修改？';
+
+  @override
+  String get diskSyncOverwriteConfirm => '将当前本地修改写入并覆盖磁盘版本？如果磁盘版本再次变化，需要重新确认。';
+
+  @override
+  String get repairJson => '修复 JSON';
+
+  @override
+  String get repairAlreadyValid => '当前文档已经是有效的 JSON。';
+
+  @override
+  String get repairFailed => '无法完成修复，请补全缺失的值或消除含义不明确的语法后重试。';
+
+  @override
+  String get repairBom => '已移除 BOM 标记';
+
+  @override
+  String get repairComments => '已移除注释';
+
+  @override
+  String get repairSingleQuotes => '已转换单引号字符串';
+
+  @override
+  String get repairUnquotedKeys => '已为属性名添加引号';
+
+  @override
+  String get repairTrailingCommas => '已移除尾逗号';
+
+  @override
+  String get repairMissingCommas => '已补充逗号';
+
+  @override
+  String get repairMissingColons => '已补充冒号';
+
+  @override
+  String get repairClosingContainers => '已闭合对象和数组';
+
+  @override
+  String get repairClosingStrings => '已闭合字符串';
+
+  @override
+  String get repairControlCharacters => '已转义控制字符';
+
+  @override
+  String get repairLiterals => '已规范化字面量';
+
+  @override
+  String get jsonLinesRecords => '记录';
+
+  @override
+  String get jsonLinesSearch => '搜索记录';
+
+  @override
+  String get jsonLinesFilter => '显示记录';
+
+  @override
+  String get jsonLinesAll => '全部记录';
+
+  @override
+  String get jsonLinesValid => '有效记录';
+
+  @override
+  String get jsonLinesInvalid => '无效记录';
+
+  @override
+  String get jsonLinesNoMatches => '没有匹配的记录';
+
+  @override
+  String get jsonLinesBlank => '空白行';
+
+  @override
+  String get jsonLinesExport => '导出筛选结果';
+
+  @override
+  String get jsonLinesExported => '筛选结果已导出';
+
+  @override
+  String jsonLinesCount(int shown, int total, int invalid) {
+    return '$shown / $total 条记录 · $invalid 条无效';
+  }
+
+  @override
+  String get jsonLinesConversionNotice =>
+      '每行包含一个 JSON 值，空白行会标记为无效。JSON Lines 转换为 JSON 数组，JSON 数组按元素逐行导出，其他 JSON 值导出为一条记录。';
+
+  @override
+  String get treeConnectors => '树状层级虚线';
 }

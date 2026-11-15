@@ -6,6 +6,8 @@ extension _ConversionFormatOptions on _ConversionDialogState {
     final exportCsv = _direction == ConversionDirection.jsonToCsv;
     final yaml = _direction == ConversionDirection.yamlToJson;
     final notice = switch (_direction) {
+      ConversionDirection.jsonToJsonLines ||
+      ConversionDirection.jsonLinesToJson => strings.jsonLinesConversionNotice,
       ConversionDirection.yamlToJson => strings.conversionYamlNotice,
       ConversionDirection.jsonToToml ||
       ConversionDirection.tomlToJson => strings.conversionTomlNotice,
@@ -31,7 +33,8 @@ extension _ConversionFormatOptions on _ConversionDialogState {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (_direction == ConversionDirection.jsonToToml)
+            if (_direction == ConversionDirection.jsonToToml ||
+                _direction == ConversionDirection.jsonToJsonLines)
               const Spacer()
             else
               Expanded(

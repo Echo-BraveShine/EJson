@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'design/workbench_style.dart';
@@ -19,6 +20,10 @@ import 'workspace/workbench.dart';
 import 'workspace/workspace.dart';
 import 'workspace/workspace_session.dart';
 import 'workspace/external_file_opens.dart';
+import 'workspace/recovered_workspace.dart';
+import 'workspace/workspace_recovery.dart';
+import 'workspace/workspace_autosave.dart';
+import 'workspace/disk_sync.dart';
 
 const _languageKey = 'language';
 const _themeModeKey = 'themeMode';
@@ -89,15 +94,48 @@ Future<void> main(List<String> arguments) async {
   var restored = const RestoredWorkspace();
   try {
     restoreOnStartup = await session.isEnabled();
-    if (restoreOnStartup) restored = await session.restore();
   } on Exception catch (error) {
     debugPrint('Could not read the saved workspace: ${error.runtimeType}');
+  }
+  WorkspaceRecovery? recovery;
+  RecoveredWorkspace? recovered;
+  final recoveryFailures = <String>[];
+  try {
+    final support = await getApplicationSupportDirectory();
+    final directory = Directory.fromUri(support.uri.resolve('Recovery/'));
+    recovery = await WorkspaceRecovery.open(
+      directory,
+      bookmarkFor: session.bookmarkFor,
+      accessFile: session.accessFile,
+    );
+    try {
+      recovered = await recovery.restore(restoreCleanFiles: restoreOnStartup);
+      if (recovered != null && recovered.documents.isEmpty) {
+        recoveryFailures.addAll(recovered.failedPaths);
+        recovered = null;
+      }
+    } on Exception catch (error) {
+      recoveryFailures.add(directory.path);
+      debugPrint('Could not recover drafts: ${error.runtimeType}');
+    }
+  } on Exception catch (error) {
+    debugPrint('Could not initialize recovery: ${error.runtimeType}');
+  }
+  if (recovered == null && restoreOnStartup) {
+    try {
+      restored = await session.restore();
+    } on Exception catch (error) {
+      debugPrint('Could not restore the saved workspace: ${error.runtimeType}');
+    }
   }
   runApp(
     ProviderScope(
       overrides: [
         externalFileOpensProvider.overrideWithValue(externalFiles),
         initialToolPreferencesProvider.overrideWithValue(toolPreferences),
+        workspaceRecoveryProvider.overrideWithValue(recovery),
+        diskSyncAvailableProvider.overrideWithValue(true),
+        initialRecoveredWorkspaceProvider.overrideWithValue(recovered),
         saveToolPreferencesProvider.overrideWithValue(
           (value) => preferences.setString(
             'toolPreferences',
@@ -112,8 +150,13 @@ Future<void> main(List<String> arguments) async {
       child: EJsonApp(
         manageWindow: true,
         workspaceSession: session,
+        recoveryUnavailable: recovery == null,
         restoreOnStartup: restoreOnStartup,
-        failedRestorePaths: restored.failedPaths,
+        failedRestorePaths: [
+          ...restored.failedPaths,
+          ...?recovered?.failedPaths,
+          ...recoveryFailures,
+        ],
         initialLanguage: language,
         initialThemeMode: themeMode,
         saveThemeMode: (mode) =>
@@ -145,6 +188,7 @@ class EJsonApp extends StatefulWidget {
     super.key,
     this.manageWindow = false,
     this.workspaceSession,
+    this.recoveryUnavailable = false,
     this.restoreOnStartup = true,
     this.failedRestorePaths = const [],
     this.initialLanguage,
@@ -158,6 +202,7 @@ class EJsonApp extends StatefulWidget {
   });
   final bool manageWindow;
   final WorkspaceSession? workspaceSession;
+  final bool recoveryUnavailable;
   final bool restoreOnStartup;
   final List<String> failedRestorePaths;
   final String? initialLanguage;
@@ -248,6 +293,7 @@ class _EJsonAppState extends State<EJsonApp> {
     home: Workbench(
       manageWindow: widget.manageWindow,
       workspaceSession: widget.workspaceSession,
+      recoveryUnavailable: widget.recoveryUnavailable,
       restoreOnStartup: widget.restoreOnStartup,
       failedRestorePaths: widget.failedRestorePaths,
       themeMode: mode,

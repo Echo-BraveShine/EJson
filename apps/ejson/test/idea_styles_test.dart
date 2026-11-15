@@ -154,7 +154,7 @@ void main() {
               matching: find.byKey(const ValueKey('tree-row:root')),
             ),
           );
-          expect(root.painter != null, entry.value == JsonTreeStyle.guides);
+          expect(root.painter, isNotNull);
           expect(savedTrees.last, entry.value);
         }
         final preview = find.byKey(const ValueKey('appearance-tree-preview'));

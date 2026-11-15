@@ -23,6 +23,7 @@ class TreePanel extends StatefulWidget {
     required this.onReveal,
     required this.onEdit,
     this.style = JsonTreeStyle.classic,
+    this.showConnectors = true,
     this.readOnly = false,
     this.reveal,
     this.onAdd,
@@ -38,6 +39,7 @@ class TreePanel extends StatefulWidget {
 
   final ParseSnapshot snapshot;
   final JsonTreeStyle style;
+  final bool showConnectors;
   final bool readOnly;
   final String source;
   final bool current;

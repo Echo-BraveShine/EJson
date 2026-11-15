@@ -89,7 +89,7 @@ void main() {
       const source = '{"a":[1e2,2]}';
       controller.editSource(1, source);
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Format'));
+      await tester.tap(find.byTooltip(RegExp(r'^Format \(')));
       await waitFor(
         tester,
         () => container.read(workspaceProvider).active.text.contains('\r\n'),

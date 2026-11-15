@@ -5,6 +5,7 @@ import 'package:ejson_core/ejson_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'local_files.dart';
+import 'recovered_workspace.dart';
 import '../settings/tool_preferences.dart';
 
 final workspaceProvider = NotifierProvider<WorkspaceController, Workspace>(
@@ -15,6 +16,10 @@ final initialWorkspaceProvider =
     Provider<({List<LocalJsonFile> files, String? activePath})>(
       (ref) => (files: const [], activePath: null),
     );
+
+final initialRecoveredWorkspaceProvider = Provider<RecoveredWorkspace?>(
+  (ref) => null,
+);
 
 final parseDocumentProvider =
     Provider<Future<ParseSnapshot> Function(String, int)>(
@@ -65,7 +70,9 @@ class WorkspaceTab {
       !document.snapshot!.diagnostics.any((d) => !d.warning);
   bool get canMinify =>
       canFormat &&
-      (format == DocumentFormat.json || format == DocumentFormat.xml);
+      (format == DocumentFormat.json ||
+          format == DocumentFormat.xml ||
+          format == DocumentFormat.jsonLines);
 
   WorkspaceTab withDocument(JsonDocument document) => WorkspaceTab(
     id,
@@ -109,17 +116,28 @@ class WorkspaceController extends Notifier<Workspace> {
       }
     });
     final initial = ref.read(initialWorkspaceProvider);
-    final tabs = [
-      for (final file in initial.files) _create(file.source, file: file),
-    ];
+    final recovered = ref.read(initialRecoveredWorkspaceProvider);
+    final tabs = recovered == null
+        ? [for (final file in initial.files) _create(file.source, file: file)]
+        : [
+            for (final document in recovered.documents)
+              _create(
+                document.source,
+                file: document.file,
+                format: document.format,
+                bom: document.bom,
+              ),
+          ];
     if (tabs.isEmpty) tabs.add(_create('', isDefault: true));
     for (final tab in tabs) {
       _schedule(tab);
     }
-    final active = tabs.firstWhere(
-      (tab) => tab.file?.path == initial.activePath,
-      orElse: () => tabs.first,
-    );
+    final active = recovered != null
+        ? tabs[recovered.activeIndex.clamp(0, tabs.length - 1)]
+        : tabs.firstWhere(
+            (tab) => tab.file?.path == initial.activePath,
+            orElse: () => tabs.first,
+          );
     return Workspace(tabs, active.id);
   }
 
@@ -285,9 +303,22 @@ class WorkspaceController extends Notifier<Workspace> {
     }
   }
 
+  void reloadFromDisk(int id, LocalJsonFile file) {
+    final tab = state.tab(id);
+    if (tab == null || tab.file?.path != file.path) return;
+    final document = tab.document.apply(
+      SourcePatch.between(tab.text, file.source),
+      expectedRevision: tab.document.revision,
+    )!;
+    _history[id] = EditHistory();
+    final updated = WorkspaceTab(id, document, file: file, format: tab.format);
+    _update(updated);
+    _schedule(updated);
+  }
+
   void _schedule(WorkspaceTab tab) {
     _timers.remove(tab.id)?.cancel();
-    if (tab.large) return;
+    if (tab.large && tab.format != DocumentFormat.jsonLines) return;
     final id = tab.id;
     _timers[id] = Timer(const Duration(milliseconds: 180), () {
       _timers.remove(id);
@@ -297,7 +328,11 @@ class WorkspaceController extends Notifier<Workspace> {
 
   Future<void> _parse(int id) async {
     final tab = state.tab(id);
-    if (tab == null || tab.large || !_parsing.add(id)) return;
+    if (tab == null ||
+        (tab.large && tab.format != DocumentFormat.jsonLines) ||
+        !_parsing.add(id)) {
+      return;
+    }
     final source = tab.text;
     final revision = tab.document.revision;
     try {

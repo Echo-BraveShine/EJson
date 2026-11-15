@@ -37,6 +37,7 @@ List<ConversionDirection> availableConversions(
   }
   final result = <ConversionDirection>[ConversionDirection.jsonToYaml];
   if (parseJson(source).root != null) {
+    result.add(ConversionDirection.jsonToJsonLines);
     result.add(ConversionDirection.jsonToXml);
     try {
       jsonToToml(source);
@@ -62,6 +63,16 @@ ConversionOutput convertDocument(ConversionRequest request) {
 
 ConversionOutput _convertDocument(ConversionRequest request) {
   switch (request.direction) {
+    case ConversionDirection.jsonToJsonLines:
+      return ConversionOutput(
+        jsonToJsonLines(request.source),
+        DocumentFormat.jsonLines,
+      );
+    case ConversionDirection.jsonLinesToJson:
+      return ConversionOutput(
+        jsonLinesToJson(request.source, indent: request.indent),
+        DocumentFormat.json,
+      );
     case ConversionDirection.jsonToYaml:
       return ConversionOutput(
         jsonToYaml(request.source, indent: request.indent),
@@ -180,9 +191,24 @@ ConversionOutput _convertDocument(ConversionRequest request) {
   }
 }
 
-void _worker((SendPort, ConversionRequest) message) {
+void _worker((SendPort, ConversionRequest, DocumentFormat?) message) {
   try {
-    message.$1.send(convertDocument(message.$2));
+    var output = convertDocument(message.$2);
+    final target = message.$3;
+    if (target != null && output.documents > 1) {
+      throw const FormatException(
+        'This YAML file contains multiple documents. Use Format conversion to choose a document before saving.',
+      );
+    }
+    if (target != null && output.format != target) {
+      final direction = ConversionDirection.values.firstWhere(
+        (direction) =>
+            direction.sourceFormat == output.format &&
+            direction.targetFormat == target,
+      );
+      output = convertDocument(ConversionRequest(output.source, direction));
+    }
+    message.$1.send(output);
   } catch (error) {
     message.$1.send(error.toString());
   }
@@ -195,7 +221,10 @@ class ConversionJob {
   Isolate? _isolate;
   bool _cancelled = false;
 
-  Future<ConversionOutput> run(ConversionRequest request) {
+  Future<ConversionOutput> run(
+    ConversionRequest request, {
+    DocumentFormat? targetFormat,
+  }) {
     _port.listen((message) {
       if (_completion.isCompleted) return;
       if (message is ConversionOutput) {
@@ -206,18 +235,21 @@ class ConversionJob {
         );
       }
     });
-    unawaited(_start(request));
+    unawaited(_start(request, targetFormat));
     return _completion.future.whenComplete(() {
       _port.close();
       _isolate?.kill(priority: Isolate.immediate);
     });
   }
 
-  Future<void> _start(ConversionRequest request) async {
+  Future<void> _start(
+    ConversionRequest request,
+    DocumentFormat? targetFormat,
+  ) async {
     try {
       _isolate = await Isolate.spawn(
         _worker,
-        (_port.sendPort, request),
+        (_port.sendPort, request, targetFormat),
         onError: _port.sendPort,
         onExit: _port.sendPort,
       );

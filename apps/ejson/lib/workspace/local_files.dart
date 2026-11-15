@@ -63,6 +63,7 @@ class LocalJsonFile {
   Future<LocalJsonFile> save(
     String text, {
     String? destination,
+    bool? outputBom,
     Future<void> Function(String, Uint8List)? writeAtomically,
   }) async {
     final requested = File(destination ?? path);
@@ -76,7 +77,8 @@ class LocalJsonFile {
     final baseline = destination == null
         ? this
         : (exists ? await read(target.path) : null);
-    final bytes = utf8.encode(bom ? '\uFEFF$text' : text);
+    final savedBom = outputBom ?? bom;
+    final bytes = utf8.encode(savedBom ? '\uFEFF$text' : text);
     if (bytes.length > maxFileBytes) {
       throw LocalFileException(LocalFileError.saveLimit, target.path);
     }
@@ -99,7 +101,7 @@ class LocalJsonFile {
     if (writeAtomically != null) {
       await verifyBaseline();
       await writeAtomically(target.path, Uint8List.fromList(bytes));
-      return LocalJsonFile(target.path, text, bom: bom);
+      return LocalJsonFile(target.path, text, bom: savedBom);
     }
 
     // Check before staging as well, so a known conflict leaves the directory untouched.
@@ -120,7 +122,7 @@ class LocalJsonFile {
       }
       await verifyBaseline();
       await staged.rename(target.path);
-      return LocalJsonFile(target.path, text, bom: bom);
+      return LocalJsonFile(target.path, text, bom: savedBom);
     } finally {
       try {
         await temp.delete(recursive: true);

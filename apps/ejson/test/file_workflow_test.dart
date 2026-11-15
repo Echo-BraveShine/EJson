@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:ejson/main.dart';
+import 'package:ejson/editor/save_as_dialog.dart';
 import 'package:ejson/design/workbench_style.dart';
 import 'package:ejson/settings/installed_fonts.dart';
 import 'package:ejson/settings/tool_preferences.dart';
@@ -52,6 +53,56 @@ Future<void> drop(WidgetTester tester, List<DropItem> files) async {
 }
 
 void main() {
+  testWidgets('save dialog filters match every supported document format', (
+    tester,
+  ) async {
+    final container = await start(
+      tester,
+      (path) async => LocalJsonFile(path, '{}'),
+    );
+    const selector = MethodChannel('plugins.flutter.io/file_selector');
+    final calls = <Map<dynamic, dynamic>>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(selector, (
+      call,
+    ) async {
+      if (call.method == 'getSavePath') {
+        calls.add(call.arguments as Map);
+      }
+      return null;
+    });
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        selector,
+        null,
+      ),
+    );
+    for (final format in DocumentFormat.values) {
+      container
+          .read(workspaceProvider.notifier)
+          .newTabWithSource('', format: format);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Command palette'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Save As'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save As'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(SaveAsDialog),
+          matching: find.text('Save'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final arguments = calls.last;
+      expect(arguments['suggestedName'], 'untitled.${format.extension}');
+      final group = (arguments['acceptedTypeGroups'] as List).single as Map;
+      expect(group['label'], format.label);
+      expect(group['extensions'], format.extensions);
+    }
+    expect(calls, hasLength(DocumentFormat.values.length));
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('multi-file drops deduplicate and preserve dirty open tabs', (
     tester,
   ) async {

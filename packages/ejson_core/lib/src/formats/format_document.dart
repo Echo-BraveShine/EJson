@@ -4,6 +4,7 @@ import 'conversion_support.dart';
 import 'toml_conversion.dart';
 import 'xml_document.dart';
 import 'yaml_formatting.dart';
+import 'json_lines.dart';
 
 String formatOtherDocument(
   String source,
@@ -13,6 +14,8 @@ String formatOtherDocument(
   bool minify = false,
 }) {
   switch (format) {
+    case DocumentFormat.jsonLines:
+      return formatJsonLines(source, lineEnding: lineEnding);
     case DocumentFormat.xml:
       return writeXmlDocument(
         parseXmlDocument(source),

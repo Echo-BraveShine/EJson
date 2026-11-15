@@ -34,6 +34,12 @@
             <RegistryValue Type="string" Value="&quot;[#EJsonExe]&quot; &quot;%1&quot;" />
           </RegistryKey>
         </RegistryKey>
+        <RegistryKey Root="HKLM" Key="Software\Classes\.jsonl\OpenWithProgids">
+          <RegistryValue Name="EJson.Document" Type="string" Value="" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="Software\Classes\.ndjson\OpenWithProgids">
+          <RegistryValue Name="EJson.Document" Type="string" Value="" />
+        </RegistryKey>
         <RegistryKey Root="HKLM" Key="Software\Classes\.xml\OpenWithProgids">
           <RegistryValue Name="EJson.Document" Type="string" Value="" />
         </RegistryKey>

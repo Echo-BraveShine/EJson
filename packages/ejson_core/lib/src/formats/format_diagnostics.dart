@@ -10,6 +10,7 @@ import 'format_structure.dart';
 import 'format_structure_builders.dart';
 import 'toml_source_ranges.dart';
 import 'xml_structure.dart';
+import 'json_lines.dart';
 
 ParseSnapshot parseOtherFormat(
   String source,
@@ -19,6 +20,7 @@ ParseSnapshot parseOtherFormat(
   final diagnostics = <JsonDiagnostic>[];
   FormatTreeNode? structure;
   CsvData? table;
+  JsonLinesData? jsonLines;
   final budget = StructureBudget();
   try {
     if (source.length > maxConversionUnits) {
@@ -27,6 +29,11 @@ ParseSnapshot parseOtherFormat(
       );
     }
     switch (format) {
+      case DocumentFormat.jsonLines:
+        jsonLines = readJsonLines(source);
+        diagnostics.addAll(
+          jsonLines.records.expand((record) => record.diagnostics),
+        );
       case DocumentFormat.json:
         return parseJson(source, revision: revision);
       case DocumentFormat.yaml:
@@ -78,6 +85,7 @@ ParseSnapshot parseOtherFormat(
     diagnostics,
     structure: diagnostics.isEmpty ? structure : null,
     table: diagnostics.isEmpty ? table : null,
+    jsonLines: jsonLines,
     structureTruncated: budget.truncated,
   );
 }

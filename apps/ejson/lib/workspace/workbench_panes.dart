@@ -15,6 +15,7 @@ extension _WorkbenchPanes on _WorkbenchState {
         : null,
     focusOnJump: !_searchJump,
     readOnly: tab.large,
+    preserveViewOnUpdate: true,
   );
 
   Widget _panes(WorkspaceTab tab, bool valid) {
@@ -59,6 +60,9 @@ extension _WorkbenchPanes on _WorkbenchState {
                       key: ValueKey(tab.id),
                       snapshot: doc.lastValid!,
                       style: widget.treeStyle,
+                      showConnectors: ref
+                          .watch(toolPreferencesProvider)
+                          .treeConnectors,
                       source: doc.lastValidSource!.text,
                       current: valid,
                       onReveal: _reveal,
@@ -120,6 +124,8 @@ extension _WorkbenchPanes on _WorkbenchState {
     bool valid,
   ) {
     final colors = Theme.of(context).colorScheme;
+    final autosave = ref.watch(workspaceAutosaveProvider);
+    final diskSync = ref.watch(diskSyncProvider)[tab.id];
     return Container(
       height: 29,
       color: colors.surfaceContainerLow,
@@ -154,6 +160,63 @@ extension _WorkbenchPanes on _WorkbenchState {
           Flexible(
             child: DocumentStatistics(document: tab.document, bom: tab.bom),
           ),
+          if (diskSync != null) ...[
+            const SizedBox(width: WorkbenchStyle.space8),
+            Tooltip(
+              message: switch (diskSync.status) {
+                DiskSyncStatus.waiting => strings.diskSyncWaiting,
+                DiskSyncStatus.saving => strings.diskSyncSaving,
+                DiskSyncStatus.saved => strings.diskSyncSaved,
+                DiskSyncStatus.conflict => strings.diskSyncConflict,
+                DiskSyncStatus.unavailable ||
+                DiskSyncStatus.failed => strings.diskSyncFailed,
+              },
+              child: Icon(
+                key: const ValueKey('disk-sync-status'),
+                switch (diskSync.status) {
+                  DiskSyncStatus.saved => Icons.check_circle_outline,
+                  DiskSyncStatus.waiting => Icons.schedule,
+                  DiskSyncStatus.saving => Icons.sync,
+                  _ => Icons.error_outline,
+                },
+                size: 16,
+                color:
+                    diskSync.status == DiskSyncStatus.conflict ||
+                        diskSync.status == DiskSyncStatus.unavailable ||
+                        diskSync.status == DiskSyncStatus.failed
+                    ? colors.error
+                    : colors.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (ref.watch(workspaceRecoveryProvider) != null) ...[
+            const SizedBox(width: WorkbenchStyle.space8),
+            IconButton(
+              key: const ValueKey('autosave-status'),
+              tooltip: switch (autosave) {
+                AutosaveStatus.disabled => strings.autosaveDisabled,
+                AutosaveStatus.waiting => strings.autosaveWaiting,
+                AutosaveStatus.saving => strings.autosaveSaving,
+                AutosaveStatus.saved => strings.autosaveSaved,
+                AutosaveStatus.failed => strings.autosaveFailed,
+              },
+              onPressed: autosave == AutosaveStatus.failed
+                  ? () => ref.read(workspaceAutosaveProvider.notifier).flush()
+                  : null,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 22, height: 22),
+              iconSize: 15,
+              disabledColor: colors.onSurfaceVariant,
+              color: colors.error,
+              icon: Icon(switch (autosave) {
+                AutosaveStatus.failed => Icons.error_outline,
+                AutosaveStatus.saving => Icons.sync,
+                AutosaveStatus.waiting => Icons.schedule,
+                AutosaveStatus.saved => Icons.save_outlined,
+                AutosaveStatus.disabled => Icons.pause_circle_outline,
+              }),
+            ),
+          ],
           const SizedBox(width: WorkbenchStyle.space12),
           Text(
             'UTF-8${tab.bom ? " BOM" : ""}  ·  ${tab.format.label}',

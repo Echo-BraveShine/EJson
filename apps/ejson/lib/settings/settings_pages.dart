@@ -10,6 +10,38 @@ extension _SettingsPages on _SettingsPanelState {
         _SettingsCard(
           children: [
             _SettingsRow(
+              label: strings.diskSyncSetting,
+              icon: CupertinoIcons.arrow_2_circlepath,
+              child: Tooltip(
+                message: strings.diskSyncDescription,
+                child: Semantics(
+                  label: strings.diskSyncSetting,
+                  child: CupertinoSwitch(
+                    value: ref.watch(toolPreferencesProvider).syncDiskFiles,
+                    activeTrackColor: colors.primary,
+                    onChanged: _savingDiskSyncPreference ? null : _setDiskSync,
+                  ),
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            _SettingsRow(
+              label: strings.autosaveDrafts,
+              icon: CupertinoIcons.floppy_disk,
+              child: Tooltip(
+                message: strings.autosaveDescription,
+                child: Semantics(
+                  label: strings.autosaveDrafts,
+                  child: CupertinoSwitch(
+                    value: ref.watch(toolPreferencesProvider).autosave,
+                    activeTrackColor: colors.primary,
+                    onChanged: _savingAutosavePreference ? null : _setAutosave,
+                  ),
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            _SettingsRow(
               label: strings.restoreWorkspace,
               icon: CupertinoIcons.clock,
               child: Semantics(
@@ -114,6 +146,19 @@ extension _SettingsPages on _SettingsPanelState {
                   _updateView(() => _treeStyle = style);
                   widget.onTreeStyleChanged(style);
                 },
+              ),
+            ),
+            const Divider(height: 1),
+            _SettingsRow(
+              label: strings.treeConnectors,
+              icon: Icons.account_tree_outlined,
+              child: Semantics(
+                label: strings.treeConnectors,
+                child: CupertinoSwitch(
+                  value: ref.watch(toolPreferencesProvider).treeConnectors,
+                  activeTrackColor: colors.primary,
+                  onChanged: _savingTreeConnectors ? null : _setTreeConnectors,
+                ),
               ),
             ),
           ],
@@ -234,6 +279,9 @@ extension _SettingsPages on _SettingsPanelState {
                 snapshot: _appearanceSnapshot,
                 source: _SettingsPanelState._appearanceSource,
                 style: _treeStyle,
+                showConnectors: ref
+                    .watch(toolPreferencesProvider)
+                    .treeConnectors,
                 current: true,
                 readOnly: true,
                 onReveal: (_) {},

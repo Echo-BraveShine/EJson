@@ -993,4 +993,201 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newDocumentFormat => 'New document format';
+
+  @override
+  String get saveAsFormat => 'File type';
+
+  @override
+  String get saveAsConversionHint =>
+      'Conversion uses default settings. Review the preview before saving. For CSV columns, YAML document selection and XML mapping, use Format conversion.';
+
+  @override
+  String saveAsExtensionError(String extension) {
+    return 'Use the .$extension extension for the selected file type.';
+  }
+
+  @override
+  String saveAsOverwrite(String path) {
+    return 'The file already exists. Replace it?\n$path';
+  }
+
+  @override
+  String get autosaveDrafts => 'Auto-save recovery drafts';
+
+  @override
+  String get autosaveDescription =>
+      'Saves recovery drafts after 2 seconds of inactivity, at least every 10 seconds while editing. Drafts are restored on the next launch after an unexpected exit.';
+
+  @override
+  String get autosaveDisabled => 'Recovery draft auto-save is off';
+
+  @override
+  String get autosaveWaiting => 'Waiting to save recovery drafts';
+
+  @override
+  String get autosaveSaving => 'Saving recovery drafts';
+
+  @override
+  String get autosaveSaved => 'Recovery drafts saved';
+
+  @override
+  String get autosaveFailed =>
+      'Recovery drafts could not be saved. Click to retry.';
+
+  @override
+  String recoveryRestored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Recovered unsaved changes in $count documents.',
+      one: 'Recovered unsaved changes in 1 document.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autosaveUnavailable =>
+      'Recovery storage could not be initialized. Draft auto-save is unavailable.';
+
+  @override
+  String get diskSyncSetting => 'Sync disk files';
+
+  @override
+  String get diskSyncDescription =>
+      'Saves edits to named files after a 500 ms pause, including incomplete syntax. Checks external changes every second. Conflicts pause synchronization.';
+
+  @override
+  String get diskSyncWaiting => 'Waiting to save to disk';
+
+  @override
+  String get diskSyncSaving => 'Saving to disk';
+
+  @override
+  String get diskSyncSaved => 'Saved to disk';
+
+  @override
+  String get diskSyncFailed => 'Disk synchronization failed';
+
+  @override
+  String get diskSyncConflict => 'File synchronization conflict';
+
+  @override
+  String get diskSyncConflictDescription =>
+      'The file changed on disk and has local edits. Synchronization is paused. Choose which version to keep.';
+
+  @override
+  String diskSyncError(String error) {
+    return 'File synchronization is paused. $error';
+  }
+
+  @override
+  String get diskSyncCompare => 'Compare versions';
+
+  @override
+  String get diskSyncLocal => 'Current edits';
+
+  @override
+  String get diskSyncDisk => 'Disk version';
+
+  @override
+  String get diskSyncReload => 'Load disk version';
+
+  @override
+  String get diskSyncOverwrite => 'Keep local edits';
+
+  @override
+  String get diskSyncRetry => 'Retry';
+
+  @override
+  String get diskSyncReloadConfirm =>
+      'Load the latest disk version and discard the current local edits?';
+
+  @override
+  String get diskSyncOverwriteConfirm =>
+      'Save the current local edits over the disk version? If the disk version changes again, you will need to review it again.';
+
+  @override
+  String get repairJson => 'Repair JSON';
+
+  @override
+  String get repairAlreadyValid => 'This document is already valid JSON.';
+
+  @override
+  String get repairFailed =>
+      'The content could not be repaired. Complete missing values or resolve ambiguous syntax and try again.';
+
+  @override
+  String get repairBom => 'Removed BOM markers';
+
+  @override
+  String get repairComments => 'Removed comments';
+
+  @override
+  String get repairSingleQuotes => 'Converted single-quoted strings';
+
+  @override
+  String get repairUnquotedKeys => 'Quoted property names';
+
+  @override
+  String get repairTrailingCommas => 'Removed trailing commas';
+
+  @override
+  String get repairMissingCommas => 'Inserted commas';
+
+  @override
+  String get repairMissingColons => 'Inserted colons';
+
+  @override
+  String get repairClosingContainers => 'Closed objects and arrays';
+
+  @override
+  String get repairClosingStrings => 'Closed strings';
+
+  @override
+  String get repairControlCharacters => 'Escaped control characters';
+
+  @override
+  String get repairLiterals => 'Normalized literal values';
+
+  @override
+  String get jsonLinesRecords => 'Records';
+
+  @override
+  String get jsonLinesSearch => 'Search records';
+
+  @override
+  String get jsonLinesFilter => 'Records to show';
+
+  @override
+  String get jsonLinesAll => 'All records';
+
+  @override
+  String get jsonLinesValid => 'Valid records';
+
+  @override
+  String get jsonLinesInvalid => 'Invalid records';
+
+  @override
+  String get jsonLinesNoMatches => 'No matching records';
+
+  @override
+  String get jsonLinesBlank => 'Blank line';
+
+  @override
+  String get jsonLinesExport => 'Export filtered records';
+
+  @override
+  String get jsonLinesExported => 'Filtered records exported';
+
+  @override
+  String jsonLinesCount(int shown, int total, int invalid) {
+    return '$shown / $total records · $invalid invalid';
+  }
+
+  @override
+  String get jsonLinesConversionNotice =>
+      'Each line contains one JSON value. Blank lines are invalid. JSON Lines becomes a JSON array. A JSON array exports one item per line, while other JSON values export as one record.';
+
+  @override
+  String get treeConnectors => 'Dashed tree connectors';
 }

@@ -15,4 +15,10 @@
     <alias type="text/x-toml"/>
     <glob pattern="*.toml"/>
   </mime-type>
+  <mime-type type="application/x-ndjson">
+    <comment>JSON Lines document</comment>
+    <sub-class-of type="text/plain"/>
+    <glob pattern="*.jsonl"/>
+    <glob pattern="*.ndjson"/>
+  </mime-type>
 </mime-info>

@@ -55,6 +55,7 @@ extension _WorkbenchCommands on _WorkbenchState {
         (WorkbenchCommandId.newCsv, DocumentFormat.csv),
         (WorkbenchCommandId.newXml, DocumentFormat.xml),
         (WorkbenchCommandId.newToml, DocumentFormat.toml),
+        (WorkbenchCommandId.newJsonLines, DocumentFormat.jsonLines),
       ])
         WorkbenchCommand(
           id: entry.$1,
@@ -135,6 +136,7 @@ extension _WorkbenchCommands on _WorkbenchState {
         id: WorkbenchCommandId.format,
         label: strings.format,
         icon: CupertinoIcons.text_alignleft,
+        shortcut: Platform.isMacOS ? '⇧⌥F' : 'Shift+Alt+F',
         keywords: 'format pretty json 格式化',
         action: tab.canFormat ? () => _rewrite(tab, minify: false) : null,
       ),
@@ -144,6 +146,18 @@ extension _WorkbenchCommands on _WorkbenchState {
         icon: CupertinoIcons.arrow_down_right_arrow_up_left,
         keywords: 'minify compact json 压缩',
         action: tab.canMinify ? () => _rewrite(tab, minify: true) : null,
+      ),
+      WorkbenchCommand(
+        id: WorkbenchCommandId.repair,
+        label: strings.repairJson,
+        icon: CupertinoIcons.wand_stars,
+        keywords: 'repair fix json jsonc json5 修复 自动修复 尾逗号 单引号',
+        action:
+            !tab.large &&
+                tab.format == DocumentFormat.json &&
+                tab.text.trim().isNotEmpty
+            ? () => _openRepair(tab)
+            : null,
       ),
       WorkbenchCommand(
         id: WorkbenchCommandId.escape,

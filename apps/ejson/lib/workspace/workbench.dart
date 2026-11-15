@@ -26,6 +26,7 @@ import '../editor/json_highlight.dart';
 import '../editor/tree_panel.dart';
 import '../editor/format_tree_view.dart';
 import '../editor/csv_document_view.dart';
+import '../editor/json_lines_view.dart';
 import '../editor/tree_style.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/workspace_messages.dart';
@@ -35,10 +36,18 @@ import '../editor/array_sort_dialog.dart';
 import '../editor/schema_dialog.dart';
 import '../editor/redaction_dialog.dart';
 import '../editor/conversion_dialog.dart';
+import '../editor/json_repair_dialog.dart';
+import '../editor/conversion_job.dart';
+import '../editor/save_as_dialog.dart';
 import 'compare_documents.dart';
 import 'local_files.dart';
 import 'workspace.dart';
 import 'workspace_session.dart';
+import 'workspace_autosave.dart';
+import 'file_io.dart';
+import 'disk_sync.dart';
+export 'file_io.dart'
+    show localFileReaderProvider, workspaceAtomicWriterProvider;
 import 'recent_file.dart';
 import 'recent_files_dialog.dart';
 import 'restore_failures_dialog.dart';
@@ -53,12 +62,8 @@ part 'workbench_document_actions.dart';
 part 'workbench_navigation.dart';
 part 'workbench_panes.dart';
 part 'workbench_format_panes.dart';
+part 'workbench_sync.dart';
 part 'workbench_node_dialogs.dart';
-
-final localFileReaderProvider =
-    Provider<Future<LocalJsonFile> Function(String)>(
-      (ref) => LocalJsonFile.read,
-    );
 
 typedef _FileOpenRequest = ({String path, String? bookmark, bool asCopy});
 
@@ -86,20 +91,12 @@ final formatTreeAdditionProvider =
       },
     );
 
-final workspaceAtomicWriterProvider =
-    Provider<Future<void> Function(String, Uint8List)?>(
-      (ref) => Platform.isMacOS
-          ? (path, bytes) => const MethodChannel(
-              'dev.ekko.ejson/files',
-            ).invokeMethod<void>('atomicWrite', {'path': path, 'bytes': bytes})
-          : null,
-    );
-
 class Workbench extends ConsumerStatefulWidget {
   const Workbench({
     super.key,
     required this.manageWindow,
     required this.workspaceSession,
+    this.recoveryUnavailable = false,
     required this.restoreOnStartup,
     required this.failedRestorePaths,
     required this.themeMode,
@@ -115,6 +112,7 @@ class Workbench extends ConsumerStatefulWidget {
 
   final bool manageWindow;
   final WorkspaceSession? workspaceSession;
+  final bool recoveryUnavailable;
   final bool restoreOnStartup;
   final List<String> failedRestorePaths;
   final ThemeMode themeMode;
@@ -163,6 +161,20 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
   @override
   void initState() {
     super.initState();
+    ref.read(workspaceAutosaveProvider);
+    ref.read(diskSyncProvider);
+    if (widget.recoveryUnavailable) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _message(strings.autosaveUnavailable);
+      });
+    }
+    final recoveredCount =
+        ref.read(initialRecoveredWorkspaceProvider)?.recoveredCount ?? 0;
+    if (recoveredCount > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _message(strings.recoveryRestored(recoveredCount));
+      });
+    }
     _externalSubscription = ref
         .read(externalFileOpensProvider)
         ?.requests
@@ -179,6 +191,9 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
     }
     _lifecycle = widget.manageWindow
         ? AppLifecycleListener(
+            onResume: () => ref.read(diskSyncProvider.notifier).checkAll(),
+            onInactive: () =>
+                unawaited(ref.read(workspaceAutosaveProvider.notifier).flush()),
             onExitRequested: () async => _exitApproved || await _confirmExit()
                 ? AppExitResponse.exit
                 : AppExitResponse.cancel,
@@ -237,6 +252,8 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
       await windowManager.destroy();
     } catch (_) {
       _exitApproved = false;
+      ref.read(workspaceAutosaveProvider.notifier).resume();
+      ref.read(diskSyncProvider.notifier).resume();
       if (hidden) await windowManager.show();
       rethrow;
     }
@@ -283,6 +300,19 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
 
     return CallbackShortcuts(
       bindings: {
+        const SingleActivator(
+          LogicalKeyboardKey.keyF,
+          shift: true,
+          alt: true,
+        ): () {
+          if (tab.canFormat &&
+              !_fileBusy &&
+              !_closingTab &&
+              !_confirmingExit &&
+              (ModalRoute.of(context)?.isCurrent ?? true)) {
+            unawaited(_rewrite(tab, minify: false));
+          }
+        },
         shortcut(LogicalKeyboardKey.keyF): _openFind,
         shortcut(LogicalKeyboardKey.keyP): _openRecents,
         shortcut(LogicalKeyboardKey.keyP, shift: true): _openPalette,
@@ -316,6 +346,8 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
                   const Divider(height: 1),
                   Material(color: colors.surfaceContainer, child: _tabs(model)),
                   const Divider(height: 1),
+                  if (ref.watch(diskSyncProvider)[tab.id] case final sync?)
+                    _diskSyncBanner(tab, sync),
                   if (_findOpen)
                     DocumentFind(
                       key: ValueKey(tab.id),

@@ -9,7 +9,9 @@ enum ConversionDirection {
   jsonToToml(DocumentFormat.json, DocumentFormat.toml),
   tomlToJson(DocumentFormat.toml, DocumentFormat.json),
   jsonToXml(DocumentFormat.json, DocumentFormat.xml),
-  xmlToJson(DocumentFormat.xml, DocumentFormat.json);
+  xmlToJson(DocumentFormat.xml, DocumentFormat.json),
+  jsonToJsonLines(DocumentFormat.json, DocumentFormat.jsonLines),
+  jsonLinesToJson(DocumentFormat.jsonLines, DocumentFormat.json);
 
   const ConversionDirection(this.sourceFormat, this.targetFormat);
   final DocumentFormat sourceFormat, targetFormat;

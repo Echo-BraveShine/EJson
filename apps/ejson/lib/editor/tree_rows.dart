@@ -48,11 +48,12 @@ extension _TreeRows on _TreePanelState {
             : null,
         child: CustomPaint(
           key: ValueKey('tree-row:${row.path}'),
-          painter: style == JsonTreeStyle.guides
+          painter: widget.showConnectors
               ? HierarchyGuidePainter(
                   row.continuation,
                   indent,
-                  colors.outlineVariant,
+                  colors.outline.withValues(alpha: .55),
+                  expanded: hasChildren && expanded,
                 )
               : null,
           child: Padding(

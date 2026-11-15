@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design/workbench_style.dart';
 import '../design/reading_style.dart';
+import '../settings/tool_preferences.dart';
 import '../editor/code_editor.dart';
 import '../editor/tree_panel.dart';
 import '../editor/tree_style.dart';
@@ -213,6 +214,9 @@ class _CompareDocumentsState extends ConsumerState<CompareDocuments> {
                   current: true,
                   readOnly: true,
                   style: widget.treeStyle,
+                  showConnectors: ref
+                      .watch(toolPreferencesProvider)
+                      .treeConnectors,
                   onReveal: (_) {},
                   onEdit: (_, _) {},
                   reveal: range == null

@@ -152,7 +152,7 @@ extension _WorkbenchNavigation on _WorkbenchState {
                   tab.canMinify ? () => _rewrite(tab, minify: true) : null,
                 ),
                 _tool(
-                  strings.format,
+                  '${strings.format} (${Platform.isMacOS ? '⇧⌥F' : 'Shift+Alt+F'})',
                   CupertinoIcons.text_alignleft,
                   tab.canFormat ? () => _rewrite(tab, minify: false) : null,
                 ),
@@ -180,6 +180,14 @@ extension _WorkbenchNavigation on _WorkbenchState {
                         .action
                         ?.call(),
                     itemBuilder: (_) => [
+                      WorkbenchMenuItem(
+                        enabled:
+                            tab.format == DocumentFormat.json &&
+                            tab.text.trim().isNotEmpty,
+                        value: WorkbenchCommandId.repair,
+                        label: strings.repairJson,
+                        icon: CupertinoIcons.wand_stars,
+                      ),
                       WorkbenchMenuItem(
                         value: WorkbenchCommandId.convert,
                         enabled: true,

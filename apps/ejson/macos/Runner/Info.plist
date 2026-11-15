@@ -40,6 +40,18 @@
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
+			<string>JSON Lines document</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array><string>dev.ekko.ejson.jsonlines</string></array>
+			<key>CFBundleTypeExtensions</key>
+			<array><string>jsonl</string><string>ndjson</string></array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
 			<string>XML document</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
@@ -114,6 +126,21 @@
 	<string>NSApplication</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>dev.ekko.ejson.jsonlines</string>
+			<key>UTTypeDescription</key>
+			<string>JSON Lines document</string>
+			<key>UTTypeConformsTo</key>
+			<array><string>public.text</string></array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array><string>jsonl</string><string>ndjson</string></array>
+				<key>public.mime-type</key>
+				<string>application/x-ndjson</string>
+			</dict>
+		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
 			<string>public.yaml</string>

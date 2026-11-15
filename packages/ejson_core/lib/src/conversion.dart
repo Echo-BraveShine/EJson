@@ -1,4 +1,5 @@
 export 'formats/document_format.dart';
+export 'formats/json_lines.dart';
 export 'formats/conversion_support.dart';
 export 'formats/yaml_conversion.dart';
 export 'formats/csv_export.dart';

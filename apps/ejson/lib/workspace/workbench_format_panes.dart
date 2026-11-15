@@ -2,7 +2,7 @@ part of 'workbench.dart';
 
 extension _WorkbenchFormatPanes on _WorkbenchState {
   Widget _otherPanes(WorkspaceTab tab) {
-    if (tab.large) {
+    if (tab.large && tab.format != DocumentFormat.jsonLines) {
       return _Panel(
         title: '${strings.source} · ${tab.format.label}',
         icon: CupertinoIcons.doc_text,
@@ -12,7 +12,19 @@ extension _WorkbenchFormatPanes on _WorkbenchState {
     final snapshot = tab.document.snapshot;
     final colors = Theme.of(context).colorScheme;
     final Widget structure;
-    if (snapshot?.table case final table?) {
+    if (snapshot?.jsonLines case final lines?) {
+      structure = JsonLinesView(
+        key: ValueKey('json-lines-${tab.id}'),
+        data: lines,
+        onReveal: _reveal,
+        onExport: (source, format) => _exportDocument(
+          source,
+          format,
+          'filtered.${format.extension}',
+          strings.jsonLinesExported,
+        ),
+      );
+    } else if (snapshot?.table case final table?) {
       structure = CsvDocumentView(
         key: ValueKey('csv-table-${tab.id}'),
         data: table,
@@ -23,6 +35,7 @@ extension _WorkbenchFormatPanes on _WorkbenchState {
         key: ValueKey('format-tree-${tab.id}'),
         root: root,
         style: widget.treeStyle,
+        showConnectors: ref.watch(toolPreferencesProvider).treeConnectors,
         truncated: snapshot!.structureTruncated,
         onReveal: _reveal,
       );
@@ -56,7 +69,9 @@ extension _WorkbenchFormatPanes on _WorkbenchState {
           ),
           Expanded(
             child: _Panel(
-              title: tab.format == DocumentFormat.csv
+              title: tab.format == DocumentFormat.jsonLines
+                  ? strings.jsonLinesRecords
+                  : tab.format == DocumentFormat.csv
                   ? strings.arrayTable
                   : strings.documentStructure,
               icon: tab.format == DocumentFormat.csv

@@ -1,6 +1,26 @@
 part of 'workbench.dart';
 
 extension _WorkbenchDocumentActions on _WorkbenchState {
+  Future<void> _openRepair(WorkspaceTab tab) async {
+    final repaired = await showDialog<String>(
+      context: context,
+      builder: (_) => JsonRepairDialog(
+        source: tab.text,
+        highlight: widget.highlight,
+        options: ref.read(toolPreferencesProvider).format,
+      ),
+    );
+    if (!mounted || repaired == null) return;
+    final current = workspace.tab(tab.id);
+    if (current == null ||
+        current.document.revision != tab.document.revision ||
+        current.format != DocumentFormat.json) {
+      _message(strings.staleNode);
+      return;
+    }
+    controller.editSource(tab.id, repaired);
+  }
+
   Future<void> _rewrite(WorkspaceTab tab, {required bool minify}) async {
     try {
       await controller.rewrite(tab.id, minify: minify);
@@ -85,7 +105,9 @@ extension _WorkbenchDocumentActions on _WorkbenchState {
       format: output.format,
       bom: output.bom,
     );
-    if (result.save) await _save(workspace.activeId, saveAs: true);
+    if (result.save) {
+      await _save(workspace.activeId, saveAs: true, chooseFormat: false);
+    }
   }
 
   Future<void> _openSchema(WorkspaceTab tab) async {
@@ -113,7 +135,9 @@ extension _WorkbenchDocumentActions on _WorkbenchState {
     );
     if (!mounted || result == null) return;
     controller.newTabWithSource(result.source);
-    if (result.save) await _save(workspace.activeId, saveAs: true);
+    if (result.save) {
+      await _save(workspace.activeId, saveAs: true, chooseFormat: false);
+    }
   }
 
   void _toggleString(WorkspaceTab tab) {
@@ -188,9 +212,26 @@ extension _WorkbenchDocumentActions on _WorkbenchState {
     _reveal(range, search: true);
   }
 
-  Future<String?> _exportCsv(String csv) async {
+  Future<String?> _exportCsv(String csv) => _exportDocument(
+    csv,
+    DocumentFormat.csv,
+    'array.csv',
+    strings.csvExported,
+  );
+
+  Future<String?> _exportDocument(
+    String source,
+    DocumentFormat format,
+    String name,
+    String success,
+  ) async {
     try {
-      final destination = await getSaveLocation(suggestedName: 'array.csv');
+      final destination = await getSaveLocation(
+        acceptedTypeGroups: [
+          XTypeGroup(label: format.label, extensions: format.extensions),
+        ],
+        suggestedName: name,
+      );
       if (destination == null || !mounted) return null;
       final target = File(destination.path);
       final resolved = await target.exists()
@@ -201,11 +242,11 @@ extension _WorkbenchDocumentActions on _WorkbenchState {
         return strings.fileAlreadyOpen;
       }
       await LocalJsonFile(destination.path, '').save(
-        csv,
+        source,
         destination: destination.path,
         writeAtomically: ref.read(workspaceAtomicWriterProvider),
       );
-      return mounted ? strings.csvExported : null;
+      return mounted ? success : null;
     } on Exception {
       return mounted ? strings.exportFailed : null;
     }

@@ -4,7 +4,10 @@ extension _WorkbenchWindowActions on _WorkbenchState {
   Future<bool> _confirmExit() async {
     if (_confirmingExit || _closingTab || _fileBusy) return false;
     _confirmingExit = true;
+    var approved = false;
     try {
+      await ref.read(diskSyncProvider.notifier).suspend();
+      if (!mounted) return false;
       final unsaved = workspace.tabs.where((tab) => tab.dirty).toList();
       if (unsaved.isNotEmpty) {
         final action = await _confirmClose(
@@ -35,9 +38,15 @@ extension _WorkbenchWindowActions on _WorkbenchState {
           return false;
         }
       }
-      return mounted;
+      if (!await ref.read(workspaceAutosaveProvider.notifier).finish()) {
+        if (mounted) _message(strings.autosaveFailed);
+        return false;
+      }
+      approved = mounted;
+      return approved;
     } finally {
       _confirmingExit = false;
+      if (!approved && mounted) ref.read(diskSyncProvider.notifier).resume();
     }
   }
 
@@ -139,10 +148,14 @@ extension _WorkbenchWindowActions on _WorkbenchState {
 
   Future<void> _close(int id) async {
     if (_closingTab || _confirmingExit || _fileBusy) return;
-    final tab = workspace.tab(id);
+    var tab = workspace.tab(id);
     if (tab == null || !workspace.canClose(tab)) return;
     _closingTab = true;
     try {
+      await ref.read(diskSyncProvider.notifier).suspend();
+      if (!mounted) return;
+      tab = workspace.tab(id);
+      if (tab == null) return;
       if (tab.dirty) {
         final action = await _confirmClose(strings.saveChanges, [
           strings.tabName(tab),
@@ -156,10 +169,12 @@ extension _WorkbenchWindowActions on _WorkbenchState {
         }
       }
       controller.close(id);
+      await ref.read(workspaceAutosaveProvider.notifier).flush();
       final path = workspace.tab(id) == null ? tab.file?.path : null;
       if (path != null) await widget.workspaceSession?.releaseAccess(path);
     } finally {
       _closingTab = false;
+      if (mounted) ref.read(diskSyncProvider.notifier).resume();
     }
   }
 

@@ -5,7 +5,16 @@ void main() {
   test('both Windows installers offer all supported extensions', () {
     for (final installer in ['ejson.iss', 'ejson.wxs']) {
       final text = File('windows/installer/$installer').readAsStringSync();
-      for (final extension in ['json', 'yaml', 'yml', 'toml', 'csv', 'xml']) {
+      for (final extension in [
+        'json',
+        'jsonl',
+        'ndjson',
+        'yaml',
+        'yml',
+        'toml',
+        'csv',
+        'xml',
+      ]) {
         expect(
           text,
           contains('.$extension\\OpenWithProgids'),
@@ -27,7 +36,16 @@ void main() {
     ]) {
       expect(text, contains('<string>$type</string>'));
     }
-    for (final extension in ['json', 'yaml', 'yml', 'toml', 'csv', 'xml']) {
+    for (final extension in [
+      'json',
+      'jsonl',
+      'ndjson',
+      'yaml',
+      'yml',
+      'toml',
+      'csv',
+      'xml',
+    ]) {
       expect(text, contains('<string>$extension</string>'));
     }
   });
@@ -37,6 +55,7 @@ void main() {
     expect(desktop, contains('Exec=ejson %F'));
     for (final type in [
       'application/json',
+      'application/x-ndjson',
       'application/yaml',
       'application/toml',
       'text/csv',
@@ -45,7 +64,7 @@ void main() {
       expect(desktop, contains('$type;'));
     }
     final mime = File('linux/dev.ekko.ejson.xml').readAsStringSync();
-    for (final extension in ['yaml', 'yml', 'toml']) {
+    for (final extension in ['jsonl', 'ndjson', 'yaml', 'yml', 'toml']) {
       expect(mime, contains('pattern="*.$extension"'));
     }
     final cmake = File('linux/CMakeLists.txt').readAsStringSync();

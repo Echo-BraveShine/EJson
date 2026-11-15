@@ -19,6 +19,7 @@ enum WorkbenchCommandId {
   redo,
   find,
   format,
+  repair,
   minify,
   escape,
   unescape,
@@ -35,6 +36,7 @@ enum WorkbenchCommandId {
   newCsv,
   newXml,
   newToml,
+  newJsonLines,
 }
 
 class WorkbenchCommand {

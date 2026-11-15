@@ -122,7 +122,8 @@ class _ConversionDialogState extends State<ConversionDialog> {
       ),
       onPressed: _busy
           ? () => _invalidate()
-          : widget.source.trim().isEmpty
+          : widget.source.trim().isEmpty &&
+                widget.format != DocumentFormat.jsonLines
           ? null
           : _convert,
       child: Text(_busy ? strings.conversionCancel : strings.conversionRun),

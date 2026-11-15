@@ -81,6 +81,7 @@ class ParseSnapshot {
     this.structure,
     this.table,
     this.structureTruncated = false,
+    this.jsonLines,
   }) : diagnostics = List.unmodifiable(diagnostics);
 
   final int revision;
@@ -90,6 +91,28 @@ class ParseSnapshot {
   final FormatTreeNode? structure;
   final CsvData? table;
   final bool structureTruncated;
+  final JsonLinesData? jsonLines;
+}
+
+class JsonLineRecord {
+  const JsonLineRecord({
+    required this.lineNumber,
+    required this.source,
+    required this.range,
+    required this.diagnostics,
+  });
+
+  final int lineNumber;
+  final String source;
+  final SourceRange range;
+  final List<JsonDiagnostic> diagnostics;
+  bool get isValid => !diagnostics.any((diagnostic) => !diagnostic.warning);
+}
+
+class JsonLinesData {
+  JsonLinesData(List<JsonLineRecord> records)
+    : records = List.unmodifiable(records);
+  final List<JsonLineRecord> records;
 }
 
 /// Parses strict JSON while keeping the raw token ranges and member order.

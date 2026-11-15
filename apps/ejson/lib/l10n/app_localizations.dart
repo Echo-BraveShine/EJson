@@ -1921,6 +1921,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New document format'**
   String get newDocumentFormat;
+
+  /// No description provided for @saveAsFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'File type'**
+  String get saveAsFormat;
+
+  /// No description provided for @saveAsConversionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion uses default settings. Review the preview before saving. For CSV columns, YAML document selection and XML mapping, use Format conversion.'**
+  String get saveAsConversionHint;
+
+  /// No description provided for @saveAsExtensionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the .{extension} extension for the selected file type.'**
+  String saveAsExtensionError(String extension);
+
+  /// No description provided for @saveAsOverwrite.
+  ///
+  /// In en, this message translates to:
+  /// **'The file already exists. Replace it?\n{path}'**
+  String saveAsOverwrite(String path);
+
+  /// No description provided for @autosaveDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-save recovery drafts'**
+  String get autosaveDrafts;
+
+  /// No description provided for @autosaveDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves recovery drafts after 2 seconds of inactivity, at least every 10 seconds while editing. Drafts are restored on the next launch after an unexpected exit.'**
+  String get autosaveDescription;
+
+  /// No description provided for @autosaveDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery draft auto-save is off'**
+  String get autosaveDisabled;
+
+  /// No description provided for @autosaveWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to save recovery drafts'**
+  String get autosaveWaiting;
+
+  /// No description provided for @autosaveSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving recovery drafts'**
+  String get autosaveSaving;
+
+  /// No description provided for @autosaveSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery drafts saved'**
+  String get autosaveSaved;
+
+  /// No description provided for @autosaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery drafts could not be saved. Click to retry.'**
+  String get autosaveFailed;
+
+  /// No description provided for @recoveryRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Recovered unsaved changes in 1 document.} other{Recovered unsaved changes in {count} documents.}}'**
+  String recoveryRestored(int count);
+
+  /// No description provided for @autosaveUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery storage could not be initialized. Draft auto-save is unavailable.'**
+  String get autosaveUnavailable;
+
+  /// No description provided for @diskSyncSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync disk files'**
+  String get diskSyncSetting;
+
+  /// No description provided for @diskSyncDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves edits to named files after a 500 ms pause, including incomplete syntax. Checks external changes every second. Conflicts pause synchronization.'**
+  String get diskSyncDescription;
+
+  /// No description provided for @diskSyncWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to save to disk'**
+  String get diskSyncWaiting;
+
+  /// No description provided for @diskSyncSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving to disk'**
+  String get diskSyncSaving;
+
+  /// No description provided for @diskSyncSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to disk'**
+  String get diskSyncSaved;
+
+  /// No description provided for @diskSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Disk synchronization failed'**
+  String get diskSyncFailed;
+
+  /// No description provided for @diskSyncConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'File synchronization conflict'**
+  String get diskSyncConflict;
+
+  /// No description provided for @diskSyncConflictDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The file changed on disk and has local edits. Synchronization is paused. Choose which version to keep.'**
+  String get diskSyncConflictDescription;
+
+  /// No description provided for @diskSyncError.
+  ///
+  /// In en, this message translates to:
+  /// **'File synchronization is paused. {error}'**
+  String diskSyncError(String error);
+
+  /// No description provided for @diskSyncCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare versions'**
+  String get diskSyncCompare;
+
+  /// No description provided for @diskSyncLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Current edits'**
+  String get diskSyncLocal;
+
+  /// No description provided for @diskSyncDisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Disk version'**
+  String get diskSyncDisk;
+
+  /// No description provided for @diskSyncReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Load disk version'**
+  String get diskSyncReload;
+
+  /// No description provided for @diskSyncOverwrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep local edits'**
+  String get diskSyncOverwrite;
+
+  /// No description provided for @diskSyncRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get diskSyncRetry;
+
+  /// No description provided for @diskSyncReloadConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Load the latest disk version and discard the current local edits?'**
+  String get diskSyncReloadConfirm;
+
+  /// No description provided for @diskSyncOverwriteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the current local edits over the disk version? If the disk version changes again, you will need to review it again.'**
+  String get diskSyncOverwriteConfirm;
+
+  /// No description provided for @repairJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair JSON'**
+  String get repairJson;
+
+  /// No description provided for @repairAlreadyValid.
+  ///
+  /// In en, this message translates to:
+  /// **'This document is already valid JSON.'**
+  String get repairAlreadyValid;
+
+  /// No description provided for @repairFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The content could not be repaired. Complete missing values or resolve ambiguous syntax and try again.'**
+  String get repairFailed;
+
+  /// No description provided for @repairBom.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed BOM markers'**
+  String get repairBom;
+
+  /// No description provided for @repairComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed comments'**
+  String get repairComments;
+
+  /// No description provided for @repairSingleQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted single-quoted strings'**
+  String get repairSingleQuotes;
+
+  /// No description provided for @repairUnquotedKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Quoted property names'**
+  String get repairUnquotedKeys;
+
+  /// No description provided for @repairTrailingCommas.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed trailing commas'**
+  String get repairTrailingCommas;
+
+  /// No description provided for @repairMissingCommas.
+  ///
+  /// In en, this message translates to:
+  /// **'Inserted commas'**
+  String get repairMissingCommas;
+
+  /// No description provided for @repairMissingColons.
+  ///
+  /// In en, this message translates to:
+  /// **'Inserted colons'**
+  String get repairMissingColons;
+
+  /// No description provided for @repairClosingContainers.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed objects and arrays'**
+  String get repairClosingContainers;
+
+  /// No description provided for @repairClosingStrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed strings'**
+  String get repairClosingStrings;
+
+  /// No description provided for @repairControlCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Escaped control characters'**
+  String get repairControlCharacters;
+
+  /// No description provided for @repairLiterals.
+  ///
+  /// In en, this message translates to:
+  /// **'Normalized literal values'**
+  String get repairLiterals;
+
+  /// No description provided for @jsonLinesRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get jsonLinesRecords;
+
+  /// No description provided for @jsonLinesSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search records'**
+  String get jsonLinesSearch;
+
+  /// No description provided for @jsonLinesFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Records to show'**
+  String get jsonLinesFilter;
+
+  /// No description provided for @jsonLinesAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All records'**
+  String get jsonLinesAll;
+
+  /// No description provided for @jsonLinesValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid records'**
+  String get jsonLinesValid;
+
+  /// No description provided for @jsonLinesInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid records'**
+  String get jsonLinesInvalid;
+
+  /// No description provided for @jsonLinesNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching records'**
+  String get jsonLinesNoMatches;
+
+  /// No description provided for @jsonLinesBlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Blank line'**
+  String get jsonLinesBlank;
+
+  /// No description provided for @jsonLinesExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export filtered records'**
+  String get jsonLinesExport;
+
+  /// No description provided for @jsonLinesExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtered records exported'**
+  String get jsonLinesExported;
+
+  /// No description provided for @jsonLinesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} records · {invalid} invalid'**
+  String jsonLinesCount(int shown, int total, int invalid);
+
+  /// No description provided for @jsonLinesConversionNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Each line contains one JSON value. Blank lines are invalid. JSON Lines becomes a JSON array. A JSON array exports one item per line, while other JSON values export as one record.'**
+  String get jsonLinesConversionNotice;
+
+  /// No description provided for @treeConnectors.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashed tree connectors'**
+  String get treeConnectors;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,9 @@ class ToolPreferences {
     this.queries = const [],
     this.reading = const ReadingPreferences(),
     this.recentFiles = const [],
+    this.autosave = true,
+    this.syncDiskFiles = true,
+    this.treeConnectors = true,
   });
 
   factory ToolPreferences.fromJson(Object? value) {
@@ -44,6 +47,13 @@ class ToolPreferences {
       }
     }
     return ToolPreferences(
+      treeConnectors: value['treeConnectors'] is bool
+          ? value['treeConnectors'] as bool
+          : true,
+      autosave: value['autosave'] is bool ? value['autosave'] as bool : true,
+      syncDiskFiles: value['syncDiskFiles'] is bool
+          ? value['syncDiskFiles'] as bool
+          : true,
       recentFiles: List.unmodifiable(recentFiles),
       format: JsonFormatOptions(
         indentation: indentation,
@@ -58,20 +68,32 @@ class ToolPreferences {
   final ReadingPreferences reading;
   final List<String> queries;
   final List<RecentFile> recentFiles;
+  final bool autosave;
+  final bool syncDiskFiles;
+  final bool treeConnectors;
 
   ToolPreferences copyWith({
     JsonFormatOptions? format,
     ReadingPreferences? reading,
     List<String>? queries,
     List<RecentFile>? recentFiles,
+    bool? autosave,
+    bool? syncDiskFiles,
+    bool? treeConnectors,
   }) => ToolPreferences(
     format: format ?? this.format,
     reading: reading ?? this.reading,
     queries: queries ?? this.queries,
     recentFiles: recentFiles ?? this.recentFiles,
+    autosave: autosave ?? this.autosave,
+    syncDiskFiles: syncDiskFiles ?? this.syncDiskFiles,
+    treeConnectors: treeConnectors ?? this.treeConnectors,
   );
 
   Map<String, Object> toJson() => {
+    'autosave': autosave,
+    'syncDiskFiles': syncDiskFiles,
+    'treeConnectors': treeConnectors,
     'indentation': format.indentation.name,
     'lineEnding': format.lineEnding.name,
     'queries': queries,
@@ -118,6 +140,15 @@ class ToolPreferencesController extends Notifier<ToolPreferences> {
 
   Future<bool> setFormat(JsonFormatOptions format) =>
       _update((current) => current.copyWith(format: format));
+
+  Future<bool> setAutosave(bool enabled) =>
+      _update((current) => current.copyWith(autosave: enabled));
+
+  Future<bool> setSyncDiskFiles(bool enabled) =>
+      _update((current) => current.copyWith(syncDiskFiles: enabled));
+
+  Future<bool> setTreeConnectors(bool enabled) =>
+      _update((current) => current.copyWith(treeConnectors: enabled));
 
   Future<bool> setReading(ReadingPreferences reading) =>
       _update((current) => current.copyWith(reading: reading));

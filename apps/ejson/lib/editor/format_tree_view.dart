@@ -15,10 +15,12 @@ class FormatTreeView extends StatefulWidget {
     required this.style,
     required this.onReveal,
     this.truncated = false,
+    this.showConnectors = true,
   });
   final FormatTreeNode root;
   final JsonTreeStyle style;
   final bool truncated;
+  final bool showConnectors;
   final ValueChanged<SourceRange> onReveal;
   @override
   State<FormatTreeView> createState() => _FormatTreeViewState();
@@ -149,11 +151,14 @@ class _FormatTreeViewState extends State<FormatTreeView> {
                           }
                         },
                         child: CustomPaint(
-                          painter: widget.style == JsonTreeStyle.guides
+                          painter: widget.showConnectors
                               ? HierarchyGuidePainter(
                                   row.continuation,
                                   indent,
-                                  colors.outlineVariant,
+                                  colors.outline.withValues(alpha: .55),
+                                  expanded:
+                                      row.node.children.isNotEmpty &&
+                                      _expanded.contains(row.path),
                                 )
                               : null,
                           child: Padding(
