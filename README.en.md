@@ -2,39 +2,74 @@
 
 [简体中文](README.md) · English
 
-A desktop JSON editor with side-by-side source and tree editing, find and replace, JSONPath queries, array tools, and workspace restore.
+A local desktop workspace for **JSON, YAML, XML, CSV, TOML and JSON Lines**. Edit source and structure, run queries, preview repairs and conversions, and work across multiple tabs.
 
 [Website](https://echo-braveshine.github.io/EJson/) · [Download](https://github.com/Echo-BraveShine/EJson/releases/latest) · [Report an issue](https://github.com/Echo-BraveShine/EJson/issues) · [Buy me a coffee](https://buymeacoffee.com/1239383708p)
 
-![EJson workbench showing the source editor and JSON tree](website/assets/workbench.png)
+<p align="center">
+  <a href="https://echo-braveshine.github.io/EJson/en.html#film"><img src="website/assets/videos/ejson-promo-cover.jpg" alt="Watch the EJson product film — Edit JSON. See every layer." width="1200"></a>
+</p>
+<p align="center">
+  <a href="https://echo-braveshine.github.io/EJson/en.html#film"><strong>▶ Watch the 60-second product film</strong></a> · <a href="website/assets/videos/ejson-promo-60s.mp4">Download MP4</a> · <a href="website/assets/videos/CREDITS.txt">Music credits</a><br>
+  <sub>Simplified Chinese captions · 1920 × 1080</sub>
+</p>
 
 ## Features
 
 | Feature | What it does |
 | --- | --- |
-| Source editor | Syntax highlighting, line numbers, validation, diagnostic navigation, undo, and redo |
-| JSON tree | Expand deep nodes, scroll horizontally, focus subtrees, jump to source, rename keys, replace values, and extract subtrees into new tabs |
-| Find and replace | Search source text, keys, or values with case matching, regular expressions, capture-group replacements, and Replace all |
-| String conversion | Escape content into a JSON string or unescape a JSON string into its original content |
-| Lossless formatting | Format and minify while preserving duplicate keys, raw numbers, and string escapes, with configurable indentation and line endings |
-| JSONPath queries | Navigate to nodes, use wildcards and scalar filters, save favorite queries, and extract results into new tabs |
-| Array tools | View tables, filter and sort rows, copy cells, and export CSV. Move, duplicate, and sort array items by value or field |
-| Comparison and statistics | Compare two documents and inspect byte count, node count, maximum depth, and longest array |
-| Local workspace | Multiple tabs, opening JSON from your file manager, multi-file drag and drop, unsaved-change confirmation, external-change detection, and startup restore |
-| Recent files | Keep the 20 most recently opened or saved files, search names or paths, remove entries, and clear the list |
-| Command palette | Search commands with English or Chinese keywords, select with arrow keys, run with Enter, and close with Escape |
-| Reading and appearance | Choose a local font, size, and line spacing with live preview. Light and dark modes, English and Simplified Chinese, and independent editor and tree styles |
+| Native document formats | Create, open, edit and save JSON, YAML, XML, CSV, TOML and JSON Lines, including `.jsonl` and `.ndjson` |
+| Source and structure | Edit JSON source and tree together, or inspect other structured formats. Expand nodes, scroll horizontally, focus subtrees, reveal source and extract subtrees |
+| Dashed hierarchy connectors | Show node connections in JSON trees, structure views and comparison trees. Toggle and persist the setting under Settings → Appearance |
+| Lossless formatting | Format and minify JSON while retaining duplicate keys, raw numbers and string escapes, with indentation, line-ending options and a keyboard shortcut |
+| JSON repair | Repair trailing commas, single quotes, unquoted keys, comments and missing separators or closing delimiters. Preview repair types and counts, then apply with undo support |
+| JSON Lines | Validate and browse records, search text, filter valid or invalid rows, reveal source and export filtered records as JSON Lines or a JSON array |
+| Conversion and Save As | Convert between JSON and YAML, XML, CSV, TOML or JSON Lines with previews and compatibility checks. Save in a different format |
+| Find and replace | Search source, keys or values with case matching, regular expressions, capture-group replacements and Replace all |
+| JSONPath queries | Navigate paths, use wildcards and scalar filters, save queries and extract matches into new tabs |
+| Array tools | Table view, filtering, sorting, cell copying and CSV export. Move, duplicate and sort array items by value or field |
+| Document comparison | Review added, removed and changed fields, then preview and apply selected structural differences |
+| Schema and redaction | Validate JSON Schema and locate issues. Preview redaction by field name or path, then open or export the result |
+| Two-way disk synchronization | Save named files after a roughly 500 ms typing pause and reload external changes. Conflicts expose comparison, disk reload, local overwrite and Save As actions |
+| Recovery drafts | Save after 2 idle seconds and at most 10 seconds apart during continuous editing. Recover content, tab order and selection after unexpected exits, with rotating snapshot fallback |
+| Files and workspace | Multiple tabs, file-manager opening, multi-file drag and drop and startup restore. Search and manage the 20 most recent files |
+| Reading and appearance | Light and dark modes, English and Simplified Chinese, local fonts, text size, line spacing and independent editor and tree styles with live previews |
+| Commands and statistics | English and Chinese command search, undo, redo, string escape and unescape, byte count, node count, maximum depth and longest-array statistics |
 
-Editing and parsing run locally. Checking for updates queries GitHub Releases only on demand. The support button opens Buy Me a Coffee in your browser.
+## Screenshots
 
-## Quick access
+These screenshots render the current Flutter interface with sample data. Select an image to open the original.
+
+<table>
+<tr><td width="50%"><strong>Dark workbench and hierarchy connectors</strong><br><a href="website/assets/workbench-dark.png"><img src="website/assets/workbench-dark.png" alt="Dark source editor and JSON tree"></a></td><td width="50%"><strong>JSON Lines validation and filtering</strong><br><a href="website/assets/json-lines.png"><img src="website/assets/json-lines.png" alt="JSON Lines record browser and invalid-line navigation"></a></td></tr>
+<tr><td><strong>JSON repair preview</strong><br><a href="website/assets/repair.png"><img src="website/assets/repair.png" alt="Repaired JSON and repair categories"></a></td><td><strong>Format conversion preview</strong><br><a href="website/assets/conversion.png"><img src="website/assets/conversion.png" alt="JSON to YAML conversion preview"></a></td></tr>
+<tr><td><strong>Array tables</strong><br><a href="website/assets/arrays.png"><img src="website/assets/arrays.png" alt="Array table filtering, sorting and export"></a></td><td><strong>Structural comparison</strong><br><a href="website/assets/comparison.png"><img src="website/assets/comparison.png" alt="Field differences between two documents"></a></td></tr>
+<tr><td><strong>JSONPath filters</strong><br><a href="website/assets/query.png"><img src="website/assets/query.png" alt="JSONPath filter and matching records"></a></td><td><strong>Synchronization and recovery settings</strong><br><a href="website/assets/settings.png"><img src="website/assets/settings.png" alt="Disk sync, recovery draft and startup restore controls"></a></td></tr>
+</table>
+
+## Saving, synchronization and recovery
+
+- Disk synchronization and recovery draft auto-save are enabled by default. Toggle them separately under Settings → General. Named files save edits including incomplete syntax. Unnamed documents save as recovery drafts.
+- Concurrent local and external changes pause synchronization until you choose a resolution. Repairs and conversions offer previews. Applied repairs participate in enabled disk synchronization.
+- Each JSON Lines record is one JSON value. Blank lines are invalid. Converting to JSON produces an array, and exporting a JSON array to JSON Lines writes one element per line.
+- The file limit is 16 MiB. Documents over 2,097,152 UTF-16 code units open read-only. JSON Lines still supports record browsing, filtering and export.
+
+Editing and parsing run locally. Checking for updates queries GitHub Releases on demand. The support button opens Buy Me a Coffee in your browser.
+
+## Keyboard shortcuts
 
 | Action | macOS | Windows / Linux |
 | --- | --- | --- |
-| Open command palette | `Cmd+Shift+P` | `Ctrl+Shift+P` |
-| Open recent files | `Cmd+P` | `Ctrl+P` |
+| Format document | `Shift+Option+F` | `Shift+Alt+F` |
+| Command palette | `Cmd+Shift+P` | `Ctrl+Shift+P` |
+| Recent files | `Cmd+P` | `Ctrl+P` |
+| Find and replace | `Cmd+F` | `Ctrl+F` |
+| Open files | `Cmd+O` | `Ctrl+O` |
+| Save / Save As | `Cmd+S` / `Cmd+Shift+S` | `Ctrl+S` / `Ctrl+Shift+S` |
+| Undo / Redo | `Cmd+Z` / `Cmd+Shift+Z` | `Ctrl+Z` / `Ctrl+Shift+Z` |
+| New / Close tab | `Cmd+N` / `Cmd+W` | `Ctrl+N` / `Ctrl+W` |
 
-Both are also available from the toolbar. Drop multiple local files onto the workbench to open them. Opening a file again switches to its existing tab. Temporary dropped copies open as new documents.
+Drop multiple local files onto the workbench to open them. Opening a file again switches to its existing tab. Temporary dropped copies open as new documents.
 
 ## Install
 
@@ -74,7 +109,7 @@ sudo apt install ./EJson-linux-amd64.deb
 sudo apt install ./EJson-linux-arm64.deb
 ```
 
-After installation, choose EJson from a `.json` file’s Open With menu. Set EJson as the default app for this file type to open it with a double-click.
+After installation, choose EJson from Open With for `.json`, `.yaml`, `.yml`, `.xml`, `.csv`, `.toml`, `.jsonl` or `.ndjson` files. Set EJson as the default app for a file type to open it with a double-click.
 
 ## Development
 

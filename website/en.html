@@ -3,98 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Edit source and tree side by side. Find and replace, query JSONPath, explore array tables, and choose your font and size. Drop files to start. All editing and parsing happen on your device.">
-  <meta name="theme-color" content="#10141e" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f4f7fc" media="(prefers-color-scheme: light)">
-  <title>EJson · Desktop JSON editor</title>
+  <meta name="description" content="A local desktop workspace for JSON, YAML, XML, CSV, TOML and JSON Lines. Edit source and trees, preview repairs and conversions, synchronize files and recover drafts.">
+  <meta name="theme-color" content="#f7f9fc" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#10151e" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="EJson · Desktop workspace for structured data">
+  <meta property="og:description" content="A local desktop workspace for JSON, YAML, XML, CSV, TOML and JSON Lines. Edit source and trees, preview repairs and conversions, synchronize files and recover drafts.">
+  <meta property="og:image" content="https://echo-braveshine.github.io/EJson/assets/workbench-light.png">
+  <title>EJson · Desktop workspace for structured data</title>
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="alternate" hreflang="zh-CN" href="index.html">
-  <link rel="stylesheet" href="styles.css">
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="styles.css?v=20261115-film2">
+  <script src="site.js?v=20261115-film2" defer></script>
 </head>
 <body>
-  <header class="site-header">
-    <nav class="wrap nav" aria-label="Main navigation">
-      <a class="brand" href="#top"><img src="assets/logo.png" width="32" height="32" alt="">EJson</a>
-      <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#download">Download</a>
-        <a class="language" href="index.html" lang="zh-CN">简体中文</a>
-      </div>
-    </nav>
-  </header>
-
-  <main id="top">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="wrap hero-inner">
-        <div class="hero-copy">
-          <h1 id="hero-title">Edit JSON. <span>See every layer.</span></h1>
-          <p>Edit source and tree side by side. Find and replace, query JSONPath, explore array tables, and choose your font and size. Drop files to start. All editing and parsing happen on your device.</p>
-          <div class="actions">
-            <a class="button primary" href="#download">Download EJson <span aria-hidden="true">↓</span></a>
-            <a class="button secondary" href="https://github.com/Echo-BraveShine/EJson">View on GitHub <span aria-hidden="true">↗</span></a>
-          </div>
-          <p class="platform-note">macOS <span aria-hidden="true">·</span> Windows <span aria-hidden="true">·</span> Linux</p>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header"><nav class="wrap nav" aria-label="Main navigation">
+    <a class="brand" href="#top"><img src="assets/logo.png" width="32" height="32" alt="">EJson</a>
+    <div class="nav-links"><a href="#features">Features</a><a href="#screenshots">Screenshots</a><a href="#download">Download</a><a class="language" href="index.html" lang="zh-CN">简体中文</a><select class="theme-select" aria-label="Website theme" data-theme-select><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+  </nav></header>
+  <main id="main">
+    <section class="hero" id="top"><div class="wrap">
+      <div class="hero-intro"><div><p class="platform-note">macOS / Windows / Linux</p><h1>Edit JSON.<br><span>See every layer.</span></h1></div><div class="hero-copy"><p>Edit, validate and convert six data formats in one desktop workspace. Keep source and structure together, with previews for repairs, queries and comparisons.</p><div class="actions"><a class="button primary" href="#download">Download EJson <span aria-hidden="true">↓</span></a><a class="button secondary" href="#film">Watch the film <span aria-hidden="true">▶</span></a></div></div></div>
+      <figure class="hero-product"><div class="preview-toolbar"><span>EJson workbench</span><span class="preview-theme-note">Screenshots match the website theme</span></div>
+        <a class="screenshot" data-screenshot="workbench" href="assets/workbench-light.png" data-zoom data-caption="Synchronized source and tree · Optional dashed connectors · Multiple tabs"><img src="assets/workbench-light.webp" width="1200" height="800" alt="Synchronized source and tree · Optional dashed connectors · Multiple tabs" fetchpriority="high" decoding="async"></a><figcaption>Synchronized source and tree · Optional dashed connectors · Multiple tabs</figcaption>
+      </figure>
+      <div class="format-strip"><p>Supported file formats</p><div><span>JSON</span><span>YAML</span><span>XML</span><span>CSV</span><span>TOML</span><span>JSON Lines <small>.jsonl / .ndjson</small></span></div></div>
+    </div></section>
+    <section class="wrap film-section" id="film" aria-labelledby="film-title">
+      <div class="film-heading"><h2 id="film-title">Meet EJson in one minute.</h2><a class="film-download" href="assets/videos/ejson-promo-60s.mp4" download>Download film <span aria-hidden="true">↓</span></a></div>
+      <figure class="film-card">
+        <div class="film-player" data-film-player>
+          <video controls playsinline preload="none" width="1920" height="1080" poster="assets/videos/ejson-promo-poster.jpg" aria-label="Play the EJson product film">
+            <source src="assets/videos/ejson-promo-60s.mp4" type="video/mp4">
+            <a href="assets/videos/ejson-promo-60s.mp4">Download film (MP4)</a>
+          </video>
+          <button class="film-play" type="button" data-film-play aria-label="Play the EJson product film" hidden><span class="film-play-icon" aria-hidden="true"></span></button>
         </div>
-        <figure class="product">
-          <a class="product-image" href="assets/workbench.png">
-            <img src="assets/workbench.png" width="1100" height="726" alt="The EJson app showing example.json source code on the left and its JSON tree on the right" fetchpriority="high">
-          </a>
-          <figcaption>EJson workbench · Source and tree view</figcaption>
-        </figure>
-      </div>
+        <figcaption><span>EJson — JSON, Simplified.</span><span>60 seconds · Simplified Chinese captions</span></figcaption>
+      </figure>
+      <p class="film-credit">Music “Cipher” · <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100844">Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <a href="assets/videos/CREDITS.txt">Excerpt, EQ and fades</a></p>
     </section>
-
-    <section class="wrap features" id="features" aria-labelledby="features-title">
-      <h2 id="features-title">From source to node</h2>
-      <div class="feature-grid">
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">{}</span>
-          <h3>Source and tree, in sync</h3>
-          <p>Select a node to jump to source. Rename keys, replace values, or extract a subtree into a new tab. Both views share undo and redo.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">≡</span>
-          <h3>Format and validate</h3>
-          <p>Preserve duplicate keys, number literals, and string escapes when formatting or minifying. Choose indentation and line endings, and jump to syntax errors.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">.*</span>
-          <h3>Find, replace, and convert</h3>
-          <p>Search source text, keys, or values with regular expressions and capture-group replacements. Escape content into a JSON string or unescape it into its original content.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">$.</span>
-          <h3>JSONPath queries</h3>
-          <p>Navigate by path, use wildcards and scalar filters, and save favorite queries. Extract results into a new tab for further editing.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">▦</span>
-          <h3>Array tables and sorting</h3>
-          <p>View arrays as tables, filter and sort rows, copy cells, and export CSV. Move or duplicate array items and sort them by value or field.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">↔</span>
-          <h3>Compare and inspect</h3>
-          <p>Compare two documents and inspect byte count, node count, maximum depth, and longest array to understand your JSON structure.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">▤</span>
-          <h3>Files and workspace</h3>
-          <p>Drop multiple files to open them and switch to an existing tab when reopening a file. Search your 20 most recently opened or saved files and restore your workspace at startup.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">⌘</span>
-          <h3>Command palette</h3>
-          <p>Search commands with English or Chinese keywords, select with arrow keys, and run with Enter. Open with Cmd+Shift+P on macOS or Ctrl+Shift+P on Windows and Linux. Use Cmd/Ctrl+P for recent files.</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon" aria-hidden="true">Aa</span>
-          <h3>Read your way</h3>
-          <p>Choose a local font, size, and line spacing with live preview. Set light or dark mode, syntax highlighting, and tree styles, with English and Simplified Chinese interfaces.</p>
-        </article>
-      </div>
-    </section>
-
+    <section class="wrap screenshot-section" id="screenshots" aria-labelledby="screenshots-title"><div class="section-heading"><h2 id="screenshots-title">See the app at work.</h2><p>These screenshots render the current Flutter interface with sample data. Select any image to inspect it at full size.</p></div><article class="showcase "><div class="showcase-copy"><h3>Inspect JSON Lines one record at a time</h3><p>Open .jsonl and .ndjson files, validate each line, search records and filter valid or invalid rows. Jump to source and export the filtered records as JSON Lines or a JSON array.</p><ul><li>Original line numbers</li><li>Invalid record navigation</li><li>Filtered exports</li></ul></div><figure><a class="screenshot" data-screenshot="json-lines" href="assets/json-lines.png" data-zoom data-caption="Inspect JSON Lines one record at a time"><img src="assets/json-lines.webp" width="1200" height="800" alt="Inspect JSON Lines one record at a time" loading="lazy" decoding="async"></a><figcaption>Inspect JSON Lines one record at a time</figcaption></figure></article>
+<article class="showcase reverse"><div class="showcase-copy"><h3>Review the repair before applying it</h3><p>Repair trailing commas, single quotes, unquoted keys, comments and missing separators. Inspect the changes and their counts, then apply the result with undo support.</p><ul><li>Repair preview</li><li>Exact numbers and duplicate keys</li><li>Undo support</li></ul></div><figure><a class="screenshot" data-screenshot="repair" href="assets/repair.png" data-zoom data-caption="Review the repair before applying it"><img src="assets/repair.webp" width="1200" height="800" alt="Review the repair before applying it" loading="lazy" decoding="async"></a><figcaption>Review the repair before applying it</figcaption></figure></article>
+<article class="showcase "><div class="showcase-copy"><h3>Convert formats and save the result</h3><p>Convert between JSON and YAML, XML, CSV, TOML or JSON Lines. Preview the output, adjust CSV columns, XML mapping or YAML document selection, then open a new tab or export.</p><ul><li>Six document formats</li><li>Conversion options and preview</li><li>Cross-format Save As</li></ul></div><figure><a class="screenshot" data-screenshot="conversion" href="assets/conversion.png" data-zoom data-caption="Convert formats and save the result"><img src="assets/conversion.webp" width="1200" height="800" alt="Convert formats and save the result" loading="lazy" decoding="async"></a><figcaption>Convert formats and save the result</figcaption></figure></article></section>
+    <section class="gallery-section"><div class="wrap"><div class="section-heading"><h2>Query, compare, explore tables and configure your workspace.</h2></div><div class="gallery-grid"><article class="gallery-card"><figure><a class="screenshot" data-screenshot="arrays" href="assets/arrays.png" data-zoom data-caption="Explore arrays as tables"><img src="assets/arrays.webp" width="1200" height="800" alt="Explore arrays as tables" loading="lazy" decoding="async"></a></figure><div><h3>Explore arrays as tables</h3><p>Filter and sort records, copy cells and export CSV. Move, duplicate and sort array items by field.</p></div></article>
+<article class="gallery-card"><figure><a class="screenshot" data-screenshot="comparison" href="assets/comparison.png" data-zoom data-caption="Review structural changes"><img src="assets/comparison.webp" width="1200" height="800" alt="Review structural changes" loading="lazy" decoding="async"></a></figure><div><h3>Review structural changes</h3><p>Inspect added, removed and changed fields. Preview and apply selected differences.</p></div></article>
+<article class="gallery-card"><figure><a class="screenshot" data-screenshot="query" href="assets/query.png" data-zoom data-caption="Extract data with JSONPath"><img src="assets/query.webp" width="1200" height="800" alt="Extract data with JSONPath" loading="lazy" decoding="async"></a></figure><div><h3>Extract data with JSONPath</h3><p>Use wildcards, scalar filters and saved queries. Reveal matching source or extract results into a new tab.</p></div></article>
+<article class="gallery-card"><figure><a class="screenshot" data-screenshot="settings" href="assets/settings.png" data-zoom data-caption="Configure how you work"><img src="assets/settings.webp" width="1200" height="800" alt="Configure how you work" loading="lazy" decoding="async"></a></figure><div><h3>Configure how you work</h3><p>Control disk synchronization, recovery drafts, startup restore and language. Configure appearance and reading preferences separately.</p></div></article></div></div></section>
+    <section class="wrap feature-section" id="features"><div class="section-heading"><h2>The everyday editing tools are here, too.</h2></div><div class="feature-grid"><article><h3>Editing and lossless formatting</h3><p>Syntax highlighting, diagnostic navigation, undo, redo and regex capture-group replacement. Formatting retains duplicate keys, raw numbers and string escapes.</p></article><article><h3>Two-way disk synchronization</h3><p>Named files save after a roughly 500 ms typing pause. External edits reload automatically. Concurrent changes pause synchronization and expose resolution actions.</p></article><article><h3>Recovery for unsaved work</h3><p>Recovery drafts save after 2 idle seconds and at most 10 seconds apart during continuous editing. Recover content, tab order and selection after an unexpected exit.</p></article><article><h3>Schema validation and redaction</h3><p>Validate using JSON Schema and locate issues. Preview redaction by field name or path, then open or export the result.</p></article><article><h3>Reading and appearance</h3><p>Light and dark modes, English and Chinese, local fonts, text size, line spacing and independent tree styles. Toggle dashed connectors in Appearance settings.</p></article><article><h3>Files and keyboard access</h3><p>Multi-file drag and drop, recent-file search, a command palette and workspace restore. Format with Shift+Alt+F, or Shift+Option+F on macOS.</p></article></div><aside class="local-note"><h3>Editing and parsing run locally</h3><p>The file limit is 16 MiB. Documents over roughly two million UTF-16 code units open read-only. JSON Lines still supports record browsing, filtering and export. Blank JSON Lines records are invalid. Converting JSON Lines to JSON produces an array.</p></aside></section>
     <section class="wrap downloads" id="download" aria-labelledby="download-title">
       <div class="download-header">
         <div>
@@ -129,13 +86,7 @@ brew install --cask echo-braveshine/ejson/ejson</code></pre>
       </div>
     </section>
   </main>
-
-  <footer class="wrap footer">
-    <p>The app contacts GitHub for release information when you choose Check for updates.</p>
-    <div>
-      <a href="https://github.com/Echo-BraveShine/EJson/issues">Report an issue</a>
-      <a href="https://buymeacoffee.com/1239383708p">Buy me a coffee</a>
-    </div>
-  </footer>
+  <footer class="wrap footer"><div><a class="brand" href="#top"><img src="assets/logo.png" width="24" height="24" alt="">EJson</a><p>The app checks GitHub Releases when you select Check for updates.</p></div><nav aria-label="Project links"><a href="https://github.com/Echo-BraveShine/EJson">GitHub</a><a href="https://github.com/Echo-BraveShine/EJson/issues">Report an issue</a><a href="https://buymeacoffee.com/1239383708p">Buy me a coffee</a></nav></footer>
+  <dialog class="lightbox" aria-label="Enlarged app screenshot"><div class="lightbox-head"><p id="lightbox-caption" aria-live="polite"></p><button type="button" data-close aria-label="Close enlarged screenshot" autofocus>×</button></div><div class="lightbox-image"><img alt="" width="1200" height="800"></div><div class="lightbox-nav"><button type="button" data-prev aria-label="Previous screenshot">←</button><a data-original href="assets/workbench-light.png" target="_blank" rel="noopener">Open original image ↗</a><button type="button" data-next aria-label="Next screenshot">→</button></div></dialog>
 </body>
 </html>
