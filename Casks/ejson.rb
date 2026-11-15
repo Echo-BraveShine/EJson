@@ -1,6 +1,6 @@
 cask "ejson" do
-  version "0.0.8"
-  sha256 "df1f4b475e85080702241ee5753056bc4a25e35f5fd53c3367cc3ff0be5f8170"
+  version "0.0.9"
+  sha256 "514cd67555e58172915296b4c0be0bf2842bc19e8f75f42ad50193abbf71ecfd"
 
   url "https://github.com/Echo-BraveShine/EJson/releases/download/v#{version}/EJson-macos.zip"
   name "EJson"
