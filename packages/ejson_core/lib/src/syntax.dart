@@ -111,8 +111,10 @@ class JsonLineRecord {
 
 class JsonLinesData {
   JsonLinesData(List<JsonLineRecord> records)
-    : records = List.unmodifiable(records);
+    : records = List.unmodifiable(records),
+      invalidCount = records.where((record) => !record.isValid).length;
   final List<JsonLineRecord> records;
+  final int invalidCount;
 }
 
 /// Parses strict JSON while keeping the raw token ranges and member order.

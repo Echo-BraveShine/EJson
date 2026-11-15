@@ -27,6 +27,7 @@ import '../editor/tree_panel.dart';
 import '../editor/format_tree_view.dart';
 import '../editor/csv_document_view.dart';
 import '../editor/json_lines_view.dart';
+import '../editor/large_source_view.dart';
 import '../editor/tree_style.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/workspace_messages.dart';

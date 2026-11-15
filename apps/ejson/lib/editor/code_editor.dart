@@ -22,24 +22,28 @@ class EJsonCodeEditor extends StatefulWidget {
   const EJsonCodeEditor({
     super.key,
     required this.source,
-    required this.onChanged,
+    this.onChanged,
+    this.onPatch,
     required this.readOnly,
     this.jump,
+    this.sourceLineIndex,
     this.focusOnJump = true,
     this.highlight = JsonHighlight.atomOne,
     this.useWorkspaceShortcuts = true,
     this.format = DocumentFormat.json,
     this.preserveViewOnUpdate = false,
-  });
+  }) : assert((onChanged == null) != (onPatch == null));
 
   final String source;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onChanged;
+  final void Function(SourcePatch patch, String before, String after)? onPatch;
   final bool readOnly;
   final DocumentFormat format;
   final JsonHighlight highlight;
   final bool useWorkspaceShortcuts;
   final bool focusOnJump;
   final bool preserveViewOnUpdate;
+  final LineIndex? sourceLineIndex;
   final ({SourceRange range, int sequence})? jump;
 
   @override
@@ -50,18 +54,31 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
   static final _newline = RegExp(r'\r\n|\r|\n');
   late String _source;
   late String _display;
+  late bool _hasCarriageReturns;
+  LineIndex? _sourceLines;
   late CodeLines _lines;
   late final CodeLineEditingController _controller;
   final _focus = FocusNode();
   final _scroll = CodeScrollController();
+  CodeIndicatorValueNotifier? _indicator;
 
   String _normalize(String text) => text.replaceAll(_newline, '\n');
+
+  LineIndex get _sourceIndex =>
+      (identical(widget.source, _source) ? widget.sourceLineIndex : null) ??
+      (_sourceLines ??= LineIndex(_source));
+
+  void _setSource(String source) {
+    _source = source;
+    _hasCarriageReturns = source.contains('\r');
+    _sourceLines = null;
+  }
 
   @override
   void initState() {
     super.initState();
-    _source = widget.source;
-    _display = _normalize(_source);
+    _setSource(widget.source);
+    _display = _hasCarriageReturns ? _normalize(_source) : _source;
     _controller = CodeLineEditingController.fromText(
       _display,
       const CodeLineOptions(indentSize: 2),
@@ -75,8 +92,8 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
   void didUpdateWidget(covariant EJsonCodeEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.source != _source) {
-      _source = widget.source;
-      final display = _normalize(_source);
+      _setSource(widget.source);
+      final display = _hasCarriageReturns ? _normalize(_source) : _source;
       if (display != _display) {
         final selection = _controller.selection;
         final vertical = _scroll.verticalScroller.hasClients
@@ -99,7 +116,7 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
           _controller.text = display;
         }
         if (widget.preserveViewOnUpdate) {
-          final lines = display.split('\n');
+          final lines = _controller.codeLines;
           final base = selection.baseIndex.clamp(0, lines.length - 1);
           final extent = selection.extentIndex.clamp(0, lines.length - 1);
           _controller.selection = CodeLineSelection(
@@ -142,36 +159,73 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     if (jump == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || widget.jump != jump) return;
-      final lines = LineIndex(_source);
+      final lines = _sourceIndex;
       final start = _position(jump.range.start, lines);
       final end = _position(jump.range.end, lines);
       _controller.selection = _selection(start, end);
       if (widget.focusOnJump) _focus.requestFocus();
+      _skipIntermediateLines(start);
       _scroll.makeCenterIfInvisible(start);
     });
+  }
+
+  void _skipIntermediateLines(CodeLinePosition target) {
+    final vertical = _scroll.verticalScroller;
+    final paragraphs = _indicator?.value?.paragraphs;
+    if (!vertical.hasClients || paragraphs == null || paragraphs.isEmpty) {
+      return;
+    }
+    final viewport = vertical.position;
+    final first = paragraphs.first;
+    final distance = (first.index - target.index) * first.preferredLineHeight;
+    if (distance <= viewport.viewportDimension) return;
+
+    // re_editor lays out every intervening paragraph on long upward scrolls.
+    // This editor has wrapping off, so move to the new line and rebuild the
+    // visible paragraphs there before its normal horizontal centering runs.
+    final offset =
+        (viewport.pixels +
+                first.top -
+                distance -
+                viewport.viewportDimension / 2)
+            .clamp(viewport.minScrollExtent, viewport.maxScrollExtent);
+    vertical.jumpTo(offset);
+    _controller.forceRepaint();
   }
 
   void _edited() {
     if (identical(_lines, _controller.codeLines)) return;
     _lines = _controller.codeLines;
+    if (widget.readOnly) return;
     final display = _controller.text;
-    if (display == _display || widget.readOnly) return;
     final change = SourcePatch.between(_display, display);
-    final shown = LineIndex(_display);
-    final original = LineIndex(_source);
-    int originalOffset(int offset) {
-      final position = shown.position(offset);
-      return original.starts[position.line - 1] + position.column - 1;
+    if (change.range.start == change.range.end && change.replacement.isEmpty) {
+      return;
     }
-
-    final newline = _newline.firstMatch(_source)?.group(0) ?? '\n';
-    final patch = SourcePatch((
-      start: originalOffset(change.range.start),
-      end: originalOffset(change.range.end),
-    ), change.replacement.replaceAll('\n', newline));
-    _source = patch.apply(_source);
+    final patch = _hasCarriageReturns ? _originalPatch(change) : change;
+    final before = _source;
+    _source = _hasCarriageReturns ? patch.apply(before) : display;
+    _sourceLines = null;
     _display = display;
-    widget.onChanged(_source);
+    widget.onPatch?.call(patch, before, _source);
+    widget.onChanged?.call(_source);
+  }
+
+  SourcePatch _originalPatch(SourcePatch change) {
+    var (:start, :end) = change.range;
+    // A CRLF adds one code unit to the source. A lone CR and an LF each
+    // occupy one code unit in both the source and the editor.
+    var newlineOffset = _source.indexOf('\r\n');
+    while (newlineOffset >= 0 && newlineOffset < end) {
+      if (newlineOffset < start) start++;
+      end++;
+      newlineOffset = _source.indexOf('\r\n', newlineOffset + 2);
+    }
+    final newline = _newline.firstMatch(_source)?.group(0) ?? '\n';
+    return SourcePatch((
+      start: start,
+      end: end,
+    ), change.replacement.replaceAll('\n', newline));
   }
 
   CodeLinePosition _position(int offset, LineIndex lines) {
@@ -266,13 +320,15 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
               ),
       ),
       leadingDivider: VerticalDivider(width: 1, color: divider),
-      indicatorBuilder: (context, controller, _, notifier) =>
-          DefaultCodeLineNumber(
-            controller: controller,
-            notifier: notifier,
-            textStyle: code.copyWith(color: muted),
-            focusedTextStyle: code.copyWith(color: accent),
-          ),
+      indicatorBuilder: (context, controller, _, notifier) {
+        _indicator = notifier;
+        return DefaultCodeLineNumber(
+          controller: controller,
+          notifier: notifier,
+          textStyle: code.copyWith(color: muted),
+          focusedTextStyle: code.copyWith(color: accent),
+        );
+      },
     );
   }
 }

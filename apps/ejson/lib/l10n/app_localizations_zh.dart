@@ -175,6 +175,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get largeFile => '大文件 · 只读';
 
   @override
+  String get sourcePreviousPage => '上一页源码';
+
+  @override
+  String get sourceNextPage => '下一页源码';
+
+  @override
+  String get sourceGoToPage => '跳转到源码页';
+
+  @override
+  String sourcePage(int page, int total) {
+    return '第 $page 页，共 $total 页';
+  }
+
+  @override
   String get emptyDocument => '空白文档';
 
   @override

@@ -1,11 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:ejson_core/ejson_core.dart';
 
 import 'local_files.dart';
 import 'recovered_workspace.dart';
 import 'workspace.dart';
+
+Future<Object?> _readSnapshot(File file) =>
+    Isolate.run(() async => jsonDecode(await file.readAsString()));
+
+Future<void> _writeSnapshot(File temporary, Map<String, Object?> snapshot) =>
+    Isolate.run(
+      () => temporary.writeAsString(jsonEncode(snapshot), flush: true),
+    );
 
 /// Two committed generations allow recovery when the newest snapshot is damaged.
 class WorkspaceRecovery {
@@ -135,7 +144,7 @@ class WorkspaceRecovery {
       if (!await file.exists()) continue;
       foundFile = true;
       try {
-        final data = jsonDecode(await file.readAsString());
+        final data = await _readSnapshot(file);
         if (!_validSnapshot(data)) continue;
         final snapshot = data as Map<String, dynamic>;
         if (newest == null ||
@@ -337,16 +346,15 @@ class WorkspaceRecovery {
       }
     }
     final sequence = _sequence + 1;
-    final contents = jsonEncode({
+    await directory.create(recursive: true);
+    final target = _slot(sequence);
+    final temporary = File('${target.path}.tmp');
+    await _writeSnapshot(temporary, {
       'version': 1,
       'sequence': sequence,
       'activeId': workspace?.activeId ?? 0,
       'tabs': tabs,
     });
-    await directory.create(recursive: true);
-    final target = _slot(sequence);
-    final temporary = File('${target.path}.tmp');
-    await temporary.writeAsString(contents, flush: true);
     await temporary.rename(target.path);
     _sequence = sequence;
     if (tabs.isEmpty) {

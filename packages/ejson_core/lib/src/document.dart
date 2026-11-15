@@ -65,8 +65,13 @@ class JsonDocument {
 
   JsonDocument? apply(SourcePatch patch, {required int expectedRevision}) {
     if (expectedRevision != revision) return null;
+    return replaceSource(patch.apply(source.text));
+  }
+
+  /// Starts a new revision when the caller already has the updated text.
+  JsonDocument replaceSource(String text) {
     return JsonDocument(
-      SourceBuffer(patch.apply(source.text)),
+      SourceBuffer(text),
       revision: revision + 1,
       lastValid: lastValid,
       lastValidSource: lastValidSource,

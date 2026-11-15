@@ -8,8 +8,9 @@ import '../design/workbench_style.dart';
 import '../design/workbench_text_field.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/workspace_messages.dart';
+import 'json_lines_filter.dart';
 
-enum JsonLinesFilter { all, valid, invalid }
+export 'json_lines_filter.dart' show JsonLinesFilter;
 
 Future<String> _prepareExport(
   List<JsonLineRecord> records,
@@ -38,31 +39,50 @@ class _JsonLinesViewState extends State<JsonLinesView> {
   final _search = TextEditingController();
   Timer? _debounce;
   JsonLinesFilter _filter = JsonLinesFilter.all;
-  late List<JsonLineRecord> _matches = widget.data.records;
+  late JsonLinesSelection _selection = (
+    records: widget.data.records,
+    allValid: widget.data.invalidCount == 0,
+  );
+  int _filterRevision = 0;
+  bool _filtering = false;
   bool _exporting = false;
 
-  void _applyFilter() {
-    final query = _search.text.toLowerCase();
+  void _scheduleFilter({bool debounce = false}) {
+    _debounce?.cancel();
+    final revision = ++_filterRevision;
+    setState(() => _filtering = true);
+    if (debounce) {
+      _debounce = Timer(
+        const Duration(milliseconds: 150),
+        () => unawaited(_applyFilter(revision)),
+      );
+    } else {
+      unawaited(_applyFilter(revision));
+    }
+  }
+
+  Future<void> _applyFilter(int revision) async {
+    bool cancelled() => !mounted || _filterRevision != revision;
+    final selection = await filterJsonLines(
+      widget.data,
+      _search.text,
+      _filter,
+      cancelled: cancelled,
+    );
+    if (cancelled() || selection == null) return;
     setState(() {
-      _matches = widget.data.records
-          .where(
-            (record) =>
-                (query.isEmpty ||
-                    record.source.toLowerCase().contains(query)) &&
-                switch (_filter) {
-                  JsonLinesFilter.all => true,
-                  JsonLinesFilter.valid => record.isValid,
-                  JsonLinesFilter.invalid => !record.isValid,
-                },
-          )
-          .toList();
+      _selection = selection;
+      _filtering = false;
     });
   }
 
   @override
   void didUpdateWidget(covariant JsonLinesView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data) _applyFilter();
+    if (oldWidget.data != widget.data) {
+      _selection = (records: const [], allValid: true);
+      _scheduleFilter();
+    }
   }
 
   @override
@@ -74,7 +94,8 @@ class _JsonLinesViewState extends State<JsonLinesView> {
 
   Future<void> _export(DocumentFormat format) async {
     final strings = AppLocalizations.of(context);
-    final records = List.of(_matches);
+    if (_filtering) return;
+    final records = _selection.records;
     setState(() => _exporting = true);
     try {
       final source = await _prepareExport(records, format);
@@ -99,9 +120,7 @@ class _JsonLinesViewState extends State<JsonLinesView> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final invalid = widget.data.records
-        .where((record) => !record.isValid)
-        .length;
+    final matches = _selection.records;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -113,13 +132,7 @@ class _JsonLinesViewState extends State<JsonLinesView> {
                 key: const ValueKey('json-lines-search'),
                 controller: _search,
                 labelText: strings.jsonLinesSearch,
-                onChanged: (_) {
-                  _debounce?.cancel();
-                  _debounce = Timer(
-                    const Duration(milliseconds: 150),
-                    _applyFilter,
-                  );
-                },
+                onChanged: (_) => _scheduleFilter(debounce: true),
               ),
               const SizedBox(height: WorkbenchStyle.space8),
               WorkbenchSelect<JsonLinesFilter>(
@@ -135,24 +148,26 @@ class _JsonLinesViewState extends State<JsonLinesView> {
                 ],
                 onChanged: (filter) {
                   _filter = filter;
-                  _applyFilter();
+                  _scheduleFilter();
                 },
               ),
               Row(
                 children: [
                   Expanded(
                     child: Text(
-                      strings.jsonLinesCount(
-                        _matches.length,
-                        widget.data.records.length,
-                        invalid,
-                      ),
+                      _filtering
+                          ? strings.checking
+                          : strings.jsonLinesCount(
+                              matches.length,
+                              widget.data.records.length,
+                              widget.data.invalidCount,
+                            ),
                       style: WorkbenchStyle.caption,
                     ),
                   ),
                   PopupMenuButton<DocumentFormat>(
                     tooltip: strings.jsonLinesExport,
-                    enabled: !_exporting && _matches.isNotEmpty,
+                    enabled: !_exporting && !_filtering && matches.isNotEmpty,
                     icon: const Icon(Icons.file_download_outlined, size: 18),
                     onSelected: _export,
                     itemBuilder: (_) => [
@@ -162,7 +177,7 @@ class _JsonLinesViewState extends State<JsonLinesView> {
                       ),
                       PopupMenuItem(
                         value: DocumentFormat.json,
-                        enabled: _matches.every((record) => record.isValid),
+                        enabled: _selection.allValid,
                         child: const Text('JSON (.json)'),
                       ),
                     ],
@@ -174,12 +189,14 @@ class _JsonLinesViewState extends State<JsonLinesView> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: _matches.isEmpty
+          child: _filtering && matches.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : matches.isEmpty
               ? Center(child: Text(strings.jsonLinesNoMatches))
               : ListView.builder(
-                  itemCount: _matches.length,
+                  itemCount: matches.length,
                   itemBuilder: (context, index) {
-                    final record = _matches[index];
+                    final record = matches[index];
                     return ListTile(
                       key: ValueKey('json-line-${record.lineNumber}'),
                       dense: true,
@@ -190,7 +207,7 @@ class _JsonLinesViewState extends State<JsonLinesView> {
                       title: Text(
                         record.source.isEmpty
                             ? strings.jsonLinesBlank
-                            : record.source,
+                            : _preview(record.source),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: WorkbenchStyle.body,
@@ -222,4 +239,12 @@ class _JsonLinesViewState extends State<JsonLinesView> {
       ],
     );
   }
+}
+
+String _preview(String source) {
+  const limit = 1024;
+  if (source.length <= limit) return source;
+  final last = source.codeUnitAt(limit - 1);
+  final end = last >= 0xd800 && last <= 0xdbff ? limit - 1 : limit;
+  return '${source.substring(0, end)}…';
 }

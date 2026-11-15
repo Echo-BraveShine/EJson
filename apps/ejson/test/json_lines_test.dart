@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:ejson/design/workbench_style.dart';
 import 'package:ejson/editor/code_editor.dart';
 import 'package:ejson/editor/conversion_job.dart';
+import 'package:ejson/editor/json_lines_filter.dart' show filterJsonLines;
 import 'package:ejson/editor/json_lines_view.dart';
 import 'package:ejson/main.dart';
 import 'package:ejson/settings/installed_fonts.dart';
@@ -20,6 +21,41 @@ import 'package:re_editor/re_editor.dart';
 import 'support/conversion_test_harness.dart' show waitForConversion;
 
 void main() {
+  test('record filtering yields and can discard an outdated result', () async {
+    final data = readJsonLines('{"name":"Alpha"}\ninvalid\n' * 2000);
+    var cancelled = false;
+    final pending = filterJsonLines(
+      data,
+      'alpha',
+      JsonLinesFilter.all,
+      cancelled: () => cancelled,
+    );
+    cancelled = true;
+    expect(await pending, isNull);
+    final current = await filterJsonLines(
+      data,
+      'INVALID',
+      JsonLinesFilter.invalid,
+      cancelled: () => false,
+    );
+    expect(data.invalidCount, 2000);
+    expect(current?.records, hasLength(2000));
+    expect(current?.records.first.lineNumber, 2);
+    expect(current?.allValid, isFalse);
+  });
+
+  test('record search finds a match near the end of a long line', () async {
+    final data = readJsonLines('"${'x' * 160000}TaIl"\n');
+    final selection = await filterJsonLines(
+      data,
+      'tail',
+      JsonLinesFilter.all,
+      cancelled: () => false,
+    );
+    expect(selection?.records.single, same(data.records.single));
+    expect(selection?.allValid, isTrue);
+  });
+
   test(
     'large JSON Lines files still produce per-line validation data',
     () async {

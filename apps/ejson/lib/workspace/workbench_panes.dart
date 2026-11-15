@@ -1,22 +1,36 @@
 part of 'workbench.dart';
 
 extension _WorkbenchPanes on _WorkbenchState {
-  Widget _sourceEditor(WorkspaceTab tab) => EJsonCodeEditor(
-    key: ValueKey(tab.id),
-    source: tab.text,
-    format: tab.format,
-    highlight: widget.highlight,
-    onChanged: (text) {
-      _jump = null;
-      controller.editSource(tab.id, text);
-    },
-    jump: _jump?.tabId == tab.id && _jump?.revision == tab.document.revision
+  Widget _sourceEditor(WorkspaceTab tab) {
+    final jump =
+        _jump?.tabId == tab.id && _jump?.revision == tab.document.revision
         ? (range: _jump!.range, sequence: _jump!.sequence)
-        : null,
-    focusOnJump: !_searchJump,
-    readOnly: tab.large,
-    preserveViewOnUpdate: true,
-  );
+        : null;
+    if (tab.large) {
+      return LargeSourceView(
+        key: ValueKey(tab.id),
+        source: tab.text,
+        format: tab.format,
+        jump: jump,
+        focusOnJump: !_searchJump,
+      );
+    }
+    return EJsonCodeEditor(
+      key: ValueKey(tab.id),
+      source: tab.text,
+      format: tab.format,
+      highlight: widget.highlight,
+      onPatch: (patch, before, after) {
+        _jump = null;
+        controller.editSourcePatch(tab.id, patch, before, after);
+      },
+      jump: jump,
+      sourceLineIndex: tab.document.snapshot?.lines,
+      focusOnJump: !_searchJump,
+      readOnly: false,
+      preserveViewOnUpdate: true,
+    );
+  }
 
   Widget _panes(WorkspaceTab tab, bool valid) {
     if (tab.format != DocumentFormat.json) return _otherPanes(tab);

@@ -175,6 +175,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get largeFile => 'Large file · read-only';
 
   @override
+  String get sourcePreviousPage => 'Previous source page';
+
+  @override
+  String get sourceNextPage => 'Next source page';
+
+  @override
+  String get sourceGoToPage => 'Go to source page';
+
+  @override
+  String sourcePage(int page, int total) {
+    return 'Page $page of $total';
+  }
+
+  @override
   String get emptyDocument => 'Empty document';
 
   @override

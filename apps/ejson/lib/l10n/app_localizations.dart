@@ -422,6 +422,30 @@ abstract class AppLocalizations {
   /// **'Large file · read-only'**
   String get largeFile;
 
+  /// No description provided for @sourcePreviousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous source page'**
+  String get sourcePreviousPage;
+
+  /// No description provided for @sourceNextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next source page'**
+  String get sourceNextPage;
+
+  /// No description provided for @sourceGoToPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to source page'**
+  String get sourceGoToPage;
+
+  /// No description provided for @sourcePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {total}'**
+  String sourcePage(int page, int total);
+
   /// No description provided for @emptyDocument.
   ///
   /// In en, this message translates to:

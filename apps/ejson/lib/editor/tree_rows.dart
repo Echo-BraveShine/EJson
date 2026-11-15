@@ -23,6 +23,7 @@ extension _TreeRows on _TreePanelState {
       ),
     };
     final selected = widget.current && _selected == row.path;
+    var editOnTap = false;
     return Material(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
@@ -39,12 +40,19 @@ extension _TreeRows on _TreePanelState {
         borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
         onTap: widget.current
             ? () {
+                if (editOnTap) {
+                  editOnTap = false;
+                  widget.onEdit(range, false);
+                  return;
+                }
                 _updateView(() => _selected = row.path);
                 widget.onReveal(range);
               }
             : null,
-        onDoubleTap: widget.current && !widget.readOnly
-            ? () => widget.onEdit(range, false)
+        // Let the first tap select on release while still recognizing a
+        // second tap on the same row as a request to edit.
+        onTapUp: widget.current && !widget.readOnly
+            ? (details) => editOnTap = _isDoubleRowTap(row, details)
             : null,
         child: CustomPaint(
           key: ValueKey('tree-row:${row.path}'),
@@ -68,11 +76,7 @@ extension _TreeRows on _TreePanelState {
                           padding: EdgeInsets.zero,
                           iconSize: 12,
                           tooltip: expanded ? strings.collapse : strings.expand,
-                          onPressed: () => _updateView(() {
-                            if (!_expanded.remove(row.path)) {
-                              _expanded.add(row.path);
-                            }
-                          }),
+                          onPressed: () => _toggle(row.path),
                           icon: Icon(
                             expanded
                                 ? CupertinoIcons.chevron_down

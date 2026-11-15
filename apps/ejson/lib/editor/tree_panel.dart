@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:ejson_core/ejson_core.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
+import 'package:flutter/gestures.dart' show kDoubleTapSlop, kDoubleTapTimeout;
 import 'package:flutter/material.dart';
 import 'hierarchy_guide_painter.dart';
 
@@ -72,6 +74,13 @@ typedef _Row = ({
   List<bool> continuation,
 });
 
+typedef _VisibleRows = ({
+  List<_Row> rows,
+  Map<String, int> indices,
+  int deepestRow,
+  bool clipped,
+});
+
 class _TreePanelState extends State<TreePanel> {
   void _updateView(VoidCallback update) => setState(update);
 
@@ -91,6 +100,7 @@ class _TreePanelState extends State<TreePanel> {
 
   @override
   void dispose() {
+    _clearRowTap();
     _horizontal.dispose();
     _vertical.dispose();
     _breadcrumbs.dispose();
@@ -102,6 +112,39 @@ class _TreePanelState extends State<TreePanel> {
   List<_Step> _focus = const [];
   String? _selected;
   final _expanded = <String>{'root'};
+  _VisibleRows? _visibleRows;
+  String? _rootLabel;
+  ({String path, Offset position})? _lastRowTap;
+  Timer? _rowTapTimeout;
+
+  void _clearRowTap() {
+    _rowTapTimeout?.cancel();
+    _rowTapTimeout = null;
+    _lastRowTap = null;
+  }
+
+  bool _isDoubleRowTap(_Row row, TapUpDetails details) {
+    final previous = _lastRowTap;
+    _clearRowTap();
+    if (previous != null &&
+        previous.path == row.path &&
+        (previous.position - details.globalPosition).distance <=
+            kDoubleTapSlop) {
+      return true;
+    }
+    _lastRowTap = (path: row.path, position: details.globalPosition);
+    _rowTapTimeout = Timer(kDoubleTapTimeout, _clearRowTap);
+    return false;
+  }
+
+  void _expand(String path) {
+    if (_expanded.add(path)) _visibleRows = null;
+  }
+
+  void _toggle(String path) => setState(() {
+    if (!_expanded.remove(path)) _expanded.add(path);
+    _visibleRows = null;
+  });
 
   JsonNode? _parent(List<_Step> steps) {
     if (steps.isEmpty) return null;
@@ -117,8 +160,9 @@ class _TreePanelState extends State<TreePanel> {
     if (_vertical.hasClients) _vertical.jumpTo(0);
     setState(() {
       _focus = steps;
+      _visibleRows = null;
       _selected = null;
-      _expanded.add(_path(steps));
+      _expand(_path(steps));
     });
   }
 
@@ -128,6 +172,12 @@ class _TreePanelState extends State<TreePanel> {
   @override
   void didUpdateWidget(covariant TreePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.snapshot != oldWidget.snapshot) _visibleRows = null;
+    if (widget.snapshot != oldWidget.snapshot ||
+        widget.current != oldWidget.current ||
+        widget.readOnly != oldWidget.readOnly) {
+      _clearRowTap();
+    }
     if (widget.current &&
         widget.reveal != null &&
         widget.reveal != oldWidget.reveal) {
@@ -154,18 +204,28 @@ class _TreePanelState extends State<TreePanel> {
     var node = widget.snapshot.root!;
     var path = 'root';
     final steps = <_Step>[];
+    if (_focus.isNotEmpty) _visibleRows = null;
     _focus = const [];
-    _expanded.add(path);
+    _expand(path);
     while (true) {
-      final index = node.children.indexWhere((child) {
-        final start = child.keyRange?.start ?? child.value.range.start;
-        return start <= offset && offset < child.value.range.end;
-      });
-      if (index < 0) break;
-      _expanded.add(path);
-      path = '$path/$index';
-      final child = node.children[index];
-      steps.add((index: index, key: child.key));
+      final children = node.children;
+      var low = 0;
+      var high = children.length;
+      while (low < high) {
+        final middle = (low + high) ~/ 2;
+        if (children[middle].value.range.end <= offset) {
+          low = middle + 1;
+        } else {
+          high = middle;
+        }
+      }
+      if (low == children.length) break;
+      final child = children[low];
+      final start = child.keyRange?.start ?? child.value.range.start;
+      if (start > offset) break;
+      _expand(path);
+      path = '$path/$low';
+      steps.add((index: low, key: child.key));
       node = child.value;
     }
     _selected = path;
@@ -173,11 +233,9 @@ class _TreePanelState extends State<TreePanel> {
     _pendingReveal = true;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppLocalizations.of(context);
-    final style = widget.style;
+  _VisibleRows _buildRows(String rootLabel) {
     final rows = <_Row>[];
+    final indices = <String, int>{};
     var clipped = false;
     var deepestRow = 0;
     void visit(
@@ -194,6 +252,7 @@ class _TreePanelState extends State<TreePanel> {
         return;
       }
       deepestRow = math.max(deepestRow, depth);
+      indices[path] = rows.length;
       rows.add((
         node: node,
         label: label,
@@ -220,15 +279,33 @@ class _TreePanelState extends State<TreePanel> {
 
     var root = widget.snapshot.root!;
     SourceRange? rootKey;
-    final trail = [strings.rootNode];
+    var label = rootLabel;
     for (final step in _focus) {
       final child = root.children[step.index];
       root = child.value;
       rootKey = child.keyRange;
-      trail.add(child.key ?? '[${step.index}]');
+      label = child.key ?? '[${step.index}]';
     }
     final rootPath = _path(_focus);
-    visit(root, trail.last, rootPath, _focus, 0, rootKey);
+    visit(root, label, rootPath, _focus, 0, rootKey);
+    return (
+      rows: rows,
+      indices: indices,
+      deepestRow: deepestRow,
+      clipped: clipped,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final style = widget.style;
+    if (_rootLabel != strings.rootNode) {
+      _rootLabel = strings.rootNode;
+      _visibleRows = null;
+    }
+    final (:rows, :indices, :deepestRow, :clipped) = _visibleRows ??=
+        _buildRows(strings.rootNode);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final reading = ReadingStyle.of(context);
@@ -236,8 +313,11 @@ class _TreePanelState extends State<TreePanel> {
     final rowHeight = reading.rowHeight(minimum: style.rowHeight);
     final indent = math.max(style.indent, reading.scaledFontSize * .7);
     if (widget.reveal != null && widget.current && _selected != null) {
-      final index = rows.indexWhere((row) => row.path == _selected);
-      if (index < 0 && _pendingReveal && clipped && _revealSteps.isNotEmpty) {
+      final index = indices[_selected];
+      if (index == null &&
+          _pendingReveal &&
+          clipped &&
+          _revealSteps.isNotEmpty) {
         _pendingReveal = false;
         final sequence = widget.reveal!.sequence;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -245,11 +325,12 @@ class _TreePanelState extends State<TreePanel> {
           setState(() {
             _focus = _revealSteps;
             _expanded.remove(_selected);
+            _visibleRows = null;
             _pendingReveal = true;
           });
         });
       }
-      if (index >= 0 && _pendingReveal) {
+      if (index != null && _pendingReveal) {
         _pendingReveal = false;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !_vertical.hasClients || !_horizontal.hasClients) {
@@ -307,8 +388,10 @@ class _TreePanelState extends State<TreePanel> {
         );
       },
     );
-    final selectedSteps =
-        rows.where((row) => row.path == _selected).firstOrNull?.steps ?? _focus;
+    final selectedIndex = indices[_selected];
+    final selectedSteps = selectedIndex == null
+        ? _focus
+        : rows[selectedIndex].steps;
     var breadcrumbNode = widget.snapshot.root!;
     final crumbs = <({String label, SourceRange range, List<_Step> steps})>[
       (label: r'$', range: breadcrumbNode.range, steps: const []),

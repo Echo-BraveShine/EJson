@@ -231,12 +231,25 @@ class WorkspaceController extends Notifier<Workspace> {
     _apply(tab, SourcePatch.between(tab.text, text));
   }
 
-  void _apply(WorkspaceTab tab, SourcePatch patch, {bool record = true}) {
-    final document = tab.document.apply(
-      patch,
-      expectedRevision: tab.document.revision,
-    )!;
-    if (document.source.text == tab.text) return;
+  void editSourcePatch(int id, SourcePatch patch, String before, String after) {
+    final tab = state.tab(id);
+    if (tab == null || tab.large || tab.text != before) return;
+    _apply(tab, patch, editedText: after);
+  }
+
+  void _apply(
+    WorkspaceTab tab,
+    SourcePatch patch, {
+    bool record = true,
+    String? editedText,
+  }) {
+    if (patch.replacement.length == patch.range.end - patch.range.start &&
+        tab.text.startsWith(patch.replacement, patch.range.start)) {
+      return;
+    }
+    final document = tab.document.replaceSource(
+      editedText ?? patch.apply(tab.text),
+    );
     if (record) _history[tab.id]!.record(patch, tab.text);
     final updated = tab.withDocument(document);
     _update(updated);

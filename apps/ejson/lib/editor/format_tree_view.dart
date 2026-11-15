@@ -26,15 +26,26 @@ class FormatTreeView extends StatefulWidget {
   State<FormatTreeView> createState() => _FormatTreeViewState();
 }
 
+typedef _FormatRow = ({
+  FormatTreeNode node,
+  String path,
+  int depth,
+  List<bool> continuation,
+});
+
 class _FormatTreeViewState extends State<FormatTreeView> {
   final _expanded = <String>{'root'};
   final _vertical = ScrollController();
   final _horizontal = ScrollController();
   String? _selected;
+  ({List<_FormatRow> rows, int deepest})? _visibleRows;
   @override
   void didUpdateWidget(covariant FormatTreeView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.root != widget.root) _selected = null;
+    if (oldWidget.root != widget.root) {
+      _selected = null;
+      _visibleRows = null;
+    }
   }
 
   @override
@@ -44,21 +55,8 @@ class _FormatTreeViewState extends State<FormatTreeView> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppLocalizations.of(context);
-    final colors = Theme.of(context).colorScheme;
-    final reading = ReadingStyle.of(context);
-    final indent = math.max(widget.style.indent, reading.scaledFontSize * .7);
-    final rows =
-        <
-          ({
-            FormatTreeNode node,
-            String path,
-            int depth,
-            List<bool> continuation,
-          })
-        >[];
+  ({List<_FormatRow> rows, int deepest}) _buildRows() {
+    final rows = <_FormatRow>[];
     var deepest = 0;
     void visit(
       FormatTreeNode node,
@@ -83,6 +81,16 @@ class _FormatTreeViewState extends State<FormatTreeView> {
     }
 
     visit(widget.root, 'root', 0, []);
+    return (rows: rows, deepest: deepest);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final colors = Theme.of(context).colorScheme;
+    final reading = ReadingStyle.of(context);
+    final indent = math.max(widget.style.indent, reading.scaledFontSize * .7);
+    final (:rows, :deepest) = _visibleRows ??= _buildRows();
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = math.max(
@@ -190,6 +198,7 @@ class _FormatTreeViewState extends State<FormatTreeView> {
                                             if (!_expanded.remove(row.path)) {
                                               _expanded.add(row.path);
                                             }
+                                            _visibleRows = null;
                                           }),
                                         ),
                                 ),
