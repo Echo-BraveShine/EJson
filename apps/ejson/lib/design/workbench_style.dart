@@ -116,7 +116,7 @@ ButtonStyle workbenchDialogButtonStyle(
       ),
     ),
     textStyle: WidgetStatePropertyAll(
-      WorkbenchStyle.body.copyWith(
+      theme.textTheme.bodyMedium!.copyWith(
         fontWeight: primary ? FontWeight.w600 : FontWeight.w500,
       ),
     ),
@@ -181,16 +181,23 @@ ThemeData workbenchTheme(Brightness brightness) {
   final buttonShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
   );
+  final platform = defaultTargetPlatform;
+  final fontFamily = WorkbenchTypography.interfaceFamily(platform);
+  final fontFamilyFallback = WorkbenchTypography.interfaceFallback(platform);
+  // Component theme styles can replace the inherited text style entirely.
+  TextStyle interfaceStyle(TextStyle style) => style.copyWith(
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFamilyFallback,
+  );
+  final body = interfaceStyle(WorkbenchStyle.body);
   return ThemeData(
     colorScheme: colors,
-    fontFamily: WorkbenchTypography.interfaceFamily(defaultTargetPlatform),
-    fontFamilyFallback: WorkbenchTypography.interfaceFallback(
-      defaultTargetPlatform,
-    ),
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFamilyFallback,
     scaffoldBackgroundColor: dark
         ? const Color(0xff2b2b2d)
         : const Color(0xffefeff1),
-    typography: Typography.material2021(platform: defaultTargetPlatform),
+    typography: Typography.material2021(platform: platform),
     textTheme: const TextTheme(
       titleLarge: WorkbenchStyle.dialogTitle,
       titleMedium: WorkbenchStyle.heading,
@@ -247,7 +254,7 @@ ThemeData workbenchTheme(Brightness brightness) {
         shape: buttonShape,
         minimumSize: const Size(56, 28),
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        textStyle: WorkbenchStyle.body.copyWith(fontWeight: FontWeight.w500),
+        textStyle: body.copyWith(fontWeight: FontWeight.w500),
       ).copyWith(overlayColor: workbenchInteractionOverlay(colors.onSurface)),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -256,9 +263,7 @@ ThemeData workbenchTheme(Brightness brightness) {
             shape: buttonShape,
             minimumSize: const Size(68, 28),
             padding: const EdgeInsets.symmetric(horizontal: 14),
-            textStyle: WorkbenchStyle.body.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            textStyle: body.copyWith(fontWeight: FontWeight.w600),
           ).copyWith(
             overlayColor: workbenchInteractionOverlay(colors.onPrimary),
             elevation: const WidgetStatePropertyAll(0),
@@ -276,7 +281,7 @@ ThemeData workbenchTheme(Brightness brightness) {
         borderRadius: BorderRadius.circular(WorkbenchStyle.groupRadius),
         side: BorderSide(color: colors.outlineVariant),
       ),
-      textStyle: WorkbenchStyle.body.copyWith(color: colors.onSurface),
+      textStyle: body.copyWith(color: colors.onSurface),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: colors.surfaceContainerLow,
@@ -288,12 +293,10 @@ ThemeData workbenchTheme(Brightness brightness) {
         borderRadius: BorderRadius.circular(WorkbenchStyle.dialogRadius),
         side: BorderSide(color: colors.outlineVariant),
       ),
-      titleTextStyle: WorkbenchStyle.dialogTitle.copyWith(
-        color: colors.onSurface,
-      ),
-      contentTextStyle: WorkbenchStyle.body.copyWith(
-        color: colors.onSurfaceVariant,
-      ),
+      titleTextStyle: interfaceStyle(
+        WorkbenchStyle.dialogTitle,
+      ).copyWith(color: colors.onSurface),
+      contentTextStyle: body.copyWith(color: colors.onSurfaceVariant),
       actionsPadding: const EdgeInsets.fromLTRB(
         WorkbenchStyle.space20,
         0,
