@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:ejson_core/ejson_core.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/languages/json.dart';
@@ -9,6 +12,7 @@ import 'package:re_highlight/re_highlight.dart';
 
 import '../design/reading_style.dart';
 import 'json_highlight.dart';
+import 'source_chunk_analyzer.dart';
 
 final _csvMode = Mode(
   name: 'CSV',
@@ -17,6 +21,12 @@ final _csvMode = Mode(
     Mode(scope: 'punctuation', match: r'[,;\t]'),
   ],
 );
+
+/// A tab's folded view for the exact source it was built from.
+class SourceFolds {
+  String? _source;
+  CodeLines? _lines;
+}
 
 class EJsonCodeEditor extends StatefulWidget {
   const EJsonCodeEditor({
@@ -32,6 +42,7 @@ class EJsonCodeEditor extends StatefulWidget {
     this.useWorkspaceShortcuts = true,
     this.format = DocumentFormat.json,
     this.preserveViewOnUpdate = false,
+    this.folds,
   }) : assert((onChanged == null) != (onPatch == null));
 
   final String source;
@@ -44,6 +55,7 @@ class EJsonCodeEditor extends StatefulWidget {
   final bool focusOnJump;
   final bool preserveViewOnUpdate;
   final LineIndex? sourceLineIndex;
+  final SourceFolds? folds;
   final ({SourceRange range, int sequence})? jump;
 
   @override
@@ -61,6 +73,7 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
   final _focus = FocusNode();
   final _scroll = CodeScrollController();
   CodeIndicatorValueNotifier? _indicator;
+  CodeChunkController? _chunks;
 
   String _normalize(String text) => text.replaceAll(_newline, '\n');
 
@@ -79,11 +92,17 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     super.initState();
     _setSource(widget.source);
     _display = _hasCarriageReturns ? _normalize(_source) : _source;
-    _controller = CodeLineEditingController.fromText(
-      _display,
-      const CodeLineOptions(indentSize: 2),
+    final folds = widget.folds;
+    final savedLines = folds?._source == _source ? folds?._lines : null;
+    _controller = _FoldAwareController(
+      delegate: CodeLineEditingController(
+        codeLines: savedLines ?? CodeLines.fromText(_display),
+        options: const CodeLineOptions(indentSize: 2),
+      ),
+      revealEnd: () => _unfoldAt(_controller.codeLines.lineCount - 1),
     );
     _lines = _controller.codeLines;
+    _rememberFolds();
     _controller.addListener(_edited);
     _scheduleJump();
   }
@@ -91,11 +110,25 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
   @override
   void didUpdateWidget(covariant EJsonCodeEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.folds != null &&
+        widget.folds == null &&
+        _lines.lineCount != _lines.length) {
+      final selection = _controller.selection;
+      _controller.removeListener(_edited);
+      _controller.value = _controller.value.copyWith(
+        codeLines: CodeLines.fromText(_display),
+        selection: selection.copyWith(
+          baseIndex: _controller.index2lineIndex(selection.baseIndex),
+          extentIndex: _controller.index2lineIndex(selection.extentIndex),
+        ),
+      );
+      _lines = _controller.codeLines;
+      _controller.addListener(_edited);
+    }
     if (widget.source != _source) {
       _setSource(widget.source);
       final display = _hasCarriageReturns ? _normalize(_source) : _source;
       if (display != _display) {
-        final selection = _controller.selection;
         final vertical = _scroll.verticalScroller.hasClients
             ? _scroll.verticalScroller.offset
             : null;
@@ -104,10 +137,15 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
             : null;
         final change = SourcePatch.between(_display, display);
         final lines = LineIndex(_display);
+        _controller.removeListener(_edited);
+        _unfoldAt(lines.position(change.range.start).line - 1, header: true);
+        _unfoldAt(lines.position(change.range.end).line - 1, header: true);
         final start = _position(change.range.start, lines);
         final end = _position(change.range.end, lines);
+        final selection = _controller.selection;
+        final rawBase = _controller.index2lineIndex(selection.baseIndex);
+        final rawExtent = _controller.index2lineIndex(selection.extentIndex);
         _display = display;
-        _controller.removeListener(_edited);
         _controller.replaceSelection(
           change.replacement,
           _selection(start, end),
@@ -117,8 +155,12 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         }
         if (widget.preserveViewOnUpdate) {
           final lines = _controller.codeLines;
-          final base = selection.baseIndex.clamp(0, lines.length - 1);
-          final extent = selection.extentIndex.clamp(0, lines.length - 1);
+          final base = _controller
+              .lineIndex2Index(rawBase.clamp(0, lines.lineCount - 1))
+              .index;
+          final extent = _controller
+              .lineIndex2Index(rawExtent.clamp(0, lines.lineCount - 1))
+              .index;
           _controller.selection = CodeLineSelection(
             baseIndex: base,
             baseOffset: selection.baseOffset.clamp(0, lines[base].length),
@@ -148,6 +190,7 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
           });
         }
         _lines = _controller.codeLines;
+        _rememberFolds();
         _controller.addListener(_edited);
       }
     }
@@ -160,12 +203,25 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || widget.jump != jump) return;
       final lines = _sourceIndex;
+      final unfoldedStart = _unfoldAt(
+        lines.position(jump.range.start).line - 1,
+      );
+      final unfoldedEnd = _unfoldAt(lines.position(jump.range.end).line - 1);
       final start = _position(jump.range.start, lines);
       final end = _position(jump.range.end, lines);
       _controller.selection = _selection(start, end);
       if (widget.focusOnJump) _focus.requestFocus();
-      _skipIntermediateLines(start);
-      _scroll.makeCenterIfInvisible(start);
+      void reveal() {
+        if (!mounted || widget.jump != jump) return;
+        _skipIntermediateLines(start);
+        _scroll.makeCenterIfInvisible(start);
+      }
+
+      if (unfoldedStart || unfoldedEnd) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => reveal());
+      } else {
+        reveal();
+      }
     });
   }
 
@@ -200,6 +256,7 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     final display = _controller.text;
     final change = SourcePatch.between(_display, display);
     if (change.range.start == change.range.end && change.replacement.isEmpty) {
+      _rememberFolds();
       return;
     }
     final patch = _hasCarriageReturns ? _originalPatch(change) : change;
@@ -207,8 +264,36 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     _source = _hasCarriageReturns ? patch.apply(before) : display;
     _sourceLines = null;
     _display = display;
+    _rememberFolds();
     widget.onPatch?.call(patch, before, _source);
     widget.onChanged?.call(_source);
+  }
+
+  void _rememberFolds() {
+    final folds = widget.folds;
+    if (folds == null) return;
+    final folded = _lines.lineCount != _lines.length;
+    folds._source = folded ? _source : null;
+    folds._lines = folded ? _lines : null;
+  }
+
+  bool _unfoldAt(int rawLine, {bool header = false}) {
+    if (widget.folds == null) return false;
+    var unfolded = false;
+    var location = _controller.lineIndex2Index(rawLine);
+    while (location.index >= 0 &&
+        (location.chunkIndex >= 0 ||
+            (header && _controller.codeLines[location.index].chunkParent))) {
+      final chunks = _chunks;
+      if (chunks == null) {
+        _controller.expandChunk(location.index);
+      } else {
+        chunks.expand(location.index);
+      }
+      unfolded = true;
+      location = _controller.lineIndex2Index(rawLine);
+    }
+    return unfolded;
   }
 
   SourcePatch _originalPatch(SourcePatch change) {
@@ -230,7 +315,12 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
 
   CodeLinePosition _position(int offset, LineIndex lines) {
     final point = lines.position(offset);
-    return CodeLinePosition(index: point.line - 1, offset: point.column - 1);
+    return CodeLinePosition(
+      index: widget.folds == null
+          ? point.line - 1
+          : _controller.lineIndex2Index(point.line - 1).index,
+      offset: point.column - 1,
+    );
   }
 
   CodeLineSelection _selection(CodeLinePosition start, CodeLinePosition end) =>
@@ -288,6 +378,26 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
           : null,
       readOnly: widget.readOnly,
       wordWrap: false,
+      chunkAnalyzer: widget.folds == null
+          ? const NonCodeChunkAnalyzer()
+          : switch (widget.format) {
+              DocumentFormat.json => const DefaultCodeChunkAnalyzer(),
+              DocumentFormat.yaml => const SourceChunkAnalyzer(
+                DocumentFormat.yaml,
+              ),
+              DocumentFormat.xml => const SourceChunkAnalyzer(
+                DocumentFormat.xml,
+              ),
+              DocumentFormat.toml => const SourceChunkAnalyzer(
+                DocumentFormat.toml,
+              ),
+              DocumentFormat.csv => const SourceChunkAnalyzer(
+                DocumentFormat.csv,
+              ),
+              DocumentFormat.jsonLines => const SourceChunkAnalyzer(
+                DocumentFormat.jsonLines,
+              ),
+            },
       padding: const EdgeInsets.fromLTRB(13, 10, 14, 10),
       style: CodeEditorStyle(
         backgroundColor: background,
@@ -320,17 +430,70 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
               ),
       ),
       leadingDivider: VerticalDivider(width: 1, color: divider),
-      indicatorBuilder: (context, controller, _, notifier) {
+      indicatorBuilder: (context, controller, chunks, notifier) {
         _indicator = notifier;
-        return DefaultCodeLineNumber(
+        _chunks = chunks;
+        final numbers = DefaultCodeLineNumber(
           controller: controller,
           notifier: notifier,
           textStyle: code.copyWith(color: muted),
           focusedTextStyle: code.copyWith(color: accent),
         );
+        if (widget.folds == null) return numbers;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            numbers,
+            DefaultCodeChunkIndicator(
+              width: 18,
+              controller: chunks,
+              notifier: notifier,
+              painter: _SourceFoldChevron(muted),
+            ),
+          ],
+        );
       },
     );
   }
+}
+
+class _SourceFoldChevron implements CodeChunkIndicatorPainter {
+  _SourceFoldChevron(this.color);
+
+  final Color color;
+  late final _down = _glyph(CupertinoIcons.chevron_down);
+  late final _right = _glyph(CupertinoIcons.chevron_right);
+
+  ui.Paragraph _glyph(IconData icon) {
+    final family = icon.fontPackage == null
+        ? icon.fontFamily
+        : 'packages/${icon.fontPackage}/${icon.fontFamily}';
+    return (ui.ParagraphBuilder(ui.ParagraphStyle())
+          ..pushStyle(
+            ui.TextStyle(color: color, fontFamily: family, fontSize: 12),
+          )
+          ..addText(String.fromCharCode(icon.codePoint)))
+        .build()
+      ..layout(const ui.ParagraphConstraints(width: 12));
+  }
+
+  void _paint(Canvas canvas, Size container, ui.Paragraph glyph) {
+    canvas.drawParagraph(
+      glyph,
+      Offset(
+        (container.width - glyph.width) / 2,
+        (container.height - glyph.height) / 2,
+      ),
+    );
+  }
+
+  @override
+  void paintCollapseIndicator(Canvas canvas, Size container) =>
+      _paint(canvas, container, _down);
+
+  @override
+  void paintExpandIndicator(Canvas canvas, Size container) =>
+      _paint(canvas, container, _right);
 }
 
 // Workspace shortcuts own the history for both editing surfaces.
@@ -345,4 +508,18 @@ class _EditorShortcuts extends DefaultCodeShortcutsActivatorsBuilder {
     CodeShortcutType.save => null,
     _ => super.build(type),
   };
+}
+
+class _FoldAwareController extends CodeLineEditingControllerDelegate {
+  _FoldAwareController({required super.delegate, required this.revealEnd});
+
+  final VoidCallback revealEnd;
+
+  @override
+  void selectAll() {
+    // The native selection uses visible endpoints. If EOF is hidden, reveal
+    // it before copying or replacing the entire document.
+    if (codeLines.last.chunkParent) revealEnd();
+    super.selectAll();
+  }
 }

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../design/workbench_style.dart';
@@ -32,6 +33,7 @@ import '../editor/tree_style.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/workspace_messages.dart';
 import '../settings/settings_panel.dart';
+import '../settings/release_updates.dart';
 import '../settings/tool_preferences.dart';
 import '../editor/array_sort_dialog.dart';
 import '../editor/schema_dialog.dart';
@@ -66,6 +68,10 @@ part 'workbench_panes.dart';
 part 'workbench_format_panes.dart';
 part 'workbench_sync.dart';
 part 'workbench_node_dialogs.dart';
+
+final startupUpdateCheckProvider = Provider<Future<UpdateResult> Function()?>(
+  (ref) => null,
+);
 
 typedef _FileOpenRequest = ({String path, String? bookmark, bool asCopy});
 
@@ -155,6 +161,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
   bool _findOpen = false;
   bool _searchJump = false;
   final _findFocus = FocusNode();
+  final _sourceFolds = <int, SourceFolds>{};
   final _newDocumentMenu = GlobalKey<PopupMenuButtonState<DocumentFormat>>();
   double _split = 0.61;
   StreamSubscription<List<RecentFile>>? _externalSubscription;
@@ -164,6 +171,12 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
   @override
   void initState() {
     super.initState();
+    final checkForUpdate = ref.read(startupUpdateCheckProvider);
+    if (checkForUpdate != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_checkStartupUpdate(checkForUpdate));
+      });
+    }
     ref.read(workspaceAutosaveProvider);
     ref.read(diskSyncProvider);
     if (widget.recoveryUnavailable) {
@@ -202,6 +215,46 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
                 : AppExitResponse.cancel,
           )
         : null;
+  }
+
+  Future<void> _checkStartupUpdate(
+    Future<UpdateResult> Function() checkForUpdate,
+  ) async {
+    final UpdateResult result;
+    try {
+      result = await checkForUpdate();
+    } on Exception {
+      // Startup remains quiet if the release server is unavailable.
+      return;
+    }
+    final latest = result.latest;
+    if (!mounted || result.status != UpdateStatus.available || latest == null) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(strings.updateAvailable(latest.toString())),
+        duration: const Duration(seconds: 12),
+        action: SnackBarAction(
+          label: strings.downloadRelease,
+          onPressed: () => unawaited(_openUpdateRelease()),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openUpdateRelease() async {
+    try {
+      if (await launchUrl(
+        latestReleasePage,
+        mode: LaunchMode.externalApplication,
+      )) {
+        return;
+      }
+    } on Exception {
+      // Some desktop environments have no registered browser.
+    }
+    if (mounted) _message(strings.browserFailed);
   }
 
   @override
@@ -266,6 +319,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
   Widget build(BuildContext context) {
     _syncNativeAppearance();
     final model = ref.watch(workspaceProvider);
+    _sourceFolds.removeWhere((id, _) => model.tab(id) == null);
     final tab = model.active;
     final doc = tab.document;
     final colors = Theme.of(context).colorScheme;

@@ -2,11 +2,16 @@ part of 'workbench.dart';
 
 extension _WorkbenchPanes on _WorkbenchState {
   Widget _sourceEditor(WorkspaceTab tab) {
+    final folding = ref.watch(
+      toolPreferencesProvider.select((value) => value.sourceFolding),
+    );
+    if (!folding) _sourceFolds.clear();
     final jump =
         _jump?.tabId == tab.id && _jump?.revision == tab.document.revision
         ? (range: _jump!.range, sequence: _jump!.sequence)
         : null;
     if (tab.large) {
+      _sourceFolds.remove(tab.id);
       return LargeSourceView(
         key: ValueKey(tab.id),
         source: tab.text,
@@ -29,6 +34,7 @@ extension _WorkbenchPanes on _WorkbenchState {
       focusOnJump: !_searchJump,
       readOnly: false,
       preserveViewOnUpdate: true,
+      folds: folding ? _sourceFolds.putIfAbsent(tab.id, SourceFolds.new) : null,
     );
   }
 

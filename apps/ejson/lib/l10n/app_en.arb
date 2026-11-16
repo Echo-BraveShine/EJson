@@ -523,5 +523,6 @@
   "jsonLinesCount": "{shown} / {total} records · {invalid} invalid",
   "jsonLinesConversionNotice": "Each line contains one JSON value. Blank lines are invalid. JSON Lines becomes a JSON array. A JSON array exports one item per line, while other JSON values export as one record.",
   "@jsonLinesCount": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}, "invalid": {"type": "int"}}},
+  "sourceFolding": "Source folding",
   "treeConnectors": "Dashed tree connectors"
 }

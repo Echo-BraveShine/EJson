@@ -1229,5 +1229,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each line contains one JSON value. Blank lines are invalid. JSON Lines becomes a JSON array. A JSON array exports one item per line, while other JSON values export as one record.';
 
   @override
+  String get sourceFolding => 'Source folding';
+
+  @override
   String get treeConnectors => 'Dashed tree connectors';
 }

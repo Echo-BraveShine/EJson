@@ -13,6 +13,7 @@ class ToolPreferences {
     this.autosave = true,
     this.syncDiskFiles = true,
     this.treeConnectors = true,
+    this.sourceFolding = true,
   });
 
   factory ToolPreferences.fromJson(Object? value) {
@@ -47,6 +48,7 @@ class ToolPreferences {
       }
     }
     return ToolPreferences(
+      sourceFolding: value['sourceFolding'] != false,
       treeConnectors: value['treeConnectors'] is bool
           ? value['treeConnectors'] as bool
           : true,
@@ -71,6 +73,7 @@ class ToolPreferences {
   final bool autosave;
   final bool syncDiskFiles;
   final bool treeConnectors;
+  final bool sourceFolding;
 
   ToolPreferences copyWith({
     JsonFormatOptions? format,
@@ -80,6 +83,7 @@ class ToolPreferences {
     bool? autosave,
     bool? syncDiskFiles,
     bool? treeConnectors,
+    bool? sourceFolding,
   }) => ToolPreferences(
     format: format ?? this.format,
     reading: reading ?? this.reading,
@@ -88,12 +92,14 @@ class ToolPreferences {
     autosave: autosave ?? this.autosave,
     syncDiskFiles: syncDiskFiles ?? this.syncDiskFiles,
     treeConnectors: treeConnectors ?? this.treeConnectors,
+    sourceFolding: sourceFolding ?? this.sourceFolding,
   );
 
   Map<String, Object> toJson() => {
     'autosave': autosave,
     'syncDiskFiles': syncDiskFiles,
     'treeConnectors': treeConnectors,
+    'sourceFolding': sourceFolding,
     'indentation': format.indentation.name,
     'lineEnding': format.lineEnding.name,
     'queries': queries,
@@ -149,6 +155,9 @@ class ToolPreferencesController extends Notifier<ToolPreferences> {
 
   Future<bool> setTreeConnectors(bool enabled) =>
       _update((current) => current.copyWith(treeConnectors: enabled));
+
+  Future<bool> setSourceFolding(bool enabled) =>
+      _update((current) => current.copyWith(sourceFolding: enabled));
 
   Future<bool> setReading(ReadingPreferences reading) =>
       _update((current) => current.copyWith(reading: reading));

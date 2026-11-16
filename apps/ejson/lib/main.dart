@@ -15,6 +15,7 @@ import 'editor/tree_style.dart';
 import 'l10n/app_localizations.dart';
 import 'settings/tool_preferences.dart';
 import 'settings/installed_fonts.dart';
+import 'settings/release_updates.dart';
 import 'design/reading_style.dart';
 import 'workspace/workbench.dart';
 import 'workspace/workspace.dart';
@@ -131,6 +132,9 @@ Future<void> main(List<String> arguments) async {
   runApp(
     ProviderScope(
       overrides: [
+        startupUpdateCheckProvider.overrideWithValue(
+          () async => checkForUpdate(await installedVersion()),
+        ),
         externalFileOpensProvider.overrideWithValue(externalFiles),
         initialToolPreferencesProvider.overrideWithValue(toolPreferences),
         workspaceRecoveryProvider.overrideWithValue(recovery),

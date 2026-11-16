@@ -93,6 +93,24 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
     }
   }
 
+  bool _savingSourceFolding = false;
+
+  Future<void> _setSourceFolding(bool enabled) async {
+    setState(() => _savingSourceFolding = true);
+    final saved = await ref
+        .read(toolPreferencesProvider.notifier)
+        .setSourceFolding(enabled);
+    if (!mounted) return;
+    setState(() => _savingSourceFolding = false);
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).workspacePreferenceFailed),
+        ),
+      );
+    }
+  }
+
   Future<void> _setDiskSync(bool enabled) async {
     setState(() => _savingDiskSyncPreference = true);
     final saved = await ref

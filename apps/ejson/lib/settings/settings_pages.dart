@@ -161,6 +161,19 @@ extension _SettingsPages on _SettingsPanelState {
                 ),
               ),
             ),
+            const Divider(height: 1),
+            _SettingsRow(
+              label: strings.sourceFolding,
+              icon: CupertinoIcons.chevron_down,
+              child: Semantics(
+                label: strings.sourceFolding,
+                child: CupertinoSwitch(
+                  value: ref.watch(toolPreferencesProvider).sourceFolding,
+                  activeTrackColor: colors.primary,
+                  onChanged: _savingSourceFolding ? null : _setSourceFolding,
+                ),
+              ),
+            ),
           ],
         ),
         _SettingsCard(children: [_appearancePreview()]),

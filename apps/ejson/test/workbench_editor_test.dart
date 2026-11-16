@@ -1,8 +1,10 @@
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:ejson/editor/code_editor.dart';
+import 'package:ejson/editor/document_find.dart';
 import 'package:ejson/editor/tree_panel.dart';
 import 'package:ejson/main.dart';
+import 'package:ejson/settings/tool_preferences.dart';
 import 'package:ejson/workspace/workspace.dart';
 import 'package:ejson_core/ejson_core.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,128 @@ import 'package:re_editor/re_editor.dart';
 import 'support/workbench_test_harness.dart';
 
 void main() {
+  testWidgets(
+    'JSON folds survive tab switches and reveal only the target',
+    (tester) async {
+      const source =
+          '{\r\n'
+          '  "first": [\r\n'
+          '    {\r\n'
+          '      "target": 42\r\n'
+          '    }\r\n'
+          '  ],\r\n'
+          '  "second": [\r\n'
+          '    "keep"\r\n'
+          '  ],\r\n'
+          '  "after": true\r\n'
+          '}';
+      final container = ProviderContainer(
+        overrides: [
+          parseDocumentProvider.overrideWithValue(
+            (source, revision) async => parseJson(source, revision: revision),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const EJsonApp(),
+        ),
+      );
+      final workspace = container.read(workspaceProvider.notifier);
+      workspace.newTabWithSource(source);
+      await settleDocumentEdits(tester);
+      final id = container.read(workspaceProvider).activeId;
+      CodeLineEditingController editor() =>
+          tester.widget<CodeEditor>(find.byType(CodeEditor)).controller!;
+      CodeChunkController chunks() => tester
+          .widget<DefaultCodeChunkIndicator>(
+            find.byType(DefaultCodeChunkIndicator),
+          )
+          .controller;
+      for (var i = 0; i < 100 && !chunks().canCollapse(2); i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
+      }
+      expect(chunks().canCollapse(2), isTrue);
+      final gutter = find.byType(DefaultCodeChunkIndicator);
+      final indicator = tester.widget<DefaultCodeChunkIndicator>(gutter);
+      final row = indicator.notifier.value!.paragraphs.singleWhere(
+        (paragraph) => paragraph.index == 6,
+      );
+      final gutterRect = tester.getRect(gutter);
+      await tester.tapAt(
+        Offset(gutterRect.center.dx, gutterRect.top + row.top + row.height / 2),
+      );
+      chunks().collapse(2);
+      chunks().collapse(1);
+      await tester.pump();
+      expect(editor().lineIndex2Index(3).chunkIndex, isNonNegative);
+      expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
+      expect(container.read(workspaceProvider).active.text, source);
+      expect(workspace.canUndo(id), isFalse);
+      editor().selectAll();
+      expect(editor().selectedText, source.replaceAll('\r\n', '\n'));
+
+      workspace.newTab();
+      await tester.pump();
+      workspace.activate(id);
+      await settleDocumentEdits(tester);
+      expect(editor().lineIndex2Index(3).chunkIndex, isNonNegative);
+      expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
+
+      await tester.tap(find.byKey(const ValueKey('expand:root/0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('expand:root/0/0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('target'));
+      await tester.pumpAndSettle();
+      expect(editor().selectedText, '42');
+      expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
+
+      workspace.editSource(id, source.replaceFirst('true', 'false'));
+      await settleDocumentEdits(tester);
+      expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
+      expect(editor().text, contains('"keep"'));
+      workspace.undo(id);
+      await settleDocumentEdits(tester);
+      expect(container.read(workspaceProvider).active.text, source);
+      expect(editor().text, source.replaceAll('\r\n', '\n'));
+      await tester.tap(find.byTooltip('Find in document'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find
+            .descendant(
+              of: find.byType(DocumentFind),
+              matching: find.byType(TextField),
+            )
+            .first,
+        'keep',
+      );
+      await tester.pumpAndSettle();
+      expect(editor().selectedText, 'keep');
+      expect(editor().lineIndex2Index(7).chunkIndex, -1);
+
+      editor().collapseChunk(6, 8);
+      await tester.pump();
+      expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
+      final preferences = container.read(toolPreferencesProvider.notifier);
+      expect(await preferences.setSourceFolding(false), isTrue);
+      await tester.pumpAndSettle();
+      expect(find.byType(DefaultCodeChunkIndicator), findsNothing);
+      expect(editor().lineIndex2Index(7).chunkIndex, -1);
+      expect(container.read(workspaceProvider).active.text, source);
+      expect(await preferences.setSourceFolding(true), isTrue);
+      await tester.pumpAndSettle();
+      expect(find.byType(DefaultCodeChunkIndicator), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant({TargetPlatform.linux}),
+  );
+
   testWidgets('mouse click reveals immediately and double click still edits', (
     tester,
   ) async {

@@ -447,5 +447,6 @@
   "jsonLinesCount": "{shown} / {total} 条记录 · {invalid} 条无效",
   "jsonLinesConversionNotice": "每行包含一个 JSON 值，空白行会标记为无效。JSON Lines 转换为 JSON 数组，JSON 数组按元素逐行导出，其他 JSON 值导出为一条记录。",
   "@jsonLinesCount": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}, "invalid": {"type": "int"}}},
+  "sourceFolding": "源码折叠",
   "treeConnectors": "树状层级虚线"
 }

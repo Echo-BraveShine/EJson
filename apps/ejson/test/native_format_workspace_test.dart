@@ -79,42 +79,52 @@ void main() {
       selected: '<item id="001">中文 &amp; text</item>',
     ),
   }.entries) {
-    testWidgets(
-      '${entry.key.label} tree selection reveals the matching source range',
-      (tester) async {
-        await tester.binding.setSurfaceSize(const Size(1120, 740));
-        addTearDown(() => tester.binding.setSurfaceSize(null));
-        final container = ProviderContainer(
-          overrides: [installedFontsProvider.overrideWith((ref) async => [])],
-        );
-        addTearDown(container.dispose);
-        await tester.pumpWidget(
-          UncontrolledProviderScope(
-            container: container,
-            child: const EJsonApp(initialLanguage: 'en'),
-          ),
-        );
-        await tester.pumpAndSettle();
-        container
-            .read(workspaceProvider.notifier)
-            .newTabWithSource(entry.value.source, format: entry.key);
-        await tester.pump(const Duration(milliseconds: 250));
-        await waitForConversion(tester, find.text('Valid ${entry.key.label}'));
-        expect(find.byType(FormatTreeView), findsOneWidget);
+    testWidgets('${entry.key.label} tree selection reveals folded source', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1120, 740));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final container = ProviderContainer(
+        overrides: [installedFontsProvider.overrideWith((ref) async => [])],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const EJsonApp(initialLanguage: 'en'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      container
+          .read(workspaceProvider.notifier)
+          .newTabWithSource(entry.value.source, format: entry.key);
+      await tester.pump(const Duration(milliseconds: 250));
+      await waitForConversion(tester, find.text('Valid ${entry.key.label}'));
+      expect(find.byType(FormatTreeView), findsOneWidget);
 
-        await tester.tap(
-          find.byKey(ValueKey('format-row:${entry.value.path}')),
+      final gutter = find.byType(DefaultCodeChunkIndicator);
+      CodeChunkController chunks() =>
+          tester.widget<DefaultCodeChunkIndicator>(gutter).controller;
+      for (var i = 0; i < 100 && !chunks().canCollapse(0); i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
         );
-        await tester.pumpAndSettle();
+        await tester.pump();
+      }
+      expect(chunks().canCollapse(0), isTrue);
+      chunks().collapse(0);
+      await tester.pump();
 
-        final editor = tester.widget<CodeEditor>(find.byType(CodeEditor));
-        expect(editor.controller!.selectedText, entry.value.selected);
-        expect(
-          tester.widget<EJsonCodeEditor>(find.byType(EJsonCodeEditor)).jump,
-          isNotNull,
-        );
-        expect(tester.takeException(), isNull);
-      },
-    );
+      await tester.tap(find.byKey(ValueKey('format-row:${entry.value.path}')));
+      await tester.pumpAndSettle();
+
+      final editor = tester.widget<CodeEditor>(find.byType(CodeEditor));
+      expect(editor.controller!.selectedText, entry.value.selected);
+      expect(
+        tester.widget<EJsonCodeEditor>(find.byType(EJsonCodeEditor)).jump,
+        isNotNull,
+      );
+      expect(tester.takeException(), isNull);
+    });
   }
 }

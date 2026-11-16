@@ -4,12 +4,15 @@ import 'package:toml/toml.dart';
 import 'format_structure.dart';
 
 /// Indexes validated TOML without searching for repeated keys or value text.
-Map<String, TextRange> tomlSourceRanges(String source) =>
-    _TomlSourceIndexer(source).read();
+Map<String, TextRange> tomlSourceRanges(
+  String source, {
+  List<TextRange>? folds,
+}) => _TomlSourceIndexer(source, folds).read();
 
 class _TomlSourceIndexer {
-  _TomlSourceIndexer(this.source);
+  _TomlSourceIndexer(this.source, this.folds);
   final String source;
+  final List<TextRange>? folds;
   final ranges = <String, TextRange>{};
   final latestTables = <String, int>{};
   var position = 0;
@@ -52,10 +55,16 @@ class _TomlSourceIndexer {
 
   Map<String, TextRange> read() {
     var table = <Object>[];
+    int? sectionStart;
+    var sectionEnd = 0;
     skipTrivia();
     while (position < source.length) {
       if (source[position] == '[') {
         final start = position;
+        if (sectionStart != null) {
+          folds?.add((start: sectionStart, end: sectionEnd));
+        }
+        sectionStart = start;
         final header = parse(TomlTable.parser);
         final path = <Object>[];
         for (var i = 0; i < header.name.parts.length; i++) {
@@ -71,7 +80,11 @@ class _TomlSourceIndexer {
       } else {
         readPair(table);
       }
+      sectionEnd = position;
       skipTrivia();
+    }
+    if (sectionStart != null) {
+      folds?.add((start: sectionStart, end: sectionEnd));
     }
     ranges[jsonEncode(<Object>[])] = (start: 0, end: source.length);
     return ranges;
@@ -117,6 +130,9 @@ class _TomlSourceIndexer {
       position++;
     } else {
       parse(TomlValue.parser);
+    }
+    if (char == '[' || char == '"' || char == "'") {
+      folds?.add((start: start, end: position));
     }
     record(path, (start: start, end: position));
   }
