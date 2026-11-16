@@ -47,7 +47,14 @@
   "english": "English",
   "simplifiedChinese": "简体中文",
   "newTab": "New tab",
+  "closeTabMenu": "Close Tab",
   "closeTab": "Close {name}",
+  "revealInFolder": "Show in Folder",
+  "revealInFinder": "Show in Finder",
+  "revealFileMissing": "The file no longer exists. Its original folder was opened.",
+  "revealFolderMissing": "The folder containing the file could not be found.",
+  "revealFolderFailed": "Could not open the file manager.",
+  "copyFilePath": "Copy File Path",
   "@closeTab": {
     "placeholders": {
       "name": {

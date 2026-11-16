@@ -1,5 +1,7 @@
 part of 'workbench.dart';
 
+enum _TabMenuAction { reveal, close }
+
 extension _WorkbenchNavigation on _WorkbenchState {
   Widget _tool(String label, IconData icon, VoidCallback? action) => IconButton(
     tooltip: label,
@@ -227,98 +229,267 @@ extension _WorkbenchNavigation on _WorkbenchState {
     );
   }
 
+  Future<void> _showTabMenu(int id, Offset anchor) async {
+    final model = workspace;
+    final tab = model.tab(id);
+    if (tab == null) return;
+    final path = tab.file?.path;
+    final canClose = model.canClose(tab);
+    if (path == null && !canClose) return;
+    final overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final point = overlay.globalToLocal(anchor);
+    final label = Platform.isMacOS
+        ? strings.revealInFinder
+        : strings.revealInFolder;
+    final action = await showMenu<_TabMenuAction>(
+      context: context,
+      position: RelativeRect.fromSize(
+        Rect.fromPoints(point, point),
+        overlay.size,
+      ),
+      items: [
+        if (path != null)
+          WorkbenchMenuItem(
+            value: _TabMenuAction.reveal,
+            label: label,
+            icon: CupertinoIcons.folder,
+          ),
+        if (canClose)
+          WorkbenchMenuItem(
+            value: _TabMenuAction.close,
+            label: strings.closeTabMenu,
+            icon: CupertinoIcons.xmark,
+            enabled: !_fileBusy,
+          ),
+      ],
+    );
+    if (action == null || !mounted) return;
+    if (action == _TabMenuAction.close) {
+      await _close(id);
+      return;
+    }
+    if (path == null) return;
+    final result = await ref.read(revealFileProvider)(path);
+    if (!mounted) return;
+    switch (result) {
+      case RevealFileResult.opened:
+        break;
+      case RevealFileResult.openedOriginalFolder:
+        _message(strings.revealFileMissing);
+      case RevealFileResult.folderMissing:
+        _message(strings.revealFolderMissing);
+      case RevealFileResult.failed:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(strings.revealFolderFailed),
+            action: SnackBarAction(
+              label: strings.copyFilePath,
+              onPressed: () =>
+                  unawaited(Clipboard.setData(ClipboardData(text: path))),
+            ),
+          ),
+        );
+    }
+  }
+
+  void _chooseNewDocumentFormat() {
+    if (ModalRoute.of(context)?.isCurrent ?? true) {
+      _newDocumentMenu.currentState?.showButtonMenu();
+    }
+  }
+
   Widget _tabs(Workspace model) {
-    final colors = Theme.of(context).colorScheme;
     return SizedBox(
       height: 39,
-      child: ListView.separated(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(9, 5, 9, 5),
         scrollDirection: Axis.horizontal,
-        itemCount: model.tabs.length + 1,
-        findItemIndexCallback: (key) {
-          if (key is! ValueKey<int>) return null;
-          final index = model.tabs.indexWhere((tab) => tab.id == key.value);
-          return index < 0 ? null : index;
-        },
-        separatorBuilder: (_, _) => const SizedBox(width: 4),
-        itemBuilder: (context, index) {
-          if (index == model.tabs.length) {
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _tool(strings.newTab, CupertinoIcons.plus, controller.newTab),
-                PopupMenuButton<DocumentFormat>(
-                  tooltip: strings.newDocumentFormat,
-                  onSelected: (format) => controller.newTab(format: format),
-                  itemBuilder: (_) => [
-                    for (final format in DocumentFormat.values)
-                      WorkbenchMenuItem(value: format, label: format.label),
-                  ],
-                  child: const SizedBox(
-                    width: 24,
-                    height: WorkbenchStyle.toolbarControlHeight,
-                    child: Icon(CupertinoIcons.chevron_down, size: 12),
-                  ),
+        child: Row(
+          children: [
+            for (final item in model.tabs)
+              Padding(
+                key: ValueKey(item.id),
+                padding: const EdgeInsetsDirectional.only(end: 2),
+                child: _WorkspaceFileTab(
+                  tab: item,
+                  name: strings.tabName(item),
+                  selected: item.id == model.activeId,
+                  canClose: model.canClose(item),
+                  closeLabel: strings.closeTab(strings.tabName(item)),
+                  onActivate: () => controller.activate(item.id),
+                  onClose: _fileBusy ? null : () => _close(item.id),
+                  onMenu: (anchor) => _showTabMenu(item.id, anchor),
                 ),
+              ),
+            const SizedBox(width: 4),
+            PopupMenuButton<DocumentFormat>(
+              key: _newDocumentMenu,
+              tooltip: strings.newDocumentFormat,
+              onSelected: (format) => controller.newTab(format: format),
+              itemBuilder: (_) => [
+                for (final format in DocumentFormat.values)
+                  WorkbenchMenuItem(value: format, label: format.label),
               ],
-            );
-          }
-          final item = model.tabs[index];
-          final selected = item.id == model.activeId;
-          return Semantics(
-            key: ValueKey(item.id),
-            selected: selected,
-            child: Material(
-              color: selected ? colors.surface : Colors.transparent,
-              borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(
-                  WorkbenchStyle.controlRadius,
-                ),
-                onTap: () => controller.activate(item.id),
-                child: Tooltip(
-                  message: item.file?.path ?? strings.tabName(item),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 11, right: 3),
-                    child: Row(
-                      children: [
-                        Icon(
-                          item.dirty ? Icons.circle : CupertinoIcons.doc_text,
-                          size: item.dirty ? 7 : 15,
-                          color: selected
-                              ? colors.primary
-                              : colors.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 7),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 190),
-                          child: Text(
-                            strings.tabName(item),
-                            overflow: TextOverflow.ellipsis,
-                            style: WorkbenchStyle.body.copyWith(
-                              fontWeight: selected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                        if (model.canClose(item)) ...[
-                          const SizedBox(width: 3),
-                          IconButton(
-                            tooltip: strings.closeTab(strings.tabName(item)),
-                            icon: const Icon(CupertinoIcons.xmark, size: 14),
-                            onPressed: _fileBusy ? null : () => _close(item.id),
-                          ),
-                        ] else
-                          const SizedBox(width: 8),
-                      ],
-                    ),
-                  ),
+              child: const SizedBox.square(
+                dimension: WorkbenchStyle.toolbarControlHeight,
+                child: Icon(
+                  CupertinoIcons.plus,
+                  size: WorkbenchStyle.controlIconSize,
                 ),
               ),
             ),
-          );
-        },
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkspaceFileTab extends StatefulWidget {
+  const _WorkspaceFileTab({
+    required this.tab,
+    required this.name,
+    required this.selected,
+    required this.canClose,
+    required this.closeLabel,
+    required this.onActivate,
+    required this.onClose,
+    required this.onMenu,
+  });
+
+  final WorkspaceTab tab;
+  final String name;
+  final bool selected;
+  final bool canClose;
+  final String closeLabel;
+  final VoidCallback onActivate;
+  final VoidCallback? onClose;
+  final Future<void> Function(Offset) onMenu;
+
+  @override
+  State<_WorkspaceFileTab> createState() => _WorkspaceFileTabState();
+}
+
+class _WorkspaceFileTabState extends State<_WorkspaceFileTab> {
+  bool _hovered = false;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.selected) _revealTab();
+  }
+
+  @override
+  void didUpdateWidget(covariant _WorkspaceFileTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected && !oldWidget.selected) _revealTab();
+  }
+
+  void _revealTab() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.selected) return;
+      final scroll = Scrollable.of(context).position;
+      final target = context.findRenderObject()!;
+      // Each policy moves only if its edge lies outside the viewport.
+      unawaited(
+        scroll.ensureVisible(
+          target,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        ),
+      );
+      unawaited(
+        scroll.ensureVisible(
+          target,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final path = widget.tab.file?.path;
+    final showClose = _hovered && widget.canClose && widget.onClose != null;
+    final background = _hovered
+        ? Color.alphaBlend(
+            colors.onSurface.withValues(alpha: widget.selected ? .035 : .07),
+            widget.selected ? colors.surface : colors.surfaceContainer,
+          )
+        : widget.selected
+        ? colors.surface
+        : Colors.transparent;
+    return Semantics(
+      selected: widget.selected,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: Material(
+          color: background,
+          animationDuration: const Duration(milliseconds: 100),
+          borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(WorkbenchStyle.controlRadius),
+            onTap: widget.onActivate,
+            onSecondaryTapUp: path != null || widget.canClose
+                ? (details) => unawaited(widget.onMenu(details.globalPosition))
+                : null,
+            child: Tooltip(
+              message: path ?? widget.name,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 4, end: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox.square(
+                      dimension: 24,
+                      child: showClose
+                          ? IconButton(
+                              tooltip: widget.closeLabel,
+                              iconSize: 12,
+                              style: IconButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                fixedSize: const Size.square(24),
+                                minimumSize: const Size.square(24),
+                                visualDensity: VisualDensity.standard,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                alignment: Alignment.center,
+                              ),
+                              icon: const Icon(Icons.close_rounded),
+                              onPressed: widget.onClose,
+                            )
+                          : Icon(
+                              widget.tab.dirty
+                                  ? Icons.circle
+                                  : CupertinoIcons.doc_text,
+                              size: widget.tab.dirty ? 7 : 15,
+                              color: widget.selected
+                                  ? colors.primary
+                                  : colors.onSurfaceVariant,
+                            ),
+                    ),
+                    const SizedBox(width: 3),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 190),
+                      child: Text(
+                        widget.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: WorkbenchStyle.body.copyWith(
+                          leadingDistribution: TextLeadingDistribution.even,
+                          fontWeight: widget.selected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

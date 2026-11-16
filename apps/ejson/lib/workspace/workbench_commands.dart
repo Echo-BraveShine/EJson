@@ -48,7 +48,7 @@ extension _WorkbenchCommands on _WorkbenchState {
         icon: CupertinoIcons.plus,
         shortcut: '${primary}N',
         keywords: 'new document tab 新建 文档 标签页',
-        action: controller.newTab,
+        action: _chooseNewDocumentFormat,
       ),
       for (final entry in [
         (WorkbenchCommandId.newYaml, DocumentFormat.yaml),

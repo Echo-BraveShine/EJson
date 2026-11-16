@@ -150,9 +150,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTab => 'New tab';
 
   @override
+  String get closeTabMenu => 'Close Tab';
+
+  @override
   String closeTab(String name) {
     return 'Close $name';
   }
+
+  @override
+  String get revealInFolder => 'Show in Folder';
+
+  @override
+  String get revealInFinder => 'Show in Finder';
+
+  @override
+  String get revealFileMissing =>
+      'The file no longer exists. Its original folder was opened.';
+
+  @override
+  String get revealFolderMissing =>
+      'The folder containing the file could not be found.';
+
+  @override
+  String get revealFolderFailed => 'Could not open the file manager.';
+
+  @override
+  String get copyFilePath => 'Copy File Path';
 
   @override
   String get untitled => 'Untitled';

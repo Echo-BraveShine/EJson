@@ -301,6 +301,9 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(find.byType(CommandPalette), findsNothing);
+    expect(container.read(workspaceProvider).tabs.length, before);
+    await tester.tap(find.text('YAML'));
+    await tester.pumpAndSettle();
     expect(container.read(workspaceProvider).tabs.length, before + 1);
     await tester.tap(find.byTooltip('Command palette'));
     await tester.pumpAndSettle();

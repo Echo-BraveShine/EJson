@@ -290,7 +290,7 @@ void main() {
       await tester.tap(find.text('取消'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('关闭 未命名'));
+      await clickTabClose(tester, '未命名', tooltip: '关闭 未命名');
       await tester.pumpAndSettle();
       expect(find.text('要保存修改吗？'), findsOneWidget);
       await tester.tap(find.text('取消'));

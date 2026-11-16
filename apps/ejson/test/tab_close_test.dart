@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'support/workbench_test_harness.dart';
+
 Future<ProviderContainer> openWorkbench(
   WidgetTester tester, {
   bool manageWindow = false,
@@ -163,7 +165,7 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> close(int id) async {
-      await tester.tap(find.byTooltip('Close Untitled $id'));
+      await clickTabClose(tester, 'Untitled $id');
       await tester.pumpAndSettle();
       expect(workspace().tab(id), isNull);
     }
@@ -172,7 +174,7 @@ void main() {
     expect(workspace().activeId, 3);
     await close(3);
     expect(workspace().activeId, 4);
-    await tester.tap(find.byTooltip('Close Untitled'));
+    await clickTabClose(tester, 'Untitled');
     await tester.pumpAndSettle();
     expect(workspace().tab(1), isNull);
     expect(workspace().activeId, 4);
@@ -242,7 +244,7 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> saveAndClose() async {
-      await tester.tap(find.byTooltip('Close example.json'));
+      await clickTabClose(tester, 'example.json');
       await tester.pumpAndSettle();
       final dialog = find.widgetWithText(FilledButton, 'Save');
       await tester.runAsync(() async {

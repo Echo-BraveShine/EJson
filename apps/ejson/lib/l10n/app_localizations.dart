@@ -380,11 +380,53 @@ abstract class AppLocalizations {
   /// **'New tab'**
   String get newTab;
 
+  /// No description provided for @closeTabMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Tab'**
+  String get closeTabMenu;
+
   /// No description provided for @closeTab.
   ///
   /// In en, this message translates to:
   /// **'Close {name}'**
   String closeTab(String name);
+
+  /// No description provided for @revealInFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in Folder'**
+  String get revealInFolder;
+
+  /// No description provided for @revealInFinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in Finder'**
+  String get revealInFinder;
+
+  /// No description provided for @revealFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The file no longer exists. Its original folder was opened.'**
+  String get revealFileMissing;
+
+  /// No description provided for @revealFolderMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The folder containing the file could not be found.'**
+  String get revealFolderMissing;
+
+  /// No description provided for @revealFolderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the file manager.'**
+  String get revealFolderFailed;
+
+  /// No description provided for @copyFilePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy File Path'**
+  String get copyFilePath;
 
   /// No description provided for @untitled.
   ///

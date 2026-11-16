@@ -63,6 +63,10 @@ class MainFlutterWindow: NSWindow {
         return
       }
       switch call.method {
+      case "revealFile":
+        guard let path = call.arguments as? String else { reply(false); return }
+        let parent = URL(fileURLWithPath: path).deletingLastPathComponent()
+        reply(NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: parent.path))
       case "atomicWrite":
         guard let args = call.arguments as? [String: Any],
               let path = args["path"] as? String,

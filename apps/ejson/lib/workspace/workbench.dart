@@ -42,6 +42,7 @@ import '../editor/conversion_job.dart';
 import '../editor/save_as_dialog.dart';
 import 'compare_documents.dart';
 import 'local_files.dart';
+import 'reveal_file.dart';
 import 'workspace.dart';
 import 'workspace_session.dart';
 import 'workspace_autosave.dart';
@@ -154,6 +155,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
   bool _findOpen = false;
   bool _searchJump = false;
   final _findFocus = FocusNode();
+  final _newDocumentMenu = GlobalKey<PopupMenuButtonState<DocumentFormat>>();
   double _split = 0.61;
   StreamSubscription<List<RecentFile>>? _externalSubscription;
   Timer? _externalRetry;
@@ -319,7 +321,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
         shortcut(LogicalKeyboardKey.keyP, shift: true): _openPalette,
         if (_findOpen)
           const SingleActivator(LogicalKeyboardKey.escape): _closeFind,
-        shortcut(LogicalKeyboardKey.keyN): controller.newTab,
+        shortcut(LogicalKeyboardKey.keyN): _chooseNewDocumentFormat,
         shortcut(LogicalKeyboardKey.keyO): _open,
         shortcut(LogicalKeyboardKey.keyS): () => _save(tab.id),
         shortcut(LogicalKeyboardKey.keyS, shift: true): () =>

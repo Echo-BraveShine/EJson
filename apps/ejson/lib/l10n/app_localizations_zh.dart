@@ -150,9 +150,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newTab => '新建标签页';
 
   @override
+  String get closeTabMenu => '关闭标签页';
+
+  @override
   String closeTab(String name) {
     return '关闭 $name';
   }
+
+  @override
+  String get revealInFolder => '在文件夹中显示';
+
+  @override
+  String get revealInFinder => '在 Finder 中显示';
+
+  @override
+  String get revealFileMissing => '文件已不存在，已打开原所在文件夹。';
+
+  @override
+  String get revealFolderMissing => '找不到文件所在的文件夹。';
+
+  @override
+  String get revealFolderFailed => '无法打开文件管理器。';
+
+  @override
+  String get copyFilePath => '复制文件路径';
 
   @override
   String get untitled => '未命名';

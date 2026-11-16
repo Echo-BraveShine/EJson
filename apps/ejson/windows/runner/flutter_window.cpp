@@ -2,6 +2,7 @@
 
 #include <dwmapi.h>
 #include <dwrite_1.h>
+#include <shlobj.h>
 #include <wrl/client.h>
 
 #include <optional>
@@ -13,6 +14,24 @@
 #include "utils.h"
 
 namespace {
+bool RevealInExplorer(const std::string& path) {
+  const int length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                        path.c_str(), -1, nullptr, 0);
+  if (length <= 1) return false;
+  std::wstring wide_path(length, L'\0');
+  if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.c_str(), -1,
+                           wide_path.data(), length)) {
+    return false;
+  }
+  PIDLIST_ABSOLUTE item = nullptr;
+  if (FAILED(SHParseDisplayName(wide_path.c_str(), nullptr, &item, 0, nullptr))) {
+    return false;
+  }
+  const HRESULT opened = SHOpenFolderAndSelectItems(item, 0, nullptr, 0);
+  CoTaskMemFree(item);
+  return SUCCEEDED(opened);
+}
+
 std::string FontFamilyName(IDWriteLocalizedStrings* names, UINT32 index) {
   UINT32 length = 0;
   if (FAILED(names->GetStringLength(index, &length))) return {};
@@ -127,6 +146,20 @@ bool FlutterWindow::OnCreate() {
     }
   });
 
+  files_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "dev.ekko.ejson/files",
+      &flutter::StandardMethodCodec::GetInstance());
+  files_channel_->SetMethodCallHandler([](const auto& call, auto result) {
+    if (call.method_name() != "revealFile") {
+      result->NotImplemented();
+      return;
+    }
+    const auto* path = call.arguments()
+                           ? std::get_if<std::string>(call.arguments())
+                           : nullptr;
+    result->Success(flutter::EncodableValue(path && RevealInExplorer(*path)));
+  });
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -161,6 +194,10 @@ void FlutterWindow::UpdateWindowIcons(HWND window, UINT dpi) {
 }
 
 void FlutterWindow::OnDestroy() {
+  if (files_channel_) {
+    files_channel_->SetMethodCallHandler(nullptr);
+    files_channel_.reset();
+  }
   if (const HWND window = GetHandle()) {
     SendMessage(window, WM_SETICON, ICON_SMALL, 0);
     SendMessage(window, WM_SETICON, ICON_BIG, 0);
