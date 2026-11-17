@@ -310,15 +310,17 @@ const _themeColors = <AppColorTheme, _ThemeColors>{
   ),
 };
 
-final Map<(Brightness, AppColorTheme), ThemeData> _themeCache = {};
+final Map<(Brightness, AppColorTheme, TargetPlatform), ThemeData> _themeCache =
+    {};
 
 /// 构造并缓存主题：ColorScheme.fromSeed 是开销较大的 Material 3 色彩运算，
-/// 相同 (brightness, theme) 组合只计算一次，避免每次 build 都重新生成 ThemeData。
+/// 相同 (brightness, theme, platform) 组合只计算一次，避免每次 build 都重新生成 ThemeData。
 ThemeData workbenchTheme(
   Brightness brightness, [
   AppColorTheme theme = AppColorTheme.systemDefault,
 ]) {
-  return _themeCache.putIfAbsent((brightness, theme), () {
+  final platform = defaultTargetPlatform;
+  return _themeCache.putIfAbsent((brightness, theme, platform), () {
     final dark = brightness == Brightness.dark;
     final plain = theme == AppColorTheme.systemDefault;
     final colors = _themeColors[theme]!;
@@ -367,7 +369,6 @@ ThemeData workbenchTheme(
               ? const Color(0xff164578)
               : Color.lerp(const Color(0xff152033), colors.seedColor, .35)!,
         );
-    final platform = defaultTargetPlatform;
     final fontFamily = WorkbenchTypography.interfaceFamily(platform);
     final fontFamilyFallback = WorkbenchTypography.interfaceFallback(platform);
     TextStyle interfaceStyle(TextStyle style) => style.copyWith(
