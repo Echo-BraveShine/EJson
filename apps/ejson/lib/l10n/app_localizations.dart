@@ -2330,6 +2330,12 @@ abstract class AppLocalizations {
   /// **'Each line contains one JSON value. Blank lines are invalid. JSON Lines becomes a JSON array. A JSON array exports one item per line, while other JSON values export as one record.'**
   String get jsonLinesConversionNotice;
 
+  /// No description provided for @foldPreviewMoreLines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 more line} other{{count} more lines}}'**
+  String foldPreviewMoreLines(int count);
+
   /// No description provided for @sourceFolding.
   ///
   /// In en, this message translates to:

@@ -9,8 +9,6 @@ class SourceChunkAnalyzer implements CodeChunkAnalyzer {
 
   @override
   List<CodeChunk> run(CodeLines codeLines) {
-    final source = codeLines.asString(TextLineBreak.lf);
-    final lines = LineIndex(source);
     final visibleStarts = <int>[];
     var rawLine = 0;
     for (final segment in codeLines.segments) {
@@ -36,10 +34,7 @@ class SourceChunkAnalyzer implements CodeChunkAnalyzer {
 
     final ends = <int, int>{};
     try {
-      for (final range in sourceFoldRanges(source, format)) {
-        if (range.end <= range.start) continue;
-        final start = lines.position(range.start).line - 1;
-        final end = lines.position(range.end - 1).line;
+      for (final (start, end) in _lineRanges(codeLines, rawLine)) {
         if (end - start < 2) continue;
         final index = boundary(start);
         if (index == visibleStarts.length || visibleStarts[index] != start) {
@@ -61,6 +56,37 @@ class SourceChunkAnalyzer implements CodeChunkAnalyzer {
     ];
   }
 
+  Iterable<(int, int)> _lineRanges(
+    CodeLines codeLines,
+    int rawLineCount,
+  ) sync* {
+    if (format == DocumentFormat.json) {
+      final raw = codeLines.length == rawLineCount
+          ? codeLines
+          : CodeLines.fromText(codeLines.asString(TextLineBreak.lf));
+      for (final chunk in const DefaultCodeChunkAnalyzer().run(raw)) {
+        final start = raw[chunk.index].text.trimRight();
+        final end = raw[chunk.end].text.trim();
+        final closer = sourceFoldCloser(start);
+        // The native analyzer leaves the closing line visible. Bring it into
+        // the fold when it contains only the delimiter and an optional comma.
+        final includeCloser =
+            closer != null && (end == closer || end == '$closer,');
+        yield (chunk.index, chunk.end + (includeCloser ? 1 : 0));
+      }
+      return;
+    }
+    final source = codeLines.asString(TextLineBreak.lf);
+    final lines = LineIndex(source);
+    for (final range in sourceFoldRanges(source, format)) {
+      if (range.end <= range.start) continue;
+      yield (
+        lines.position(range.start).line - 1,
+        lines.position(range.end - 1).line,
+      );
+    }
+  }
+
   // Different structures can start or end on the same source line.
   bool _fits(int start, int end, List<int> enclosing) {
     while (enclosing.isNotEmpty && enclosing.last <= start) {
@@ -71,3 +97,12 @@ class SourceChunkAnalyzer implements CodeChunkAnalyzer {
     return true;
   }
 }
+
+String? sourceFoldCloser(String header) => header.isEmpty
+    ? null
+    : switch (header[header.length - 1]) {
+        '{' => '}',
+        '[' => ']',
+        '(' => ')',
+        _ => null,
+      };

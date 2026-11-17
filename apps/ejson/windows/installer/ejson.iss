@@ -16,6 +16,9 @@ UninstallDisplayIcon={app}\ejson.exe
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+DisableWelcomePage=no
+WizardImageFile=wizard-sidebar.bmp
+WizardImageStretch=yes
 ChangesAssociations=yes
 
 [Languages]

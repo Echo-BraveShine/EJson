@@ -143,6 +143,9 @@ jobs:
           EXPECTED_BUILD: ${{ steps.version.outputs.build }}
         run: |
           # Reuse the universal app instead of compiling it twice more.
+          python3 -m venv "$RUNNER_TEMP/ejson-dmg"
+          "$RUNNER_TEMP/ejson-dmg/bin/python" -m pip install 'dmgbuild==1.6.5'
+          export DMGBUILD="$RUNNER_TEMP/ejson-dmg/bin/dmgbuild"
           bash "$GITHUB_WORKSPACE/release-tools/.github/release/macos.sh" \
             build/macos/Build/Products/Release/EJson.app \
             '${{ matrix.file }}' '${{ matrix.xcode_arch || 'arm64 x86_64' }}'
@@ -213,6 +216,9 @@ jobs:
           jq -e --arg version "$EXPECTED_VERSION" --arg build "$EXPECTED_BUILD" \
             '.version == $version and .build_number == $build' \
             "$bundle/data/flutter_assets/version.json"
+          tools="$GITHUB_WORKSPACE/release-tools/.github/release"
+          install -Dm644 "$tools/dev.ekko.ejson.metainfo.xml" \
+            "$bundle/share/metainfo/dev.ekko.ejson.metainfo.xml"
           tar -czf "${{ matrix.file }}" -C "$bundle" .
           staging=$(mktemp -d)
           chmod 0755 "$staging"
@@ -230,7 +236,8 @@ jobs:
           Maintainer: EJson <1239383708@qq.com>
           Depends: libc6 (>= 2.39), libstdc++6, libgtk-3-0t64 | libgtk-3-0, libgl1, shared-mime-info, desktop-file-utils
           Homepage: https://github.com/Echo-BraveShine/EJson
-          Description: Desktop JSON editor with a synchronized tree view
+          Description: Structured data editor
+           View, edit, and convert JSON, YAML, XML, CSV, TOML, and JSON Lines locally.
           EOF
           install -m 0755 linux/packaging/postinst "$staging/DEBIAN/postinst"
           install -m 0755 linux/packaging/postrm "$staging/DEBIAN/postrm"
@@ -238,7 +245,6 @@ jobs:
           test "$(dpkg-deb -f "$deb_file" Version)" = "$EXPECTED_VERSION-$EXPECTED_BUILD"
           test "$(dpkg-deb -f "$deb_file" Architecture)" = "$deb_arch"
           rm -rf "$staging"
-          tools="$GITHUB_WORKSPACE/release-tools/.github/release"
           image_arch='${{ matrix.image_arch }}'
           bash "$tools/linux-appimage.sh" "$bundle" "$image_arch"
           bash "$tools/linux-rpm.sh" '${{ matrix.file }}' "$image_arch"

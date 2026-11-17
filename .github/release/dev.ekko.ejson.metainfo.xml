@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.ekko.ejson</id>
+  <name>EJson</name>
+  <summary>Structured data editor</summary>
+  <summary xml:lang="zh-CN">结构化数据编辑器</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <description>
+    <p>View, edit, and convert JSON, YAML, XML, CSV, TOML, and JSON Lines locally.</p>
+    <p xml:lang="zh-CN">在本地查看、编辑和转换 JSON、YAML、XML、CSV、TOML 和 JSON Lines。</p>
+  </description>
+  <launchable type="desktop-id">dev.ekko.ejson.desktop</launchable>
+  <icon type="stock">dev.ekko.ejson</icon>
+  <url type="homepage">https://echo-braveshine.github.io/EJson/</url>
+</component>

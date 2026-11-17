@@ -41,6 +41,7 @@ cd "$staging"
 "$output" --appimage-extract >/dev/null
 test -x squashfs-root/AppRun
 test -f "squashfs-root/$id.png"
+test -f "squashfs-root/share/metainfo/$id.metainfo.xml"
 jq -e --arg version "$EXPECTED_VERSION" --arg build "$EXPECTED_BUILD" \
   '.version == $version and .build_number == $build' \
   squashfs-root/data/flutter_assets/version.json

@@ -62,8 +62,9 @@ case "$output" in
       fi
     done < <(find "$packaged/Contents/Frameworks" -type f -print0)
     codesign --verify --deep --strict "$packaged"
-    ln -s /Applications "$staging/Applications"
-    hdiutil create -volname EJson -srcfolder "$staging" -format UDZO "$output"
+    tools=$(cd "$(dirname "$0")" && pwd)
+    "${DMGBUILD:-dmgbuild}" -s "$tools/macos-dmg.py" \
+      -D "app=$packaged" -D "background=$tools/macos-background.png" EJson "$output"
     hdiutil verify "$output"
     ;;
   *)

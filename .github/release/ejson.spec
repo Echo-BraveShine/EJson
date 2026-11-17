@@ -1,7 +1,7 @@
 Name: ejson
 Version: %{ejson_version}
 Release: %{ejson_build}
-Summary: Desktop JSON editor with a synchronized tree view
+Summary: Structured data editor
 License: LicenseRef-EJson
 URL: https://github.com/Echo-BraveShine/EJson
 Source0: ejson.tar.gz
@@ -20,7 +20,7 @@ Requires: shared-mime-info
 Requires: desktop-file-utils
 
 %description
-EJson is an offline desktop JSON workspace with a source editor and tree view.
+View, edit, and convert JSON, YAML, XML, CSV, TOML, and JSON Lines locally.
 
 %install
 mkdir -p %{buildroot}/opt/ejson %{buildroot}/usr/bin
@@ -55,4 +55,5 @@ fi
 /usr/bin/ejson
 /usr/share/applications/dev.ekko.ejson.desktop
 /usr/share/icons/hicolor/256x256/apps/dev.ekko.ejson.png
+/usr/share/metainfo/dev.ekko.ejson.metainfo.xml
 /usr/share/mime/packages/dev.ekko.ejson.xml

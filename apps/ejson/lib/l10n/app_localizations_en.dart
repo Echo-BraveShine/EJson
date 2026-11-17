@@ -1229,6 +1229,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each line contains one JSON value. Blank lines are invalid. JSON Lines becomes a JSON array. A JSON array exports one item per line, while other JSON values export as one record.';
 
   @override
+  String foldPreviewMoreLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more lines',
+      one: '1 more line',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sourceFolding => 'Source folding';
 
   @override

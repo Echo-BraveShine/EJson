@@ -72,12 +72,53 @@ void main() {
         Offset(gutterRect.center.dx, gutterRect.top + row.top + row.height / 2),
       );
       chunks().collapse(2);
+      await tester.pumpAndSettle();
+      expect(find.text('{…}'), findsOneWidget);
       chunks().collapse(1);
       await tester.pump();
       expect(editor().lineIndex2Index(3).chunkIndex, isNonNegative);
       expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
       expect(container.read(workspaceProvider).active.text, source);
       expect(workspace.canUndo(id), isFalse);
+
+      await tester.pump();
+      final marker = find.text('[…]').first;
+      expect(find.text('[…]'), findsNWidgets(2));
+      final suffix = find.text(',').first;
+      expect(find.text(','), findsNWidgets(2));
+      expect(
+        tester.getRect(suffix).left,
+        greaterThan(tester.getRect(marker).right),
+      );
+      expect(tester.getCenter(suffix).dy - tester.getCenter(marker).dy, 1);
+      expect(
+        find.ancestor(of: suffix, matching: find.byType(Tooltip)),
+        findsNothing,
+      );
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer();
+      await mouse.moveTo(tester.getCenter(marker));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('"target": 42', findRichText: true),
+        findsOneWidget,
+      );
+      expect(editor().lineIndex2Index(3).chunkIndex, isNonNegative);
+      await mouse.removePointer();
+      await tester.pumpAndSettle();
+
+      final headerLength = editor().codeLines[1].length;
+      editor().selection = CodeLineSelection.collapsed(
+        index: 1,
+        offset: headerLength,
+      );
+      await tester.pumpAndSettle();
+      expect(editor().codeLines[1].chunkParent, isFalse);
+      chunks().collapse(1);
+      await tester.pumpAndSettle();
+      expect(editor().codeLines[1].chunkParent, isTrue);
+      expect(editor().selection.extentOffset, headerLength - 1);
       editor().selectAll();
       expect(editor().selectedText, source.replaceAll('\r\n', '\n'));
 
@@ -96,6 +137,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(editor().selectedText, '42');
       expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
+
+      await tester.tap(find.text('[…]'));
+      await tester.pumpAndSettle();
+      expect(editor().lineIndex2Index(7).chunkIndex, -1);
+      chunks().collapse(6);
+      await tester.pumpAndSettle();
 
       workspace.editSource(id, source.replaceFirst('true', 'false'));
       await settleDocumentEdits(tester);
@@ -120,7 +167,7 @@ void main() {
       expect(editor().selectedText, 'keep');
       expect(editor().lineIndex2Index(7).chunkIndex, -1);
 
-      editor().collapseChunk(6, 8);
+      editor().collapseChunk(6, 9);
       await tester.pump();
       expect(editor().lineIndex2Index(7).chunkIndex, isNonNegative);
       final preferences = container.read(toolPreferencesProvider.notifier);

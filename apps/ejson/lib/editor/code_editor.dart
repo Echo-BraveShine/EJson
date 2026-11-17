@@ -11,8 +11,11 @@ import 'package:re_highlight/languages/ini.dart';
 import 'package:re_highlight/re_highlight.dart';
 
 import '../design/reading_style.dart';
+import '../l10n/app_localizations.dart';
 import 'json_highlight.dart';
 import 'source_chunk_analyzer.dart';
+
+part 'source_fold_markers.dart';
 
 final _csvMode = Mode(
   name: 'CSV',
@@ -74,6 +77,8 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
   final _scroll = CodeScrollController();
   CodeIndicatorValueNotifier? _indicator;
   CodeChunkController? _chunks;
+  final _foldGutter = GlobalKey();
+  final _foldMarkers = GlobalKey<_SourceFoldMarkersState>();
 
   String _normalize(String text) => text.replaceAll(_newline, '\n');
 
@@ -250,13 +255,17 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
   }
 
   void _edited() {
-    if (identical(_lines, _controller.codeLines)) return;
+    if (identical(_lines, _controller.codeLines)) {
+      _keepCaretOutsideFold();
+      return;
+    }
     _lines = _controller.codeLines;
     if (widget.readOnly) return;
     final display = _controller.text;
     final change = SourcePatch.between(_display, display);
     if (change.range.start == change.range.end && change.replacement.isEmpty) {
       _rememberFolds();
+      _keepCaretOutsideFold(justFolded: true);
       return;
     }
     final patch = _hasCarriageReturns ? _originalPatch(change) : change;
@@ -267,6 +276,28 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
     _rememberFolds();
     widget.onPatch?.call(patch, before, _source);
     widget.onChanged?.call(_source);
+  }
+
+  void _keepCaretOutsideFold({bool justFolded = false}) {
+    if (widget.folds == null) return;
+    final selection = _controller.selection;
+    final index = selection.extentIndex;
+    if (!selection.isCollapsed || index < 0 || index >= _lines.length) return;
+    final line = _lines[index];
+    if (!line.chunkParent) return;
+    final (label, _) = _foldLabel(line);
+    if (label == '…') return;
+    final opening = line.text.trimRight().length - 1;
+    if (selection.extentOffset <= opening) return;
+    if (justFolded) {
+      // A collapse can put a caret from a hidden line at the end of the header.
+      _controller.selection = CodeLineSelection.collapsed(
+        index: index,
+        offset: opening,
+      );
+    } else {
+      _unfoldAt(_controller.index2lineIndex(index), header: true);
+    }
   }
 
   void _rememberFolds() {
@@ -369,7 +400,17 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         ? colors.outlineVariant
         : foreground.withValues(alpha: .20);
 
-    return CodeEditor(
+    final language = widget.format == DocumentFormat.jsonLines
+        ? 'json'
+        : widget.format.name;
+    final mode = switch (widget.format) {
+      DocumentFormat.json || DocumentFormat.jsonLines => langJson,
+      DocumentFormat.yaml => langYaml,
+      DocumentFormat.csv => _csvMode,
+      DocumentFormat.xml => langXml,
+      DocumentFormat.toml => langIni,
+    };
+    final editor = CodeEditor(
       controller: _controller,
       focusNode: _focus,
       scrollController: _scroll,
@@ -381,7 +422,9 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
       chunkAnalyzer: widget.folds == null
           ? const NonCodeChunkAnalyzer()
           : switch (widget.format) {
-              DocumentFormat.json => const DefaultCodeChunkAnalyzer(),
+              DocumentFormat.json => const SourceChunkAnalyzer(
+                DocumentFormat.json,
+              ),
               DocumentFormat.yaml => const SourceChunkAnalyzer(
                 DocumentFormat.yaml,
               ),
@@ -398,7 +441,7 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
                 DocumentFormat.jsonLines,
               ),
             },
-      padding: const EdgeInsets.fromLTRB(13, 10, 14, 10),
+      padding: EdgeInsets.fromLTRB(13, 10, widget.folds == null ? 14 : 42, 10),
       style: CodeEditorStyle(
         backgroundColor: background,
         textColor: foreground,
@@ -412,26 +455,14 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         codeTheme: highlight == null
             ? null
             : CodeHighlightTheme(
-                languages: {
-                  (widget.format == DocumentFormat.jsonLines
-                      ? 'json'
-                      : widget.format.name): CodeHighlightThemeMode(
-                    mode: switch (widget.format) {
-                      DocumentFormat.json ||
-                      DocumentFormat.jsonLines => langJson,
-                      DocumentFormat.yaml => langYaml,
-                      DocumentFormat.csv => _csvMode,
-                      DocumentFormat.xml => langXml,
-                      DocumentFormat.toml => langIni,
-                    },
-                  ),
-                },
+                languages: {language: CodeHighlightThemeMode(mode: mode)},
                 theme: highlight,
               ),
       ),
       leadingDivider: VerticalDivider(width: 1, color: divider),
       indicatorBuilder: (context, controller, chunks, notifier) {
         _indicator = notifier;
+        _foldMarkers.currentState?.bind(notifier);
         _chunks = chunks;
         final numbers = DefaultCodeLineNumber(
           controller: controller,
@@ -441,6 +472,7 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         );
         if (widget.folds == null) return numbers;
         return Row(
+          key: _foldGutter,
           mainAxisSize: MainAxisSize.min,
           children: [
             numbers,
@@ -453,6 +485,23 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
           ],
         );
       },
+    );
+    if (widget.folds == null) return editor;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        editor,
+        _SourceFoldMarkers(
+          key: _foldMarkers,
+          editor: this,
+          textStyle: code.copyWith(color: foreground),
+          background: background,
+          accent: accent,
+          language: language,
+          mode: mode,
+          highlight: highlight,
+        ),
+      ],
     );
   }
 }

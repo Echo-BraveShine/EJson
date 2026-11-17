@@ -1200,6 +1200,11 @@ class AppLocalizationsZh extends AppLocalizations {
       '每行包含一个 JSON 值，空白行会标记为无效。JSON Lines 转换为 JSON 数组，JSON 数组按元素逐行导出，其他 JSON 值导出为一条记录。';
 
   @override
+  String foldPreviewMoreLines(int count) {
+    return '还有 $count 行';
+  }
+
+  @override
   String get sourceFolding => '源码折叠';
 
   @override
