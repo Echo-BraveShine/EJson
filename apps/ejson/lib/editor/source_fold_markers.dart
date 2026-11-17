@@ -159,6 +159,11 @@ class _SourceFoldMarkersState extends State<_SourceFoldMarkers> {
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
+                                // The editor paints the original opener below
+                                // this overlay. Mask it before adding the inset.
+                                Positioned.fill(
+                                  child: ColoredBox(color: widget.background),
+                                ),
                                 Positioned.fill(
                                   top: 2,
                                   bottom: 2,
