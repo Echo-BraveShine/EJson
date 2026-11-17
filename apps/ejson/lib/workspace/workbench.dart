@@ -116,6 +116,8 @@ class Workbench extends ConsumerStatefulWidget {
     required this.onTreeStyleChanged,
     required this.language,
     required this.onLanguageChanged,
+    required this.colorTheme,
+    required this.onColorThemeChanged,
   });
 
   final bool manageWindow;
@@ -124,6 +126,8 @@ class Workbench extends ConsumerStatefulWidget {
   final bool restoreOnStartup;
   final List<String> failedRestorePaths;
   final ThemeMode themeMode;
+  final AppColorTheme colorTheme;
+  final ValueChanged<AppColorTheme> onColorThemeChanged;
   final JsonHighlight highlight;
   final JsonTreeStyle treeStyle;
   final ValueChanged<JsonTreeStyle> onTreeStyleChanged;
@@ -317,6 +321,12 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(workspaceProvider.select((value) => value.activeId), (
+      previous,
+      next,
+    ) {
+      if (previous != next && _findOpen) _closeFind();
+    });
     _syncNativeAppearance();
     final model = ref.watch(workspaceProvider);
     _sourceFolds.removeWhere((id, _) => model.tab(id) == null);
@@ -414,6 +424,7 @@ class _WorkbenchState extends ConsumerState<Workbench> with WindowListener {
                       focusNode: _findFocus,
                       onMatch: (range) => _reveal(range, search: true),
                       onClose: _closeFind,
+                      onNoMatch: _clearFindMatch,
                       onReplace: (text) => controller.editSource(tab.id, text),
                     ),
                   Expanded(child: _panes(tab, valid)),

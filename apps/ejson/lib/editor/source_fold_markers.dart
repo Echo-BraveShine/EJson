@@ -122,7 +122,7 @@ class _SourceFoldMarkersState extends State<_SourceFoldMarkers> {
               key: ObjectKey(line),
               left: x,
               top: y,
-              height: paragraph.preferredLineHeight,
+              height: paragraph.preferredLineHeight + 6,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,6 +135,7 @@ class _SourceFoldMarkersState extends State<_SourceFoldMarkers> {
                         language: widget.language,
                         mode: widget.mode,
                         highlight: widget.highlight,
+                        height: widget.textStyle.height,
                       ),
                     ),
                     waitDuration: const Duration(milliseconds: 350),
@@ -146,7 +147,9 @@ class _SourceFoldMarkersState extends State<_SourceFoldMarkers> {
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: kElevationToShadow[4],
                     ),
-                    padding: const EdgeInsets.all(10),
+                    padding: EdgeInsets.all(
+                      10 * (widget.textStyle.height ?? 1.4),
+                    ),
                     child: Semantics(
                       label: AppLocalizations.of(context).expand,
                       button: true,
@@ -165,8 +168,6 @@ class _SourceFoldMarkersState extends State<_SourceFoldMarkers> {
                                   child: ColoredBox(color: widget.background),
                                 ),
                                 Positioned.fill(
-                                  top: 2,
-                                  bottom: 2,
                                   left: 2,
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
@@ -225,6 +226,7 @@ class _FoldSourcePreview extends StatelessWidget {
     required this.language,
     required this.mode,
     required this.highlight,
+    this.height,
   });
 
   final CodeLine line;
@@ -232,6 +234,7 @@ class _FoldSourcePreview extends StatelessWidget {
   final String language;
   final Mode mode;
   final Map<String, TextStyle>? highlight;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +266,7 @@ class _FoldSourcePreview extends StatelessWidget {
           Text.rich(span),
           if (remaining > 0)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: 8 * (height ?? 1.4)),
               child: Text(
                 l10n.foldPreviewMoreLines(remaining),
                 style: style.copyWith(fontSize: 11),

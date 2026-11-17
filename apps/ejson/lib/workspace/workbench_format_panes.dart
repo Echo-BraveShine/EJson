@@ -35,6 +35,7 @@ extension _WorkbenchFormatPanes on _WorkbenchState {
         key: ValueKey('format-tree-${tab.id}'),
         root: root,
         style: widget.treeStyle,
+        highlight: widget.highlight,
         showConnectors: ref.watch(toolPreferencesProvider).treeConnectors,
         truncated: snapshot!.structureTruncated,
         onReveal: _reveal,

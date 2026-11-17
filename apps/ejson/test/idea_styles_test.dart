@@ -1,4 +1,5 @@
 import 'package:ejson/editor/code_editor.dart';
+import 'package:ejson/design/workbench_style.dart';
 import 'package:ejson/editor/json_highlight.dart';
 import 'package:ejson/editor/tree_panel.dart';
 import 'package:ejson/editor/tree_style.dart';
@@ -12,6 +13,62 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:re_editor/re_editor.dart';
 
 void main() {
+  test(
+    'all themes have readable light and dark palettes and plain defaults',
+    () {
+      double contrast(Color a, Color b) {
+        final x = a.computeLuminance();
+        final y = b.computeLuminance();
+        return x > y ? (x + .05) / (y + .05) : (y + .05) / (x + .05);
+      }
+
+      for (final brightness in Brightness.values) {
+        for (final theme in AppColorTheme.values) {
+          final colors = workbenchTheme(brightness, theme).colorScheme;
+          expect(
+            contrast(colors.onSurface, colors.surface),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(
+            contrast(colors.onSecondaryContainer, colors.secondaryContainer),
+            greaterThanOrEqualTo(4.5),
+          );
+        }
+        for (final theme in JsonHighlight.values) {
+          final background = theme.editorBackground(brightness);
+          if (background == null) continue;
+          expect(
+            ThemeData.estimateBrightnessForColor(background),
+            brightness,
+            reason: theme.name,
+          );
+          for (final token in [
+            'root',
+            'attr',
+            'string',
+            'number',
+            'literal',
+            'comment',
+          ]) {
+            final color = theme.colors(brightness)![token]?.color;
+            if (color != null) {
+              expect(
+                contrast(color, background),
+                greaterThanOrEqualTo(4.5),
+                reason: '${theme.name}/$token/$brightness',
+              );
+            }
+          }
+        }
+      }
+      final light = workbenchTheme(Brightness.light).colorScheme;
+      expect(light.surface, Colors.white);
+      expect(light.surfaceContainerLow, const Color(0xfff6f6f7));
+      expect(light.surfaceContainer, const Color(0xffebebee));
+      expect(light.secondaryContainer, const Color(0xffe0edff));
+    },
+  );
+
   test('IDEA-inspired palettes distinguish tokens with readable contrast', () {
     for (final scheme in [
       JsonHighlight.intellijLight,
@@ -77,6 +134,43 @@ void main() {
         await tester.tap(find.byTooltip('Settings'));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('settings-appearance')));
+        await tester.pumpAndSettle();
+        final presets = find.byTooltip('Theme preset');
+        await tester.ensureVisible(presets);
+        await tester.tap(presets);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('GitHub').last);
+        await tester.pumpAndSettle();
+        final presetsAgain = find.byTooltip('Theme preset');
+        await tester.ensureVisible(presetsAgain);
+        await tester.tap(presetsAgain);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Tokyo Night').last);
+        await tester.pumpAndSettle();
+        for (final editor in tester.widgetList<CodeEditor>(
+          find.byType(CodeEditor, skipOffstage: false),
+        )) {
+          expect(editor.style!.backgroundColor, const Color(0xff1a1b26));
+        }
+        await tester.tap(presetsAgain);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('GitHub').last);
+        await tester.pumpAndSettle();
+        expect(savedHighlights.last, JsonHighlight.github);
+        expect(savedTrees.last, JsonTreeStyle.structure);
+        expect(
+          tester
+              .widget<TreePanel>(
+                find.byKey(const ValueKey('appearance-tree-preview')),
+              )
+              .highlight,
+          JsonHighlight.github,
+        );
+        final appearanceMode = find.text(
+          mode == ThemeMode.dark ? 'Dark' : 'Light',
+        );
+        await tester.ensureVisible(appearanceMode);
+        await tester.tap(appearanceMode);
         await tester.pumpAndSettle();
         for (final entry in {
           'IntelliJ Light': JsonHighlight.intellijLight,

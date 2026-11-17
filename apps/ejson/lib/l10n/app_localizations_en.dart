@@ -138,6 +138,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get glassToolbar => 'Glass toolbar';
 
   @override
+  String get colorTheme => 'Color theme';
+
+  @override
+  String get colorThemeSystemDefault => 'System Default';
+
+  @override
+  String get colorThemeBlue => 'Blue';
+
+  @override
+  String get colorThemeAmber => 'Amber';
+
+  @override
+  String get colorThemeGreen => 'Green';
+
+  @override
+  String get colorThemePurple => 'Purple';
+
+  @override
+  String get colorThemeRose => 'Rose';
+
+  @override
+  String get colorThemeWebsiteBlue => 'Website Blue';
+
+  @override
+  String get colorThemeSlate => 'Slate';
+
+  @override
+  String get colorThemeSteel => 'Steel';
+
+  @override
   String get systemLanguage => 'System';
 
   @override
@@ -478,6 +508,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useRegex => 'Regular expression';
+
+  @override
+  String get ignoreWhitespace => 'Ignore whitespace';
 
   @override
   String get invalidRegex => 'Invalid regular expression';
@@ -1238,6 +1271,15 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get themeCustom => 'Custom';
+
+  @override
+  String get themeWarmPaper => 'Warm Paper';
+
+  @override
+  String get themePreset => 'Theme preset';
 
   @override
   String get sourceFolding => 'Source folding';

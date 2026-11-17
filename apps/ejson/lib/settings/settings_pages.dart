@@ -80,6 +80,108 @@ extension _SettingsPages on _SettingsPanelState {
         _SettingsCard(
           children: [
             _SettingsRow(
+              label: strings.themePreset,
+              icon: CupertinoIcons.paintbrush,
+              child: _StylePicker<String>(
+                label: strings.themePreset,
+                options: {
+                  '': strings.themeCustom,
+                  'paper': strings.themeWarmPaper,
+                  'github': 'GitHub',
+                  'darcula': 'Darcula',
+                  'tokyo': 'Tokyo Night',
+                  'contrast': strings.highlightAccessibility,
+                },
+                selected: switch ((
+                  _colorTheme,
+                  _highlight,
+                  _theme,
+                  _treeStyle,
+                )) {
+                  (
+                    AppColorTheme.amber,
+                    JsonHighlight.atomOne,
+                    ThemeMode.light,
+                    JsonTreeStyle.structure,
+                  ) =>
+                    'paper',
+                  (
+                    AppColorTheme.slate,
+                    JsonHighlight.github,
+                    ThemeMode.system,
+                    JsonTreeStyle.structure,
+                  ) =>
+                    'github',
+                  (
+                    AppColorTheme.steel,
+                    JsonHighlight.darcula,
+                    ThemeMode.dark,
+                    JsonTreeStyle.structure,
+                  ) =>
+                    'darcula',
+                  (
+                    AppColorTheme.purple,
+                    JsonHighlight.tokyoNight,
+                    ThemeMode.dark,
+                    JsonTreeStyle.structure,
+                  ) =>
+                    'tokyo',
+                  (
+                    AppColorTheme.blue,
+                    JsonHighlight.accessibility,
+                    ThemeMode.system,
+                    JsonTreeStyle.structure,
+                  ) =>
+                    'contrast',
+                  _ => '',
+                },
+                onChanged: (preset) {
+                  if (preset.isEmpty) return;
+                  final (color, highlight, mode) = switch (preset) {
+                    'paper' => (
+                      AppColorTheme.amber,
+                      JsonHighlight.atomOne,
+                      ThemeMode.light,
+                    ),
+                    'darcula' => (
+                      AppColorTheme.steel,
+                      JsonHighlight.darcula,
+                      ThemeMode.dark,
+                    ),
+                    'tokyo' => (
+                      AppColorTheme.purple,
+                      JsonHighlight.tokyoNight,
+                      ThemeMode.dark,
+                    ),
+                    'contrast' => (
+                      AppColorTheme.blue,
+                      JsonHighlight.accessibility,
+                      ThemeMode.system,
+                    ),
+                    _ => (
+                      AppColorTheme.slate,
+                      JsonHighlight.github,
+                      ThemeMode.system,
+                    ),
+                  };
+                  _updateView(() {
+                    _colorTheme = color;
+                    _highlight = highlight;
+                    _theme = mode;
+                    _treeStyle = JsonTreeStyle.structure;
+                  });
+                  widget.onColorThemeChanged(color);
+                  widget.onHighlightChanged(highlight);
+                  widget.onThemeChanged(mode);
+                  widget.onTreeStyleChanged(JsonTreeStyle.structure);
+                },
+              ),
+            ),
+          ],
+        ),
+        _SettingsCard(
+          children: [
+            _SettingsRow(
               label: strings.appearance,
               icon: CupertinoIcons.circle_lefthalf_fill,
               child: _SettingsSelector(
@@ -109,6 +211,30 @@ extension _SettingsPages on _SettingsPanelState {
                     widget.onGlassChanged(value);
                   },
                 ),
+              ),
+            ),
+            const Divider(height: 1),
+            _SettingsRow(
+              label: strings.colorTheme,
+              icon: CupertinoIcons.color_filter,
+              child: _StylePicker<AppColorTheme>(
+                label: strings.colorTheme,
+                options: {
+                  AppColorTheme.systemDefault: strings.colorThemeSystemDefault,
+                  AppColorTheme.blue: strings.colorThemeBlue,
+                  AppColorTheme.amber: strings.colorThemeAmber,
+                  AppColorTheme.green: strings.colorThemeGreen,
+                  AppColorTheme.purple: strings.colorThemePurple,
+                  AppColorTheme.rose: strings.colorThemeRose,
+                  AppColorTheme.websiteBlue: strings.colorThemeWebsiteBlue,
+                  AppColorTheme.slate: strings.colorThemeSlate,
+                  AppColorTheme.steel: strings.colorThemeSteel,
+                },
+                selected: _colorTheme,
+                onChanged: (theme) {
+                  _updateView(() => _colorTheme = theme);
+                  widget.onColorThemeChanged(theme);
+                },
               ),
             ),
           ],
@@ -288,6 +414,7 @@ extension _SettingsPages on _SettingsPanelState {
             child: SizedBox(
               height: 210,
               child: TreePanel(
+                highlight: _highlight,
                 key: const ValueKey('appearance-tree-preview'),
                 snapshot: _appearanceSnapshot,
                 source: _SettingsPanelState._appearanceSource,

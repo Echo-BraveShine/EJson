@@ -199,7 +199,10 @@ class _EJsonCodeEditorState extends State<EJsonCodeEditor> {
         _controller.addListener(_edited);
       }
     }
-    if (widget.jump != oldWidget.jump) _scheduleJump();
+    if (widget.jump != oldWidget.jump) {
+      if (widget.jump == null) _controller.cancelSelection();
+      _scheduleJump();
+    }
   }
 
   void _scheduleJump() {

@@ -13,6 +13,7 @@ extension _WorkbenchPanes on _WorkbenchState {
     if (tab.large) {
       _sourceFolds.remove(tab.id);
       return LargeSourceView(
+        highlight: widget.highlight,
         key: ValueKey(tab.id),
         source: tab.text,
         format: tab.format,
@@ -80,6 +81,7 @@ extension _WorkbenchPanes on _WorkbenchState {
                       key: ValueKey(tab.id),
                       snapshot: doc.lastValid!,
                       style: widget.treeStyle,
+                      highlight: widget.highlight,
                       showConnectors: ref
                           .watch(toolPreferencesProvider)
                           .treeConnectors,

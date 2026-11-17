@@ -138,6 +138,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get glassToolbar => '玻璃工具栏';
 
   @override
+  String get colorTheme => '配色主题';
+
+  @override
+  String get colorThemeSystemDefault => '系统默认';
+
+  @override
+  String get colorThemeBlue => '蓝色';
+
+  @override
+  String get colorThemeAmber => '琥珀';
+
+  @override
+  String get colorThemeGreen => '绿色';
+
+  @override
+  String get colorThemePurple => '紫色';
+
+  @override
+  String get colorThemeRose => '玫瑰';
+
+  @override
+  String get colorThemeWebsiteBlue => '网站蓝';
+
+  @override
+  String get colorThemeSlate => '石板灰';
+
+  @override
+  String get colorThemeSteel => '钢蓝';
+
+  @override
   String get systemLanguage => '跟随系统';
 
   @override
@@ -472,6 +502,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get useRegex => '正则表达式';
+
+  @override
+  String get ignoreWhitespace => '忽略空白';
 
   @override
   String get invalidRegex => '正则表达式无效';
@@ -1203,6 +1236,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String foldPreviewMoreLines(int count) {
     return '还有 $count 行';
   }
+
+  @override
+  String get themeCustom => '自定义';
+
+  @override
+  String get themeWarmPaper => '暖纸';
+
+  @override
+  String get themePreset => '主题预设';
 
   @override
   String get sourceFolding => '源码折叠';

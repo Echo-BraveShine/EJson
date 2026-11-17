@@ -28,6 +28,7 @@ import 'workspace/disk_sync.dart';
 
 const _languageKey = 'language';
 const _themeModeKey = 'themeMode';
+const _colorThemeKey = 'colorTheme';
 const _highlightKey = 'jsonHighlight';
 const _treeStyleKey = 'jsonTreeStyle';
 
@@ -49,6 +50,13 @@ Future<void> main(List<String> arguments) async {
   } on PlatformException catch (error) {
     debugPrint('Could not read appearance preference: ${error.code}');
   }
+  var colorTheme = AppColorTheme.systemDefault;
+  try {
+    final savedColorTheme = await preferences.getString(_colorThemeKey);
+    colorTheme = appColorThemeByName(savedColorTheme ?? '');
+  } on PlatformException catch (error) {
+    debugPrint('Could not read color theme preference: ${error.code}');
+  }
   final launchBrightness = switch (themeMode) {
     ThemeMode.light => Brightness.light,
     ThemeMode.dark => Brightness.dark,
@@ -60,7 +68,10 @@ Future<void> main(List<String> arguments) async {
       size: const Size(1120, 740),
       minimumSize: const Size(720, 460),
       center: true,
-      backgroundColor: workbenchTheme(launchBrightness).scaffoldBackgroundColor,
+      backgroundColor: workbenchTheme(
+        launchBrightness,
+        colorTheme,
+      ).scaffoldBackgroundColor,
     ),
   );
   String? language;
@@ -165,6 +176,9 @@ Future<void> main(List<String> arguments) async {
         initialThemeMode: themeMode,
         saveThemeMode: (mode) =>
             preferences.setString(_themeModeKey, mode.name),
+        initialColorTheme: colorTheme,
+        saveColorTheme: (theme) =>
+            preferences.setString(_colorThemeKey, theme.name),
         initialHighlight: highlight,
         initialTreeStyle: treeStyle,
         saveTreeStyle: (style) =>
@@ -199,6 +213,8 @@ class EJsonApp extends StatefulWidget {
     this.saveLanguage,
     this.initialThemeMode = ThemeMode.system,
     this.saveThemeMode,
+    this.initialColorTheme = AppColorTheme.systemDefault,
+    this.saveColorTheme,
     this.initialHighlight = JsonHighlight.atomOne,
     this.saveHighlight,
     this.initialTreeStyle = JsonTreeStyle.classic,
@@ -211,6 +227,8 @@ class EJsonApp extends StatefulWidget {
   final List<String> failedRestorePaths;
   final String? initialLanguage;
   final ThemeMode initialThemeMode;
+  final AppColorTheme initialColorTheme;
+  final Future<void> Function(AppColorTheme)? saveColorTheme;
   final JsonHighlight initialHighlight;
   final JsonTreeStyle initialTreeStyle;
   final Future<void> Function(JsonTreeStyle)? saveTreeStyle;
@@ -224,6 +242,7 @@ class EJsonApp extends StatefulWidget {
 
 class _EJsonAppState extends State<EJsonApp> {
   late ThemeMode mode = widget.initialThemeMode;
+  late AppColorTheme colorTheme = widget.initialColorTheme;
   Future<void> _pendingThemeSave = Future<void>.value();
   late JsonHighlight highlight = widget.initialHighlight;
   late JsonTreeStyle treeStyle = widget.initialTreeStyle;
@@ -244,6 +263,17 @@ class _EJsonAppState extends State<EJsonApp> {
         await widget.saveThemeMode?.call(value);
       } on PlatformException catch (error) {
         debugPrint('Could not save appearance preference: ${error.code}');
+      }
+    });
+  }
+
+  void _selectColorTheme(AppColorTheme value) {
+    setState(() => colorTheme = value);
+    _pendingThemeSave = _pendingThemeSave.then((_) async {
+      try {
+        await widget.saveColorTheme?.call(value);
+      } on PlatformException catch (error) {
+        debugPrint('Could not save color theme preference: ${error.code}');
       }
     });
   }
@@ -291,8 +321,8 @@ class _EJsonAppState extends State<EJsonApp> {
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     debugShowCheckedModeBanner: false,
-    theme: workbenchTheme(Brightness.light),
-    darkTheme: workbenchTheme(Brightness.dark),
+    theme: workbenchTheme(Brightness.light, colorTheme),
+    darkTheme: workbenchTheme(Brightness.dark, colorTheme),
     themeMode: mode,
     home: Workbench(
       manageWindow: widget.manageWindow,
@@ -301,6 +331,8 @@ class _EJsonAppState extends State<EJsonApp> {
       restoreOnStartup: widget.restoreOnStartup,
       failedRestorePaths: widget.failedRestorePaths,
       themeMode: mode,
+      colorTheme: colorTheme,
+      onColorThemeChanged: _selectColorTheme,
       highlight: highlight,
       onHighlightChanged: _selectHighlight,
       treeStyle: treeStyle,

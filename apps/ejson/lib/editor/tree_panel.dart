@@ -1,3 +1,4 @@
+import 'json_highlight.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -26,6 +27,7 @@ class TreePanel extends StatefulWidget {
     required this.onEdit,
     this.style = JsonTreeStyle.classic,
     this.showConnectors = true,
+    this.highlight,
     this.readOnly = false,
     this.reveal,
     this.onAdd,
@@ -42,6 +44,7 @@ class TreePanel extends StatefulWidget {
   final ParseSnapshot snapshot;
   final JsonTreeStyle style;
   final bool showConnectors;
+  final JsonHighlight? highlight;
   final bool readOnly;
   final String source;
   final bool current;
@@ -172,6 +175,10 @@ class _TreePanelState extends State<TreePanel> {
   @override
   void didUpdateWidget(covariant TreePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.reveal != null && widget.reveal == null) {
+      _selected = null;
+      _revealSteps = const [];
+    }
     if (widget.snapshot != oldWidget.snapshot) _visibleRows = null;
     if (widget.snapshot != oldWidget.snapshot ||
         widget.current != oldWidget.current ||

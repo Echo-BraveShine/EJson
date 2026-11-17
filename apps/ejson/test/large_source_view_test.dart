@@ -1,4 +1,5 @@
 import 'package:ejson/editor/code_editor.dart';
+import 'package:ejson/editor/json_highlight.dart';
 import 'package:ejson/editor/large_source_view.dart';
 import 'package:ejson/l10n/app_localizations.dart';
 import 'package:ejson_core/ejson_core.dart';
@@ -21,6 +22,7 @@ void main() {
           home: Scaffold(
             body: LargeSourceView(
               source: text ?? source,
+              highlight: JsonHighlight.tokyoNight,
               format: DocumentFormat.json,
               jump: jump,
               focusOnJump: false,
@@ -33,6 +35,11 @@ void main() {
     await tester.pumpWidget(view());
     expect(editor().source, first);
     expect(editor().readOnly, isTrue);
+    expect(editor().highlight, JsonHighlight.tokyoNight);
+    expect(
+      tester.widget<CodeEditor>(find.byType(CodeEditor)).style!.backgroundColor,
+      JsonHighlight.tokyoNight.editorBackground(Brightness.light),
+    );
     await tester.tap(find.byTooltip('Next source page'));
     await tester.pumpAndSettle();
     expect(editor().source, second);

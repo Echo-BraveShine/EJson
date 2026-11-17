@@ -20,6 +20,7 @@ class DocumentFind extends StatefulWidget {
     required this.focusNode,
     required this.onMatch,
     required this.onClose,
+    this.onNoMatch,
     this.onReplace,
     this.structured = true,
   });
@@ -30,6 +31,7 @@ class DocumentFind extends StatefulWidget {
   final FocusNode focusNode;
   final ValueChanged<SourceRange> onMatch;
   final VoidCallback onClose;
+  final VoidCallback? onNoMatch;
   final ValueChanged<String>? onReplace;
 
   @override
@@ -43,6 +45,7 @@ class _DocumentFindState extends State<DocumentFind> {
   bool _showReplace = false;
   bool _caseSensitive = false;
   bool _regex = false;
+  bool _ignoreWhitespace = false;
   bool _invalidPattern = false;
   RegExp? _pattern;
   _Scope _scope = _Scope.source;
@@ -54,9 +57,29 @@ class _DocumentFindState extends State<DocumentFind> {
   @override
   void didUpdateWidget(covariant DocumentFind oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // 只有在文档或 enabled 真正变化时才重新匹配
     if (widget.document != oldWidget.document ||
         widget.enabled != oldWidget.enabled) {
+      // 保存旧的选中索引，用于匹配后恢复
+      final oldIndex = _index;
       _updateMatches();
+      // 如果旧索引在新匹配列表中有效，则尝试恢复
+      if (oldIndex >= 0 && _matches.length > oldIndex) {
+        _index = oldIndex;
+      } else if (_matches.isNotEmpty) {
+        // 否则回退到第一个匹配
+        _index = 0;
+      } else {
+        _index = -1;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (_index >= 0 && _index < _matches.length) {
+          widget.onMatch(_matches[_index]);
+        } else {
+          widget.onNoMatch?.call();
+        }
+      });
     }
   }
 
@@ -92,10 +115,47 @@ class _DocumentFindState extends State<DocumentFind> {
       return;
     }
     if (_scope == _Scope.source) {
-      for (final match in pattern.allMatches(source).take(_matchLimit + 1)) {
-        final range = (start: match.start, end: match.end);
-        _matches.add(range);
-        _sourceMatches[range] = match;
+      final searchSource = _ignoreWhitespace
+          ? _stripWhitespace(source)
+          : source;
+      final searchQuery = _ignoreWhitespace ? _stripWhitespace(query) : query;
+      if (_ignoreWhitespace && searchQuery.isEmpty) {
+        _matches = [];
+        _limited = false;
+        return;
+      }
+      late RegExp pattern;
+      try {
+        pattern = RegExp(
+          _regex ? searchQuery : RegExp.escape(searchQuery),
+          caseSensitive: _caseSensitive,
+        );
+      } on FormatException {
+        _invalidPattern = true;
+        return;
+      }
+      _pattern = pattern;
+      if (_ignoreWhitespace) {
+        final mapping = _buildIndexMapping(source);
+        for (final match
+            in pattern.allMatches(searchSource).take(_matchLimit + 1)) {
+          final start = match.start < mapping.length
+              ? mapping[match.start]
+              : source.length;
+          final end = match.start == match.end
+              ? start
+              : mapping[match.end - 1] + 1;
+          final range = (start: start, end: end);
+          _matches.add(range);
+          _sourceMatches[range] = match;
+        }
+      } else {
+        for (final match
+            in pattern.allMatches(searchSource).take(_matchLimit + 1)) {
+          final range = (start: match.start, end: match.end);
+          _matches.add(range);
+          _sourceMatches[range] = match;
+        }
       }
       _limitMatches();
       return;
@@ -132,6 +192,28 @@ class _DocumentFindState extends State<DocumentFind> {
       _matches.length = _matchLimit;
       _limited = true;
     }
+  }
+
+  /// Removes all whitespace characters from [text].
+  String _stripWhitespace(String text) {
+    return text.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  /// Checks if a character is whitespace (same regex as _stripWhitespace).
+  static bool _isWhitespace(String c) => RegExp(r'\s').hasMatch(c);
+
+  /// Builds a mapping from normalized (whitespace-stripped) index to original
+  /// index. [mapping][i] is the index in the original string for the i-th
+  /// non-whitespace character. Used to translate match positions back to the
+  /// original document when ignoring whitespace.
+  List<int> _buildIndexMapping(String text) {
+    final mapping = <int>[];
+    for (var i = 0; i < text.length; i++) {
+      if (!_isWhitespace(text[i])) {
+        mapping.add(i);
+      }
+    }
+    return mapping;
   }
 
   void _replace(bool all) {
@@ -194,6 +276,7 @@ class _DocumentFindState extends State<DocumentFind> {
   void _search() {
     setState(_updateMatches);
     _move(1);
+    if (_matches.isEmpty) widget.onNoMatch?.call();
   }
 
   @override
@@ -334,6 +417,13 @@ class _DocumentFindState extends State<DocumentFind> {
                 const SizedBox(width: WorkbenchStyle.space4),
                 _toggle(strings.useRegex, '.*', _regex, (value) {
                   _regex = value;
+                  _search();
+                }),
+                const SizedBox(width: WorkbenchStyle.space8),
+                _toggle(strings.ignoreWhitespace, '∅', _ignoreWhitespace, (
+                  value,
+                ) {
+                  _ignoreWhitespace = value;
                   _search();
                 }),
                 const SizedBox(width: WorkbenchStyle.space8),

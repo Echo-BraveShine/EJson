@@ -356,6 +356,66 @@ abstract class AppLocalizations {
   /// **'Glass toolbar'**
   String get glassToolbar;
 
+  /// No description provided for @colorTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Color theme'**
+  String get colorTheme;
+
+  /// No description provided for @colorThemeSystemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System Default'**
+  String get colorThemeSystemDefault;
+
+  /// No description provided for @colorThemeBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get colorThemeBlue;
+
+  /// No description provided for @colorThemeAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get colorThemeAmber;
+
+  /// No description provided for @colorThemeGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get colorThemeGreen;
+
+  /// No description provided for @colorThemePurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get colorThemePurple;
+
+  /// No description provided for @colorThemeRose.
+  ///
+  /// In en, this message translates to:
+  /// **'Rose'**
+  String get colorThemeRose;
+
+  /// No description provided for @colorThemeWebsiteBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Website Blue'**
+  String get colorThemeWebsiteBlue;
+
+  /// No description provided for @colorThemeSlate.
+  ///
+  /// In en, this message translates to:
+  /// **'Slate'**
+  String get colorThemeSlate;
+
+  /// No description provided for @colorThemeSteel.
+  ///
+  /// In en, this message translates to:
+  /// **'Steel'**
+  String get colorThemeSteel;
+
   /// No description provided for @systemLanguage.
   ///
   /// In en, this message translates to:
@@ -985,6 +1045,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Regular expression'**
   String get useRegex;
+
+  /// No description provided for @ignoreWhitespace.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore whitespace'**
+  String get ignoreWhitespace;
 
   /// No description provided for @invalidRegex.
   ///
@@ -2335,6 +2401,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{1 more line} other{{count} more lines}}'**
   String foldPreviewMoreLines(int count);
+
+  /// No description provided for @themeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get themeCustom;
+
+  /// No description provided for @themeWarmPaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Paper'**
+  String get themeWarmPaper;
+
+  /// No description provided for @themePreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme preset'**
+  String get themePreset;
 
   /// No description provided for @sourceFolding.
   ///

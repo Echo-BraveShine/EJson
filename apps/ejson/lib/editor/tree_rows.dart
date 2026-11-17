@@ -100,7 +100,9 @@ extension _TreeRows on _TreePanelState {
                         ? 'null'
                         : node.kind.name,
                     size: WorkbenchStyle.controlIconSize,
-                    color: style.valueColor(node.kind, colors),
+                    color:
+                        widget.highlight?.valueColor(node.kind, colors) ??
+                        style.valueColor(node.kind, colors),
                   ),
                   const SizedBox(width: WorkbenchStyle.space8),
                 ],
@@ -122,7 +124,12 @@ extension _TreeRows on _TreePanelState {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: code.copyWith(
-                            color: style.valueColor(node.kind, colors),
+                            color:
+                                widget.highlight?.valueColor(
+                                  node.kind,
+                                  colors,
+                                ) ??
+                                style.valueColor(node.kind, colors),
                           ),
                         ),
                       ),

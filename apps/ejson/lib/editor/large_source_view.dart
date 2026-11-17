@@ -9,6 +9,7 @@ import 'json_highlight.dart';
 class LargeSourceView extends StatefulWidget {
   const LargeSourceView({
     super.key,
+    this.highlight = JsonHighlight.monochrome,
     required this.source,
     required this.format,
     required this.jump,
@@ -17,6 +18,7 @@ class LargeSourceView extends StatefulWidget {
 
   final String source;
   final DocumentFormat format;
+  final JsonHighlight highlight;
   final ({SourceRange range, int sequence})? jump;
   final bool focusOnJump;
 
@@ -162,7 +164,7 @@ class _LargeSourceViewState extends State<LargeSourceView> {
             source: widget.source.substring(start, end),
             format: widget.format,
             readOnly: true,
-            highlight: JsonHighlight.monochrome,
+            highlight: widget.highlight,
             onChanged: (_) {},
             focusOnJump: widget.focusOnJump,
             jump: jump == null

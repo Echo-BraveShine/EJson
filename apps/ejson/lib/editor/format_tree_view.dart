@@ -1,3 +1,4 @@
+import 'json_highlight.dart';
 import 'dart:math' as math;
 import 'package:ejson_core/ejson_core.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
@@ -16,11 +17,13 @@ class FormatTreeView extends StatefulWidget {
     required this.onReveal,
     this.truncated = false,
     this.showConnectors = true,
+    this.highlight,
   });
   final FormatTreeNode root;
   final JsonTreeStyle style;
   final bool truncated;
   final bool showConnectors;
+  final JsonHighlight? highlight;
   final ValueChanged<SourceRange> onReveal;
   @override
   State<FormatTreeView> createState() => _FormatTreeViewState();
@@ -216,10 +219,12 @@ class _FormatTreeViewState extends State<FormatTreeView> {
                                       _ => CupertinoIcons.textformat,
                                     },
                                     size: 16,
-                                    color: widget.style.valueColor(
-                                      kind,
-                                      colors,
-                                    ),
+                                    color:
+                                        widget.highlight?.valueColor(
+                                          kind,
+                                          colors,
+                                        ) ??
+                                        widget.style.valueColor(kind, colors),
                                   ),
                                   const SizedBox(width: WorkbenchStyle.space8),
                                 ],
@@ -245,10 +250,15 @@ class _FormatTreeViewState extends State<FormatTreeView> {
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: reading.text.copyWith(
-                                            color: widget.style.valueColor(
-                                              kind,
-                                              colors,
-                                            ),
+                                            color:
+                                                widget.highlight?.valueColor(
+                                                  kind,
+                                                  colors,
+                                                ) ??
+                                                widget.style.valueColor(
+                                                  kind,
+                                                  colors,
+                                                ),
                                           ),
                                         ),
                                       ),

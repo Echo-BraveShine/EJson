@@ -23,6 +23,8 @@ extension _WorkbenchNavigation on _WorkbenchState {
         context: context,
         builder: (_) => SettingsPanel(
           themeMode: widget.themeMode,
+          colorTheme: widget.colorTheme,
+          onColorThemeChanged: widget.onColorThemeChanged,
           restoreOnStartup: _restoreOnStartup,
           onRestoreOnStartupChanged: (value) {
             final update = _setRestoreOnStartup(value);

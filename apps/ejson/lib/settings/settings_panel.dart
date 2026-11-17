@@ -27,6 +27,8 @@ class SettingsPanel extends ConsumerStatefulWidget {
   const SettingsPanel({
     super.key,
     required this.themeMode,
+    required this.colorTheme,
+    required this.onColorThemeChanged,
     required this.restoreOnStartup,
     required this.onRestoreOnStartupChanged,
     required this.glassEnabled,
@@ -41,6 +43,8 @@ class SettingsPanel extends ConsumerStatefulWidget {
   });
 
   final ThemeMode themeMode;
+  final AppColorTheme colorTheme;
+  final ValueChanged<AppColorTheme> onColorThemeChanged;
   final bool restoreOnStartup;
   final Future<bool> Function(bool) onRestoreOnStartupChanged;
   final JsonHighlight highlight;
@@ -71,6 +75,7 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
   final _appearanceSnapshot = parseJson(_appearanceSource);
 
   late ThemeMode _theme = widget.themeMode;
+  late AppColorTheme _colorTheme = widget.colorTheme;
   late bool _restoreOnStartup = widget.restoreOnStartup;
   bool _savingRestorePreference = false;
   bool _savingAutosavePreference = false;

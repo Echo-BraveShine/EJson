@@ -174,6 +174,11 @@ extension _WorkbenchDocumentActions on _WorkbenchState {
     _findFocus.requestFocus();
   }
 
+  void _clearFindMatch() {
+    if (!_searchJump || _jump == null) return;
+    _updateView(() => _jump = null);
+  }
+
   void _closeFind() => _updateView(() {
     _findOpen = false;
     if (_searchJump) _jump = null;
